@@ -8,38 +8,29 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tb_media")
+@Table(name = "tb_aesthetic_website",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"aesthetic", "website"}))
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Media {
-
+public class AestheticWebsite {
+    
     @Id
-    @Column(name = "media", nullable = false, unique = true)
+    @Column(name = "aesthetic_website")
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer media;
+    private Integer aestheticMedia;
 
-    @Column(name = "url", nullable = false)
-    private String url;
-
-    @Column(name = "preview_image_url")
-    private String previewImageUrl;
-
-    @Column(name = "label")
-    private String label;
-
-    @Column(name = "description")
-    private String description;
-
-    @JoinColumn(name = "media_creator")
+    @JoinColumn(name = "aesthetic", nullable = false)
     @OneToOne
-    private MediaCreator mediaCreator;
+    private Aesthetic aesthetic;
 
-    @Column(name = "year")
-    private Integer year;
+    @JoinColumn(name = "website", nullable = false)
+    @OneToOne
+    private Website website;
 }

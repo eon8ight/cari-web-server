@@ -5,23 +5,29 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "tb_media_creator")
+@Table(name = "tb_website")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MediaCreator {
-
+public class Website {
+    
     @Id
-    @Column(name = "media_creator", nullable = false, unique = true)
+    @Column(name = "website", nullable = false, unique = true)
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer mediaCreator;
+    private Integer website;
 
-    @Column(name = "name", nullable = false, unique = true)
-    private String name;
+    @Column(name = "url", nullable = false, unique = true)
+    private String url;
+
+    @JoinColumn(name = "website_type", nullable = false, unique = true)
+    @OneToOne
+    private WebsiteType websiteType;
 }

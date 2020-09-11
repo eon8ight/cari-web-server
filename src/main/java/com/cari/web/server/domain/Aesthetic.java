@@ -3,15 +3,13 @@ package com.cari.web.server.domain;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.persistence.Transient;
+import com.cari.web.server.dto.ArenaApiResponse;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,9 +19,11 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class Aesthetic {
 
         @Id
+        @Column(name = "aesthetic", nullable = false, unique = true)
         @GeneratedValue(strategy = GenerationType.AUTO)
         private Integer aesthetic;
 
@@ -45,16 +45,15 @@ public class Aesthetic {
         @Column(name = "description", nullable = false)
         private String description;
 
-        @JoinTable(name = "tb_aesthetic_relationship",
-                        joinColumns = @JoinColumn(name = "from_aesthetic"),
-                        inverseJoinColumns = @JoinColumn(name = "to_aesthetic"))
-        @OneToMany(fetch = FetchType.LAZY)
-        @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+        @Transient
         private List<Aesthetic> similarAesthetics;
 
-        @JoinTable(name = "tb_aesthetic_media", joinColumns = @JoinColumn(name = "aesthetic"),
-                        inverseJoinColumns = @JoinColumn(name = "media"))
-        @OneToMany(fetch = FetchType.LAZY)
-        @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+        @Transient
         private List<Media> media;
+
+        @Transient
+        private List<Website> websites;
+
+        @Transient
+        private ArenaApiResponse galleryContent;
 }
