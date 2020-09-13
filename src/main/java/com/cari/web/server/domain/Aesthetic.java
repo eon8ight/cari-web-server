@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import com.cari.web.server.dto.ArenaApiResponse;
+import com.cari.web.server.dto.SimilarAesthetic;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,7 +47,7 @@ public class Aesthetic {
         private String description;
 
         @Transient
-        private List<Aesthetic> similarAesthetics;
+        private List<SimilarAesthetic> similarAesthetics;
 
         @Transient
         private List<Media> media;

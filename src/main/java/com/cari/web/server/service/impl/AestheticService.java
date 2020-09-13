@@ -2,9 +2,11 @@ package com.cari.web.server.service.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.Media;
 import com.cari.web.server.domain.Website;
+import com.cari.web.server.dto.SimilarAesthetic;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.service.IAestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,17 +17,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class AestheticService implements IAestheticService {
 
+    private static final int MAX_PER_PAGE = 20;
+
     @Autowired
     private AestheticRepository repository;
 
     @Override
-    public Optional<Aesthetic> find(int aesthetic) {
-        return repository.findById(aesthetic);
-    }
-
-    @Override
     public Page<Aesthetic> findAll(Optional<Integer> page) {
-        return repository.findAll(PageRequest.of(page.orElse(0), 15));
+        return repository.findAll(PageRequest.of(page.orElse(0), MAX_PER_PAGE));
     }
 
     @Override
@@ -44,7 +43,13 @@ public class AestheticService implements IAestheticService {
     }
 
     @Override
-    public List<Aesthetic> findSimilarAesthetics(int aesthetic) {
-        return repository.findSimilarAesthetics(aesthetic);
+    public List<SimilarAesthetic> findSimilarAesthetics(int aesthetic) {
+        List<Object[]> obj = repository.findSimilarAesthetics(aesthetic);
+
+        List<SimilarAesthetic> similarAesthetics =
+                obj.stream().map(o -> new SimilarAesthetic((Aesthetic) o[0], (String) o[1]))
+                        .collect(Collectors.toList());
+
+        return similarAesthetics;
     }
 }

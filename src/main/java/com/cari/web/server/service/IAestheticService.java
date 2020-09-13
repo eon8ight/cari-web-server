@@ -5,11 +5,10 @@ import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.Media;
 import com.cari.web.server.domain.Website;
+import com.cari.web.server.dto.SimilarAesthetic;
 import org.springframework.data.domain.Page;
 
 public interface IAestheticService {
-
-    Optional<Aesthetic> find(int aesthetic);
 
     Page<Aesthetic> findAll(Optional<Integer> page);
 
@@ -19,5 +18,5 @@ public interface IAestheticService {
 
     List<Website> findWebsites(int aesthetic);
 
-    List<Aesthetic> findSimilarAesthetics(int aesthetic);
+    List<SimilarAesthetic> findSimilarAesthetics(int aesthetic);
 }
