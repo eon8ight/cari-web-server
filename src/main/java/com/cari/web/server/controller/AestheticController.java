@@ -35,6 +35,8 @@ public class AestheticController {
         Aesthetic aesthetic = aestheticService.findByUrlSlug(urlSlug);
         int pkAesthetic = aesthetic.getAesthetic();
 
+        aesthetic.setWebsites(aestheticService.findWebsites(pkAesthetic));
+
         if (includeSimilarAesthetics.orElse(false)) {
             aesthetic.setSimilarAesthetics(aestheticService.findSimilarAesthetics(pkAesthetic));
         }
