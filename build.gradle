@@ -8,14 +8,6 @@ group = 'com.cari.web.server'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '14'
 
-tasks.withType(JavaCompile) {
-	options.compilerArgs += '--enable-preview'
-}
-
-tasks.withType(Test) {
-	jvmArgs += '--enable-preview'
-}
-
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -41,7 +33,6 @@ dependencies {
 	}
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    compile 'io.github.cdimascio:java-dotenv:5.2.1'
 }
 
 dependencyManagement {
