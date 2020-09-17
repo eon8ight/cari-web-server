@@ -12,6 +12,7 @@ import com.cari.web.server.service.IAestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,8 +24,21 @@ public class AestheticService implements IAestheticService {
     private AestheticRepository repository;
 
     @Override
-    public Page<Aesthetic> findAll(Optional<Integer> page) {
-        return repository.findAll(PageRequest.of(page.orElse(0), MAX_PER_PAGE));
+    public Page<Aesthetic> findAll(Optional<Integer> page, Optional<String> sortField,
+            Optional<Boolean> asc) {
+        PageRequest pageRequest;
+
+        if (sortField.isPresent()) {
+            Sort.Direction sortDirection =
+                    asc.orElse(false) ? Sort.Direction.ASC : Sort.Direction.DESC;
+
+            Sort sort = Sort.by(new Sort.Order(sortDirection, sortField.get()));
+            pageRequest = PageRequest.of(page.orElse(0), MAX_PER_PAGE, sort);
+        } else {
+            pageRequest = PageRequest.of(page.orElse(0), MAX_PER_PAGE);
+        }
+
+        return repository.findAll(pageRequest);
     }
 
     @Override

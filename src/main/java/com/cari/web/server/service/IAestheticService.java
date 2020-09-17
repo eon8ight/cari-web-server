@@ -10,7 +10,8 @@ import org.springframework.data.domain.Page;
 
 public interface IAestheticService {
 
-    Page<Aesthetic> findAll(Optional<Integer> page);
+    Page<Aesthetic> findAll(Optional<Integer> page, Optional<String> sortField,
+            Optional<Boolean> asc);
 
     Aesthetic findByUrlSlug(String urlSlug);
 
