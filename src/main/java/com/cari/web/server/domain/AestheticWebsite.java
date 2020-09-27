@@ -1,5 +1,6 @@
 package com.cari.web.server.domain;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,8 +20,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AestheticWebsite {
+public class AestheticWebsite implements Serializable {
     
+    private static final long serialVersionUID = 8251957923213915929L;
+
     @Id
     @Column(name = "aesthetic_website")
     @GeneratedValue(strategy = GenerationType.AUTO)

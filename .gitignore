@@ -1,6 +1,7 @@
 # Ripped from https://gist.github.com/dedunumax/54e82214715e35439227
 
 .env
+src/main/resources/application.properties
 
 ##############################
 ## Java

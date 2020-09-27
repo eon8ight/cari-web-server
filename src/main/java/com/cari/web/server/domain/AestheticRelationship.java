@@ -1,5 +1,6 @@
 package com.cari.web.server.domain;
 
+import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,7 +20,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AestheticRelationship {
+public class AestheticRelationship implements Serializable {
+
+    private static final long serialVersionUID = -3625374001558766927L;
 
     @Id
     @Column(name = "aesthetic_relationship", nullable = false, unique = true)

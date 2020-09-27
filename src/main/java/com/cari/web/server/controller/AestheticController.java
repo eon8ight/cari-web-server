@@ -1,11 +1,8 @@
 package com.cari.web.server.controller;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.domain.CariError;
 import com.cari.web.server.dto.ArenaApiResponse;
 import com.cari.web.server.service.IAestheticService;
 import com.cari.web.server.service.IArenaApiService;
@@ -21,8 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AestheticController {
 
-    private static final List<String> VALID_SORT_FIELDS = Arrays.asList("name", "startYear");
-
     @Autowired
     private IAestheticService aestheticService;
 
@@ -30,50 +25,31 @@ public class AestheticController {
     private IArenaApiService arenaApiService;
 
     @GetMapping("/aesthetic/findForList")
-    public ResponseEntity<Object> findAll(@RequestParam Optional<Integer> page,
-            @RequestParam Optional<String> sortField, @RequestParam Optional<Boolean> asc) {
-        if (sortField.isPresent() && !VALID_SORT_FIELDS.contains(sortField.get())) {
-            CariError error = new CariError("sortField must be one of the following: "
-                    + String.join(", ", VALID_SORT_FIELDS.toArray(new String[0])));
+    public ResponseEntity<Page<Aesthetic>> findAll(@RequestParam Map<String, String> filters) {
+        Page<Aesthetic> aesthetics = aestheticService.findAll(filters);
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
+        aesthetics.forEach(aesthetic -> {
+            aesthetic.setWebsites(null);
+            aesthetic.setMedia(null);
+            aesthetic.setSimilarAesthetics(null);
+        });
 
-        Page<Aesthetic> aesthetics = aestheticService.findAll(page, sortField, asc);
-        ResponseEntity<Object> response = ResponseEntity.status(HttpStatus.OK).body(aesthetics);
+        ResponseEntity<Page<Aesthetic>> response = ResponseEntity.status(HttpStatus.OK).body(aesthetics);
         return response;
     }
 
     @GetMapping("/aesthetic/findForPage/{urlSlug}")
-    public Aesthetic find(@PathVariable String urlSlug,
-            @RequestParam Optional<Boolean> includeSimilarAesthetics,
-            @RequestParam Optional<Boolean> includeMedia,
-            @RequestParam Optional<Boolean> includeGalleryContent) {
+    public Aesthetic find(@PathVariable String urlSlug) {
         Aesthetic aesthetic = aestheticService.findByUrlSlug(urlSlug);
-        int pkAesthetic = aesthetic.getAesthetic();
+        ArenaApiResponse galleryContent;
 
-        aesthetic.setWebsites(aestheticService.findWebsites(pkAesthetic));
-
-        if (includeSimilarAesthetics.orElse(false)) {
-            aesthetic.setSimilarAesthetics(aestheticService.findSimilarAesthetics(pkAesthetic));
+        try {
+            galleryContent = arenaApiService.findInitialBlocksForPagination(aesthetic.getAesthetic());
+        } catch (MissingResourceException ex) {
+            galleryContent = null;
         }
 
-        if (includeMedia.orElse(false)) {
-            aesthetic.setMedia(aestheticService.findMedia(pkAesthetic));
-        }
-
-        if (includeGalleryContent.orElse(false)) {
-            ArenaApiResponse galleryContent;
-
-            try {
-                galleryContent = arenaApiService.findInitialBlocksForPagination(pkAesthetic);
-            } catch (MissingResourceException ex) {
-                galleryContent = null;
-            }
-
-            aesthetic.setGalleryContent(galleryContent);
-        }
-
+        aesthetic.setGalleryContent(galleryContent);
         return aesthetic;
     }
 
