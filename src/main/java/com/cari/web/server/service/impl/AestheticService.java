@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 @Service
@@ -25,8 +26,11 @@ public class AestheticService implements IAestheticService {
     private static final String FILTER_SORT_FIELD = "sortField";
     private static final String FILTER_ASC = "asc";
     private static final String FILTER_KEYWORD = "keyword";
+    private static final String FILTER_START_YEAR = "startYear";
+    private static final String FILTER_END_YEAR = "endYear";
 
-    private static final String[] SORT_FIELDS = {"name", "startYear"};
+    private static final Map<String, String> SORT_FIELDS =
+            Map.of("name", "name", "startYear", "start_year");
 
     @Autowired
     private AestheticRepository repository;
@@ -43,6 +47,8 @@ public class AestheticService implements IAestheticService {
         MapSqlParameterSource params = new MapSqlParameterSource();
 
         String keyword = filters.get(FILTER_KEYWORD);
+        String startYearString = filters.get(FILTER_START_YEAR);
+        String endYearString = filters.get(FILTER_END_YEAR);
 
         if (keyword != null) {
             String filter =
@@ -55,13 +61,33 @@ public class AestheticService implements IAestheticService {
             params.addValue("descriptionKeyword", keyword);
         }
 
+        if (!StringUtils.isEmpty(startYearString)) {
+            int startYear = Integer.parseInt(startYearString);
+            String filter = "and start_year >= :startYear ";
+
+            queryBuilder.append(filter);
+            countQueryBuilder.append(filter);
+
+            params.addValue("startYear", startYear);
+        }
+
+        if (!StringUtils.isEmpty(endYearString)) {
+            int endYear = Integer.parseInt(endYearString);
+            String filter = "and coalesce(end_year, date_part('year', CURRENT_DATE)) <= :endYear ";
+
+            queryBuilder.append(filter);
+            countQueryBuilder.append(filter);
+
+            params.addValue("endYear", endYear);
+        }
+
         Sort sort = validateAndGetSort(filters);
 
         if (sort.isSorted()) {
             String sortField = filters.get(FILTER_SORT_FIELD);
             Sort.Order sortOrder = sort.getOrderFor(sortField);
 
-            queryBuilder.append("order by ").append(sortField).append(
+            queryBuilder.append("order by ").append(SORT_FIELDS.get(sortField)).append(
                     sortOrder.getDirection().equals(Sort.Direction.ASC) ? " asc " : " desc ");
         }
 
@@ -92,11 +118,10 @@ public class AestheticService implements IAestheticService {
 
         if (sortField == null) {
             return Sort.unsorted();
-        } else if (!Arrays.asList(SORT_FIELDS).contains(sortField)) {
+        } else if (!SORT_FIELDS.containsKey(sortField)) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_SORT_FIELD)
-                    .append("` must be one of the following values: ")
-                    .append(Arrays.stream(SORT_FIELDS).map(f -> "\"" + f + "\"")
-                            .collect(Collectors.joining(", ")))
+                    .append("` must be one of the following values: ").append(SORT_FIELDS.keySet()
+                            .stream().map(f -> "\"" + f + "\"").collect(Collectors.joining(", ")))
                     .append(".");
 
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errorBuilder.toString());
