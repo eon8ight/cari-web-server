@@ -1,31 +1,28 @@
 package com.cari.web.server.domain;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "tb_website_type")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table("tb_website_type")
 public class WebsiteType implements Serializable {
-    
+
     private static final long serialVersionUID = 6205086345664654697L;
 
     private static final String COLUMN_WEBSITE_TYPE = "website_type";
 
     @Id
-    @Column(name = COLUMN_WEBSITE_TYPE, nullable = false, unique = true)
-    @JsonAlias({ COLUMN_WEBSITE_TYPE })
-    private Integer websiteType;
+    @Column(COLUMN_WEBSITE_TYPE)
+    @JsonAlias({COLUMN_WEBSITE_TYPE})
+    private int websiteType;
 
-    @Column(name = "label", nullable = false, length = 50, unique = true)
     private String label;
 }

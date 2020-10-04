@@ -1,39 +1,39 @@
 package com.cari.web.server.domain;
 
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "tb_aesthetic_website",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"aesthetic", "website"}))
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table("tb_aesthetic_website")
 public class AestheticWebsite implements Serializable {
-    
+
     private static final long serialVersionUID = 8251957923213915929L;
 
+    private static final String COLUMN_AESTHETIC_WEBSITE = "aesthetic_website";
+
     @Id
-    @Column(name = "aesthetic_website")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer aestheticMedia;
+    @Column(COLUMN_AESTHETIC_WEBSITE)
+    @JsonAlias({COLUMN_AESTHETIC_WEBSITE})
+    private int aestheticWebsite;
 
-    @JoinColumn(name = "aesthetic", nullable = false)
-    @OneToOne
-    private Aesthetic aesthetic;
+    @Column
+    private int aesthetic;
 
-    @JoinColumn(name = "website", nullable = false)
-    @OneToOne
-    private Website website;
+    @Column
+    private int website;
+
+    @Transient
+    private Aesthetic aestheticObj;
+
+    @Transient
+    private Website websiteObj;
 }
