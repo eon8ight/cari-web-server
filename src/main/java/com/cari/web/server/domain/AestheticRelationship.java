@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table("tb_aesthetic_relationship")
 public class AestheticRelationship implements Serializable {
-
     private static final long serialVersionUID = -3625374001558766927L;
 
     private static final String COLUMN_FROM_AESTHETIC = "from_aesthetic";

@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 @Table("tb_media")
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class Media implements Serializable {
-
     private static final long serialVersionUID = -4116792078351646162L;
 
     private static final String COLUMN_PREVIEW_IMAGE_URL = "preview_image_url";

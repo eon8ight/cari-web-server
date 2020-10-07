@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AestheticRepository extends PagingAndSortingRepository<Aesthetic, Integer> {
-
     String FIND_BY_URL_SLUG_QUERY =
         "with tt_website as ( " +
         "  select w.*, " +

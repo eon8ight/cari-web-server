@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.RowMapper;
 
 public class AestheticFindByUrlSlugRowMapper implements RowMapper<Aesthetic> {
-
     public Aesthetic mapRow(ResultSet rs, int rowNum) throws SQLException {
         Aesthetic aesthetic = Aesthetic.fromResultSet(rs, rowNum);
 

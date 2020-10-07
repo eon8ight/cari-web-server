@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table("tb_media_creator")
 public class MediaCreator implements Serializable {
-
     private static final long serialVersionUID = -2739822601756198464L;
 
     private static final String COLUMN_MEDIA_CREATOR = "media_creator";

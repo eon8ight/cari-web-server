@@ -11,7 +11,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ArenaContent implements Serializable {
-
     private static final long serialVersionUID = -1100385390369922189L;
 
     private int id;
@@ -44,13 +43,7 @@ public class ArenaContent implements Serializable {
 
     private String description;
 
-    private String source;
-
     private ArenaImage image;
-
-    private String embed;
-
-    private String attachment;
 
     private String metadata;
 

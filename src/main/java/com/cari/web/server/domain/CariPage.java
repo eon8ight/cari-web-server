@@ -15,7 +15,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
 public class CariPage<T> implements Page<T> {
-
     private List<T> data;
 
     private int pageNum;
@@ -118,14 +117,14 @@ public class CariPage<T> implements Page<T> {
         return new CariPage<U>(transformedData, pageNum, totalCount, maxPerPage, sort);
     }
 
-    public static <T> CariPage<T> getPage(DataSource dbHandle, String query, String countQuery, SqlParameterSource params,
+    public static <T> CariPage<T> getPage(DataSource dbHandle, String query, SqlParameterSource params,
             int pageNum, int maxPerPage, Sort sort, RowMapper<T> rowMapper) {
         NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(dbHandle);
 
         List<T> data = template.query(query, params, rowMapper);
 
         int totalCount =
-                template.query(countQuery, params, (ResultSetExtractor<Integer>) (resultSet -> {
+                template.query(query, params, (ResultSetExtractor<Integer>) (resultSet -> {
                     resultSet.next();
                     return resultSet.getInt("count");
                 }));

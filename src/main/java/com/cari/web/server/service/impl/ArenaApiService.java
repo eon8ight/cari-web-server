@@ -5,12 +5,13 @@ import com.cari.web.server.dto.ArenaApiResponse;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.service.IArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ArenaApiService implements IArenaApiService {
-
     private static final String ARENA_API_BASE_URL = "https://api.are.na/v2/";
     private static final String ARENA_API_CHANNELS_BASE_URL = ARENA_API_BASE_URL + "channels";
 
@@ -56,7 +57,19 @@ public class ArenaApiService implements IArenaApiService {
         StringBuilder urlBuilder =
                 new StringBuilder(url).append("?page=1&per=").append(MAX_PER_PAGE);
 
-        return callApi(urlBuilder.toString());
+        ArenaApiResponse response;
+
+        try {
+            response = callApi(urlBuilder.toString());
+        } catch (HttpClientErrorException ex) {
+            if(ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
+                response = null;
+            } else {
+                throw ex;
+            }
+        }
+
+        return response;
     }
 
     public ArenaApiResponse findBlocksForPagination(int aesthetic, int page)

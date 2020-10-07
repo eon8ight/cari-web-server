@@ -7,7 +7,6 @@ import org.springframework.data.relational.core.mapping.RelationalPersistentProp
 
 @Configuration
 public class JdbcConfig {
-
     @Bean
     public NamingStrategy getNamingStrategy() {
         return new NamingStrategy() {

@@ -1,11 +1,16 @@
 package com.cari.web.server.service.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.CariPage;
+import com.cari.web.server.domain.Media;
+import com.cari.web.server.domain.Website;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.service.IAestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,46 +45,46 @@ public class AestheticService implements IAestheticService {
 
     @Override
     public Page<Aesthetic> findAll(Map<String, String> filters) {
-        StringBuilder queryBuilder = new StringBuilder("select * from tb_aesthetic where true ");
-        StringBuilder countQueryBuilder =
-                new StringBuilder("select count(*) from tb_aesthetic where true ");
+        StringBuilder queryBuilder =
+                new StringBuilder("select count(*) over (), * from tb_aesthetic ");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
 
+        /* WHERE */
+
         String keyword = filters.get(FILTER_KEYWORD);
-        String startYearString = filters.get(FILTER_START_YEAR);
-        String endYearString = filters.get(FILTER_END_YEAR);
+        Optional<Integer> startYear = validateAndGetInt(filters, FILTER_START_YEAR);
+        Optional<Integer> endYear = validateAndGetInt(filters, FILTER_END_YEAR);
+
+        List<String> filterClauses = new ArrayList<String>();
 
         if (keyword != null) {
-            String filter =
-                    "and (name ilike '%' || :nameKeyword || '%' or description ilike '%' || :descriptionKeyword || '%') ";
-
-            queryBuilder.append(filter);
-            countQueryBuilder.append(filter);
+            filterClauses.add(
+                    "name ilike '%' || :nameKeyword || '%' or description ilike '%' || :descriptionKeyword || '%'");
 
             params.addValue("nameKeyword", keyword);
             params.addValue("descriptionKeyword", keyword);
         }
 
-        if (!StringUtils.isEmpty(startYearString)) {
-            int startYear = Integer.parseInt(startYearString);
-            String filter = "and start_year >= :startYear ";
-
-            queryBuilder.append(filter);
-            countQueryBuilder.append(filter);
-
-            params.addValue("startYear", startYear);
+        if (startYear.isPresent()) {
+            filterClauses.add("start_year >= :startYear");
+            params.addValue("startYear", startYear.get().intValue());
         }
 
-        if (!StringUtils.isEmpty(endYearString)) {
-            int endYear = Integer.parseInt(endYearString);
-            String filter = "and coalesce(end_year, date_part('year', CURRENT_DATE)) <= :endYear ";
-
-            queryBuilder.append(filter);
-            countQueryBuilder.append(filter);
-
-            params.addValue("endYear", endYear);
+        if (endYear.isPresent()) {
+            filterClauses.add("coalesce(end_year, date_part('year', CURRENT_DATE)) <= :endYear");
+            params.addValue("endYear", endYear.get().intValue());
         }
+
+        if (!filterClauses.isEmpty()) {
+            String filterString =
+                    new StringBuffer("where ").append(filterClauses.stream().map(f -> "(" + f + ")")
+                            .collect(Collectors.joining(" and "))).append(" ").toString();
+
+            queryBuilder.append(filterString);
+        }
+
+        /* ORDER BY */
 
         Sort sort = validateAndGetSort(filters);
 
@@ -91,26 +96,41 @@ public class AestheticService implements IAestheticService {
                     sortOrder.getDirection().equals(Sort.Direction.ASC) ? " asc " : " desc ");
         }
 
-        int pageNum;
+        /* LIMIT and OFFSET */
 
-        try {
-            pageNum = Integer.parseInt(filters.getOrDefault(FILTER_PAGE, "0"));
-        } catch (NumberFormatException ex) {
-            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,
-                    "`" + FILTER_PAGE + "` must be a non-negative number.");
-        }
+        Optional<Integer> pageNumOptional = validateAndGetIntNonNegative(filters, FILTER_PAGE);
+        int pageNum = pageNumOptional.orElse(0);
 
         queryBuilder.append("limit :limit offset :offset");
         params.addValue("limit", MAX_PER_PAGE);
         params.addValue("offset", pageNum * MAX_PER_PAGE);
 
-        return CariPage.getPage(dbHandle, queryBuilder.toString(), countQueryBuilder.toString(),
-                params, pageNum, MAX_PER_PAGE, sort, Aesthetic::fromResultSet);
+        return CariPage.getPage(dbHandle, queryBuilder.toString(), params, pageNum, MAX_PER_PAGE,
+                sort, Aesthetic::fromResultSet);
     }
 
     @Override
     public Aesthetic findByUrlSlug(String urlSlug) {
-        return repository.findByUrlSlug(urlSlug);
+        Aesthetic aesthetic = repository.findByUrlSlug(urlSlug);
+
+        List<Media> media = aesthetic.getMedia();
+        List<Website> websites = aesthetic.getWebsites();
+        List<Aesthetic> similarAesthetics = aesthetic.getSimilarAesthetics();
+
+        if (media != null && media.size() == 1 && media.get(0) == null) {
+            aesthetic.setMedia(null);
+        }
+
+        if (websites != null && websites.size() == 1 && websites.get(0) == null) {
+            aesthetic.setWebsites(null);
+        }
+
+        if (similarAesthetics != null && similarAesthetics.size() == 1
+                && similarAesthetics.get(0) == null) {
+            aesthetic.setSimilarAesthetics(null);
+        }
+
+        return aesthetic;
     }
 
     private Sort validateAndGetSort(Map<String, String> filters) {
@@ -143,5 +163,48 @@ public class AestheticService implements IAestheticService {
 
         boolean asc = Boolean.parseBoolean(ascString);
         return Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortField);
+    }
+
+    private Optional<Integer> validateAndGetInt(Map<String, String> filters, String key) {
+        String value = filters.get(key);
+
+        if (!StringUtils.isEmpty(value)) {
+            int intValue;
+
+            try {
+                intValue = Integer.parseInt(value);
+            } catch (NumberFormatException ex) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,
+                        "`" + key + "` must be an integer");
+            }
+
+            return Optional.of(intValue);
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<Integer> validateAndGetIntNonNegative(Map<String, String> filters,
+            String key) {
+        String value = filters.get(key);
+
+        if (!StringUtils.isEmpty(value)) {
+            int intValue;
+
+            try {
+                intValue = Integer.parseInt(value);
+
+                if (intValue < 0) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException ex) {
+                throw new HttpClientErrorException(HttpStatus.BAD_REQUEST,
+                        "`" + key + "` must be a non-negative integer");
+            }
+
+            return Optional.of(intValue);
+        }
+
+        return Optional.empty();
     }
 }

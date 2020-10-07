@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table("tb_website_type")
 public class WebsiteType implements Serializable {
-
     private static final long serialVersionUID = 6205086345664654697L;
 
     private static final String COLUMN_WEBSITE_TYPE = "website_type";

@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table("tb_aesthetic_website")
 public class AestheticWebsite implements Serializable {
-
     private static final long serialVersionUID = 8251957923213915929L;
 
     private static final String COLUMN_AESTHETIC_WEBSITE = "aesthetic_website";

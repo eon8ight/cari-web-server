@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class AestheticController {
-
     @Autowired
     private IAestheticService aestheticService;
 
