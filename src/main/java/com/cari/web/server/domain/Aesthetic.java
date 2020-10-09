@@ -27,6 +27,7 @@ public class Aesthetic implements Serializable {
     private static final String COLUMN_URL_SLUG = "url_slug";
     private static final String COLUMN_START_YEAR = "start_year";
     private static final String COLUMN_END_YEAR = "end_year";
+    private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
 
     @Id
     private int aesthetic;
@@ -48,6 +49,10 @@ public class Aesthetic implements Serializable {
     private Integer endYear;
 
     private String description;
+
+    @Column(COLUMN_MEDIA_SOURCE_URL)
+    @JsonAlias({COLUMN_MEDIA_SOURCE_URL})
+    private String mediaSourceUrl;
 
     @Embedded.Empty
     private List<Aesthetic> similarAesthetics;
@@ -77,6 +82,7 @@ public class Aesthetic implements Serializable {
         aesthetic.setStartYear(rs.getInt("start_year"));
         aesthetic.setEndYear(endYear);
         aesthetic.setDescription(rs.getString("description"));
+        aesthetic.setMediaSourceUrl(rs.getString("media_source_url"));
 
         return aesthetic;
     }

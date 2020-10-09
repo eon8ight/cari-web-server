@@ -43,18 +43,6 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "    where a.url_slug = :urlSlug " +
         " group by a.aesthetic";
 
-    String GET_WEBSITE_URL_BY_TYPE_QUERY = 
-        "select w.url " +
-        "  from tb_website w " +
-        "  join tb_aesthetic_website aw " +
-        "    on w.website = aw.website " +
-        " where aw.aesthetic = :aesthetic " +
-        "   and w.website_type = :websiteType";
-
     @Query(value = FIND_BY_URL_SLUG_QUERY, rowMapperClass = AestheticFindByUrlSlugRowMapper.class)
     Aesthetic findByUrlSlug(@Param("urlSlug") String urlSlug);
-
-    @Query(GET_WEBSITE_URL_BY_TYPE_QUERY)
-    String getWebsiteUrlByType(@Param("aesthetic") int aesthetic,
-            @Param("websiteType") int websiteType);
 }

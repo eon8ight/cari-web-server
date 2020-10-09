@@ -35,7 +35,7 @@ public class AestheticService implements IAestheticService {
     private static final String FILTER_END_YEAR = "endYear";
 
     private static final Map<String, String> SORT_FIELDS =
-            Map.of("name", "name", "startYear", "start_year");
+            Map.of("name", "name", "startYear", "start_year", "endYear", "end_year");
 
     @Autowired
     private AestheticRepository repository;
@@ -89,11 +89,12 @@ public class AestheticService implements IAestheticService {
         Sort sort = validateAndGetSort(filters);
 
         if (sort.isSorted()) {
-            String sortField = filters.get(FILTER_SORT_FIELD);
-            Sort.Order sortOrder = sort.getOrderFor(sortField);
+            String orderByParts = sort.toList().stream().map(sortOrder -> SORT_FIELDS
+                    .get(sortOrder.getProperty())
+                    + (sortOrder.getDirection().equals(Sort.Direction.ASC) ? " asc " : " desc "))
+                    .collect(Collectors.joining(", "));
 
-            queryBuilder.append("order by ").append(SORT_FIELDS.get(sortField)).append(
-                    sortOrder.getDirection().equals(Sort.Direction.ASC) ? " asc " : " desc ");
+            queryBuilder.append("order by ").append(orderByParts);
         }
 
         /* LIMIT and OFFSET */
@@ -133,11 +134,16 @@ public class AestheticService implements IAestheticService {
         return aesthetic;
     }
 
+    @Override
+    public Aesthetic find(int aesthetic) {
+        return repository.findById(aesthetic).orElse(null);
+    }
+
     private Sort validateAndGetSort(Map<String, String> filters) {
         String sortField = filters.get(FILTER_SORT_FIELD);
 
         if (sortField == null) {
-            return Sort.unsorted();
+            return Sort.by(Sort.Order.asc("startYear"), Sort.Order.asc("endYear"));
         } else if (!SORT_FIELDS.containsKey(sortField)) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_SORT_FIELD)
                     .append("` must be one of the following values: ").append(SORT_FIELDS.keySet()

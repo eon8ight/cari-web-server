@@ -33,35 +33,34 @@ public class AestheticController {
             aesthetic.setSimilarAesthetics(null);
         });
 
-        ResponseEntity<Page<Aesthetic>> response = ResponseEntity.status(HttpStatus.OK).body(aesthetics);
+        ResponseEntity<Page<Aesthetic>> response =
+                ResponseEntity.status(HttpStatus.OK).body(aesthetics);
         return response;
     }
 
     @GetMapping("/aesthetic/findForPage/{urlSlug}")
     public Aesthetic find(@PathVariable String urlSlug) {
         Aesthetic aesthetic = aestheticService.findByUrlSlug(urlSlug);
-        ArenaApiResponse galleryContent;
 
-        try {
-            galleryContent = arenaApiService.findInitialBlocksForPagination(aesthetic.getAesthetic());
-        } catch (MissingResourceException ex) {
-            galleryContent = null;
+        if (aesthetic.getMediaSourceUrl() != null) {
+            ArenaApiResponse galleryContent = arenaApiService.findInitialBlocksForPagination(aesthetic);
+            aesthetic.setGalleryContent(galleryContent);
         }
 
-        aesthetic.setGalleryContent(galleryContent);
         return aesthetic;
     }
 
     @GetMapping("/aesthetic/findGalleryContent/{aesthetic}")
     public ArenaApiResponse findGalleryContent(@PathVariable int aesthetic,
             @RequestParam int page) {
-        ArenaApiResponse arenaApiResponse;
+        Aesthetic aestheticObj = aestheticService.find(aesthetic);
 
-        try {
-            arenaApiResponse = arenaApiService.findBlocksForPagination(aesthetic, page);
-        } catch (MissingResourceException ex) {
-            arenaApiResponse = null;
+        if (aestheticObj.getMediaSourceUrl() == null) {
+            return null;
         }
+
+        ArenaApiResponse arenaApiResponse =
+                arenaApiService.findBlocksForPagination(aestheticObj, page);
 
         return arenaApiResponse;
     }

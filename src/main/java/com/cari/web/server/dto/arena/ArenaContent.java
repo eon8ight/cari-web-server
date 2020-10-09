@@ -1,11 +1,9 @@
-package com.cari.web.server.dto;
+package com.cari.web.server.dto.arena;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
@@ -43,7 +41,13 @@ public class ArenaContent implements Serializable {
 
     private String description;
 
+    private ArenaSource source;
+
     private ArenaImage image;
+
+    private ArenaEmbed embed;
+
+    private ArenaAttachment attachment;
 
     private String metadata;
 
@@ -71,57 +75,4 @@ public class ArenaContent implements Serializable {
 
     @JsonProperty("connected_by_user_slug")
     private String connectedByUserSlug;
-
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    @NoArgsConstructor
-    private static class ArenaImage implements Serializable {
-
-        private static final long serialVersionUID = 1929060722366533676L;
-
-        private String filename;
-
-        @JsonProperty("content_type")
-        private String contentType;
-
-        @JsonProperty("updated_at")
-        private LocalDateTime updatedAt;
-
-        private ArenaImageScale thumb;
-
-        private ArenaImageScale square;
-
-        private ArenaImageScale display;
-
-        private ArenaImageScale large;
-
-        private ArenaImageOriginalScale original;
-
-        @Getter
-        @Setter
-        @AllArgsConstructor
-        @NoArgsConstructor
-        private static class ArenaImageScale implements Serializable {
-
-            private static final long serialVersionUID = 5591895042955700664L;
-
-            private String url;
-        }
-
-        @Getter
-        @Setter
-        @AllArgsConstructor
-        @NoArgsConstructor
-        private static class ArenaImageOriginalScale extends ArenaImageScale {
-
-            private static final long serialVersionUID = 77895881789592999L;
-
-            @JsonProperty("file_size")
-            private int fileSize;
-
-            @JsonProperty("file_size_display")
-            private String fileSizeDisplay;
-        }
-    }
 }
