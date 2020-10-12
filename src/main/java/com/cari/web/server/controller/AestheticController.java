@@ -1,7 +1,6 @@
 package com.cari.web.server.controller;
 
 import java.util.Map;
-import java.util.MissingResourceException;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.dto.ArenaApiResponse;
 import com.cari.web.server.service.IAestheticService;

@@ -125,8 +125,11 @@ public class CariPage<T> implements Page<T> {
 
         int totalCount =
                 template.query(query, params, (ResultSetExtractor<Integer>) (resultSet -> {
-                    resultSet.next();
-                    return resultSet.getInt("count");
+                    if(resultSet.next()) {
+                        return resultSet.getInt("count");
+                    }
+
+                    return 0;
                 }));
 
         return new CariPage<T>(data, pageNum, totalCount, maxPerPage, sort);
