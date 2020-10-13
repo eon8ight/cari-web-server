@@ -2,7 +2,7 @@ package com.cari.web.server.controller;
 
 import java.util.Map;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.dto.ArenaApiResponse;
+import com.cari.web.server.dto.arena.ArenaApiResponse;
 import com.cari.web.server.service.IAestheticService;
 import com.cari.web.server.service.IArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -11,6 +11,7 @@ import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.CariPage;
 import com.cari.web.server.domain.Media;
 import com.cari.web.server.domain.Website;
+import com.cari.web.server.dto.SimilarAesthetic;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.service.IAestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,7 +117,7 @@ public class AestheticService implements IAestheticService {
 
         List<Media> media = aesthetic.getMedia();
         List<Website> websites = aesthetic.getWebsites();
-        List<Aesthetic> similarAesthetics = aesthetic.getSimilarAesthetics();
+        List<SimilarAesthetic> similarAesthetics = aesthetic.getSimilarAesthetics();
 
         if (media != null && media.size() == 1 && media.get(0) == null) {
             aesthetic.setMedia(null);

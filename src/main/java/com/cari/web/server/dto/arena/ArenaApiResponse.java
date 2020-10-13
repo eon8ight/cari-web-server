@@ -1,8 +1,7 @@
-package com.cari.web.server.dto;
+package com.cari.web.server.dto.arena;
 
 import java.io.Serializable;
 import java.util.List;
-import com.cari.web.server.dto.arena.ArenaContent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

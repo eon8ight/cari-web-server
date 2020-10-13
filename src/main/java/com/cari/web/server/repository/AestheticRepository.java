@@ -26,7 +26,11 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "   select a.*, " +
         "          jsonb_agg(distinct w.*)    as websites, " +
         "          jsonb_agg(distinct m.*)    as media, " +
-        "          jsonb_agg(distinct to_a.*) as similar_aesthetics " +
+        "          jsonb_agg(jsonb_build_object( " +
+        "            'name', to_a.name, " +
+        "            'url_slug', to_a.url_slug, " +
+        "            'description', ar.description " +
+        "          )) as similar_aesthetics " +
         "     from tb_aesthetic a " +
         "left join tb_aesthetic_website aw " +
         "       on a.aesthetic = aw.aesthetic " +

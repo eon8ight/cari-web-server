@@ -4,7 +4,8 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import com.cari.web.server.dto.ArenaApiResponse;
+import com.cari.web.server.dto.SimilarAesthetic;
+import com.cari.web.server.dto.arena.ArenaApiResponse;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
@@ -55,7 +56,7 @@ public class Aesthetic implements Serializable {
     private String mediaSourceUrl;
 
     @Embedded.Empty
-    private List<Aesthetic> similarAesthetics;
+    private List<SimilarAesthetic> similarAesthetics;
 
     @Embedded.Empty
     private List<Media> media;
