@@ -137,7 +137,7 @@ public class AestheticService implements IAestheticService {
 
     @Override
     public Aesthetic find(int aesthetic) {
-        return repository.findById(aesthetic).orElse(null);
+        return repository.findByPk(aesthetic);
     }
 
     private Sort validateAndGetSort(Map<String, String> filters) {

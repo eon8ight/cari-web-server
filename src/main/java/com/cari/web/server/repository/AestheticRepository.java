@@ -1,6 +1,7 @@
 package com.cari.web.server.repository;
 
 import com.cari.web.server.domain.Aesthetic;
+import com.cari.web.server.util.AestheticFindByPkRowMapper;
 import com.cari.web.server.util.AestheticFindByUrlSlugRowMapper;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -52,6 +53,14 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "    where a.url_slug = :urlSlug " +
         " group by a.aesthetic";
 
+    String FIND_BY_PK_QUERY =
+        "select * " +
+        "  from tb_aesthetic " +
+        " where aesthetic = :aesthetic";
+
     @Query(value = FIND_BY_URL_SLUG_QUERY, rowMapperClass = AestheticFindByUrlSlugRowMapper.class)
     Aesthetic findByUrlSlug(@Param("urlSlug") String urlSlug);
+
+    @Query(value = FIND_BY_PK_QUERY, rowMapperClass = AestheticFindByPkRowMapper.class)
+    Aesthetic findByPk(@Param("aesthetic") int aesthetic);
 }

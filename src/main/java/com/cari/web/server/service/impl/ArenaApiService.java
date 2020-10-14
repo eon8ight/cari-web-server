@@ -40,8 +40,8 @@ public class ArenaApiService implements IArenaApiService {
     }
 
     public ArenaApiResponse findBlocksForPagination(Aesthetic aesthetic, int page) {
-        StringBuilder urlBuilder = new StringBuilder(aesthetic.getMediaSourceUrl())
-                .append("?page=1&per=").append(MAX_PER_PAGE);
+        StringBuilder urlBuilder = new StringBuilder(aesthetic.getMediaSourceUrl()).append("?page=")
+                .append(page).append("&per=").append(MAX_PER_PAGE);
 
         return callApi(urlBuilder.toString());
     }
