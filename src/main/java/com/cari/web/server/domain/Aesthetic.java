@@ -43,7 +43,7 @@ public class Aesthetic implements Serializable {
 
     @Column(COLUMN_START_YEAR)
     @JsonAlias({COLUMN_START_YEAR})
-    private int startYear;
+    private Integer startYear;
 
     @Column(COLUMN_END_YEAR)
     @JsonAlias({COLUMN_END_YEAR})
