@@ -27,7 +27,7 @@ public class Aesthetic implements Serializable {
 
     private static final String COLUMN_URL_SLUG = "url_slug";
     private static final String COLUMN_START_YEAR = "start_year";
-    private static final String COLUMN_END_YEAR = "end_year";
+    private static final String COLUMN_PEAK_YEAR = "peak_year";
     private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
 
     @Id
@@ -45,9 +45,9 @@ public class Aesthetic implements Serializable {
     @JsonAlias({COLUMN_START_YEAR})
     private Integer startYear;
 
-    @Column(COLUMN_END_YEAR)
-    @JsonAlias({COLUMN_END_YEAR})
-    private Integer endYear;
+    @Column(COLUMN_PEAK_YEAR)
+    @JsonAlias({COLUMN_PEAK_YEAR})
+    private Integer peakYear;
 
     private String description;
 
@@ -68,11 +68,11 @@ public class Aesthetic implements Serializable {
     private ArenaApiResponse galleryContent;
 
     public static Aesthetic fromResultSet(ResultSet rs, int rowNum) throws SQLException {
-        Integer endYear = null;
-        String endYearString = rs.getString("end_year");
+        Integer peakYear = null;
+        String peakYearString = rs.getString("peak_year");
 
-        if (endYearString != null) {
-            endYear = Integer.parseInt(endYearString);
+        if (peakYearString != null) {
+            peakYear = Integer.parseInt(peakYearString);
         }
 
         Aesthetic aesthetic = new Aesthetic();
@@ -81,7 +81,7 @@ public class Aesthetic implements Serializable {
         aesthetic.setUrlSlug(rs.getString("url_slug"));
         aesthetic.setSymbol(rs.getString("symbol"));
         aesthetic.setStartYear(rs.getInt("start_year"));
-        aesthetic.setEndYear(endYear);
+        aesthetic.setPeakYear(peakYear);
         aesthetic.setDescription(rs.getString("description"));
         aesthetic.setMediaSourceUrl(rs.getString("media_source_url"));
 

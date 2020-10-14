@@ -33,10 +33,10 @@ public class AestheticService implements IAestheticService {
     private static final String FILTER_ASC = "asc";
     private static final String FILTER_KEYWORD = "keyword";
     private static final String FILTER_START_YEAR = "startYear";
-    private static final String FILTER_END_YEAR = "endYear";
+    private static final String FILTER_PEAK_YEAR = "peakYear";
 
     private static final Map<String, String> SORT_FIELDS =
-            Map.of("name", "name", "startYear", "start_year", "endYear", "end_year");
+            Map.of("name", "name", "startYear", "start_year", "peakYear", "peak_year");
 
     @Autowired
     private AestheticRepository repository;
@@ -55,7 +55,7 @@ public class AestheticService implements IAestheticService {
 
         String keyword = filters.get(FILTER_KEYWORD);
         Optional<Integer> startYear = validateAndGetInt(filters, FILTER_START_YEAR);
-        Optional<Integer> endYear = validateAndGetInt(filters, FILTER_END_YEAR);
+        Optional<Integer> peakYear = validateAndGetInt(filters, FILTER_PEAK_YEAR);
 
         List<String> filterClauses = new ArrayList<String>();
 
@@ -72,9 +72,9 @@ public class AestheticService implements IAestheticService {
             params.addValue("startYear", startYear.get().intValue());
         }
 
-        if (endYear.isPresent()) {
-            filterClauses.add("coalesce(end_year, date_part('year', CURRENT_DATE)) <= :endYear");
-            params.addValue("endYear", endYear.get().intValue());
+        if (peakYear.isPresent()) {
+            filterClauses.add("coalesce(peak_year, date_part('year', CURRENT_DATE)) <= :peakYear");
+            params.addValue("peakYear", peakYear.get().intValue());
         }
 
         if (!filterClauses.isEmpty()) {
@@ -144,7 +144,7 @@ public class AestheticService implements IAestheticService {
         String sortField = filters.get(FILTER_SORT_FIELD);
 
         if (sortField == null) {
-            return Sort.by(Sort.Order.asc("startYear"), Sort.Order.asc("endYear"));
+            return Sort.by(Sort.Order.asc("startYear"), Sort.Order.asc("peakYear"));
         } else if (!SORT_FIELDS.containsKey(sortField)) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_SORT_FIELD)
                     .append("` must be one of the following values: ").append(SORT_FIELDS.keySet()
