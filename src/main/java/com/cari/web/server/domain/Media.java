@@ -19,17 +19,16 @@ import lombok.NoArgsConstructor;
 public class Media implements Serializable {
     private static final long serialVersionUID = -4116792078351646162L;
 
-    private static final String COLUMN_PREVIEW_IMAGE_URL = "preview_image_url";
+    private static final String COLUMN_MEDIA_IMAGE = "media_image";
     private static final String COLUMN_MEDIA_CREATOR = "media_creator";
 
     @Id
     private int media;
 
-    private String url;
-
-    @Column(COLUMN_PREVIEW_IMAGE_URL)
-    @JsonAlias({COLUMN_PREVIEW_IMAGE_URL})
-    private String previewImageUrl;
+    @Column(COLUMN_MEDIA_IMAGE)
+    @JsonAlias({COLUMN_MEDIA_IMAGE})
+    @MappedCollection
+    private MediaImage mediaImage;
 
     private String label;
 
