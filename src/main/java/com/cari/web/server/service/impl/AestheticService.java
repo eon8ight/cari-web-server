@@ -9,9 +9,7 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.CariPage;
-import com.cari.web.server.domain.Media;
-import com.cari.web.server.domain.Website;
-import com.cari.web.server.dto.SimilarAesthetic;
+import com.cari.web.server.dto.AestheticName;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.service.IAestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,31 +111,22 @@ public class AestheticService implements IAestheticService {
 
     @Override
     public Aesthetic findByUrlSlug(String urlSlug) {
-        Aesthetic aesthetic = repository.findByUrlSlug(urlSlug);
+        return repository.findByUrlSlug(urlSlug);
+    }
 
-        List<Media> media = aesthetic.getMedia();
-        List<Website> websites = aesthetic.getWebsites();
-        List<SimilarAesthetic> similarAesthetics = aesthetic.getSimilarAesthetics();
-
-        if (media != null && media.size() == 1 && media.get(0) == null) {
-            aesthetic.setMedia(null);
-        }
-
-        if (websites != null && websites.size() == 1 && websites.get(0) == null) {
-            aesthetic.setWebsites(null);
-        }
-
-        if (similarAesthetics != null && similarAesthetics.size() == 1
-                && similarAesthetics.get(0) == null) {
-            aesthetic.setSimilarAesthetics(null);
-        }
-
-        return aesthetic;
+    @Override
+    public Aesthetic findByPk(int aesthetic) {
+        return repository.findByPk(aesthetic);
     }
 
     @Override
     public Aesthetic find(int aesthetic) {
-        return repository.findByPk(aesthetic);
+        return repository.simpleFind(aesthetic);
+    }
+
+    @Override
+    public List<AestheticName> findNames(Optional<String> query) {
+        return repository.findNames(query.orElse(""));
     }
 
     private Sort validateAndGetSort(Map<String, String> filters) {

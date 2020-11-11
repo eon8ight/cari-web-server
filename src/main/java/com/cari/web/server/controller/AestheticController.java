@@ -1,14 +1,15 @@
 package com.cari.web.server.controller;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
+import com.cari.web.server.dto.AestheticName;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
 import com.cari.web.server.service.IAestheticService;
 import com.cari.web.server.service.IArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +24,7 @@ public class AestheticController {
     private IArenaApiService arenaApiService;
 
     @GetMapping("/aesthetic/findForList")
-    public ResponseEntity<Page<Aesthetic>> findAll(@RequestParam Map<String, String> filters) {
+    public Page<Aesthetic> findAll(@RequestParam Map<String, String> filters) {
         Page<Aesthetic> aesthetics = aestheticService.findAll(filters);
 
         aesthetics.forEach(aesthetic -> {
@@ -32,9 +33,7 @@ public class AestheticController {
             aesthetic.setSimilarAesthetics(null);
         });
 
-        ResponseEntity<Page<Aesthetic>> response =
-                ResponseEntity.status(HttpStatus.OK).body(aesthetics);
-        return response;
+        return aesthetics;
     }
 
     @GetMapping("/aesthetic/findForPage/{urlSlug}")
@@ -42,11 +41,18 @@ public class AestheticController {
         Aesthetic aesthetic = aestheticService.findByUrlSlug(urlSlug);
 
         if (aesthetic.getMediaSourceUrl() != null) {
-            ArenaApiResponse galleryContent = arenaApiService.findInitialBlocksForPagination(aesthetic);
+            ArenaApiResponse galleryContent =
+                    arenaApiService.findInitialBlocksForPagination(aesthetic);
+
             aesthetic.setGalleryContent(galleryContent);
         }
 
         return aesthetic;
+    }
+
+    @GetMapping("/aesthetic/findForEdit/{aesthetic}")
+    public Aesthetic find(@PathVariable int aesthetic) {
+        return aestheticService.findByPk(aesthetic);
     }
 
     @GetMapping("/aesthetic/findGalleryContent/{aesthetic}")
@@ -62,5 +68,10 @@ public class AestheticController {
                 arenaApiService.findBlocksForPagination(aestheticObj, page);
 
         return arenaApiResponse;
+    }
+
+    @GetMapping("/aesthetic/names")
+    public List<AestheticName> findNames(@RequestParam Optional<String> query) {
+        return aestheticService.findNames(query);
     }
 }

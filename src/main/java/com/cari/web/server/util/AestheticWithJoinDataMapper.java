@@ -11,10 +11,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.RowMapper;
 
-public class AestheticFindByUrlSlugRowMapper implements RowMapper<Aesthetic> {
+public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
+    private static final Website[] EMPTY_WEBSITES = new Website[] {null};
+    private static final Media[] EMPTY_MEDIA = new Media[] {null};
+
+    private static final SimilarAesthetic[] EMPTY_SIMILAR_AESTHETICS =
+            new SimilarAesthetic[] {null};
+
     public Aesthetic mapRow(ResultSet rs, int rowNum) throws SQLException {
         Aesthetic aesthetic = Aesthetic.fromResultSet(rs, rowNum);
-
         ObjectMapper mapper = new ObjectMapper();
 
         try {
@@ -24,9 +29,17 @@ public class AestheticFindByUrlSlugRowMapper implements RowMapper<Aesthetic> {
             SimilarAesthetic[] similarAesthetics =
                     mapper.readValue(rs.getString("similar_aesthetics"), SimilarAesthetic[].class);
 
-            aesthetic.setWebsites(Arrays.asList(websites));
-            aesthetic.setMedia(Arrays.asList(media));
-            aesthetic.setSimilarAesthetics(Arrays.asList(similarAesthetics));
+            if (!Arrays.equals(EMPTY_WEBSITES, websites)) {
+                aesthetic.setWebsites(Arrays.asList(websites));
+            }
+
+            if (!Arrays.equals(EMPTY_MEDIA, media)) {
+                aesthetic.setMedia(Arrays.asList(media));
+            }
+
+            if (!Arrays.equals(EMPTY_SIMILAR_AESTHETICS, similarAesthetics)) {
+                aesthetic.setSimilarAesthetics(Arrays.asList(similarAesthetics));
+            }
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
