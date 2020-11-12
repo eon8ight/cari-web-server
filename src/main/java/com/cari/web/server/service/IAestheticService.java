@@ -8,11 +8,11 @@ import com.cari.web.server.dto.AestheticName;
 import org.springframework.data.domain.Page;
 
 public interface IAestheticService {
-    Page<Aesthetic> findAll(Map<String, String> filters);
+    Page<Aesthetic> findForList(Map<String, String> filters);
 
-    Aesthetic findByUrlSlug(String urlSlug);
+    Aesthetic findForPage(String urlSlug);
 
-    Aesthetic findByPk(int aesthetic);
+    Aesthetic findForEdit(int aesthetic);
 
     Aesthetic find(int aesthetic);
 

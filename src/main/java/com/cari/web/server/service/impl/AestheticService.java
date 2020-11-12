@@ -43,7 +43,7 @@ public class AestheticService implements IAestheticService {
     private DataSource dbHandle;
 
     @Override
-    public Page<Aesthetic> findAll(Map<String, String> filters) {
+    public Page<Aesthetic> findForList(Map<String, String> filters) {
         StringBuilder queryBuilder =
                 new StringBuilder("select count(*) over (), * from tb_aesthetic ");
 
@@ -110,13 +110,13 @@ public class AestheticService implements IAestheticService {
     }
 
     @Override
-    public Aesthetic findByUrlSlug(String urlSlug) {
-        return repository.findByUrlSlug(urlSlug);
+    public Aesthetic findForPage(String urlSlug) {
+        return repository.findForPage(urlSlug);
     }
 
     @Override
-    public Aesthetic findByPk(int aesthetic) {
-        return repository.findByPk(aesthetic);
+    public Aesthetic findForEdit(int aesthetic) {
+        return repository.findForEdit(aesthetic);
     }
 
     @Override

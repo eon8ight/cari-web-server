@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.RowMapper;
 
 public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
+
     private static final Website[] EMPTY_WEBSITES = new Website[] {null};
     private static final Media[] EMPTY_MEDIA = new Media[] {null};
 

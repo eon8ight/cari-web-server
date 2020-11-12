@@ -24,8 +24,8 @@ public class AestheticController {
     private IArenaApiService arenaApiService;
 
     @GetMapping("/aesthetic/findForList")
-    public Page<Aesthetic> findAll(@RequestParam Map<String, String> filters) {
-        Page<Aesthetic> aesthetics = aestheticService.findAll(filters);
+    public Page<Aesthetic> findForList(@RequestParam Map<String, String> filters) {
+        Page<Aesthetic> aesthetics = aestheticService.findForList(filters);
 
         aesthetics.forEach(aesthetic -> {
             aesthetic.setWebsites(null);
@@ -37,8 +37,8 @@ public class AestheticController {
     }
 
     @GetMapping("/aesthetic/findForPage/{urlSlug}")
-    public Aesthetic find(@PathVariable String urlSlug) {
-        Aesthetic aesthetic = aestheticService.findByUrlSlug(urlSlug);
+    public Aesthetic findForPage(@PathVariable String urlSlug) {
+        Aesthetic aesthetic = aestheticService.findForPage(urlSlug);
 
         if (aesthetic.getMediaSourceUrl() != null) {
             ArenaApiResponse galleryContent =
@@ -51,8 +51,8 @@ public class AestheticController {
     }
 
     @GetMapping("/aesthetic/findForEdit/{aesthetic}")
-    public Aesthetic find(@PathVariable int aesthetic) {
-        return aestheticService.findByPk(aesthetic);
+    public Aesthetic findForEdit(@PathVariable int aesthetic) {
+        return aestheticService.findForEdit(aesthetic);
     }
 
     @GetMapping("/aesthetic/findGalleryContent/{aesthetic}")

@@ -24,4 +24,7 @@ public class SimilarAesthetic implements Serializable {
     private String urlSlug;
 
     private String description;
+
+    @JsonAlias("reverse_description")
+    private String reverseDescription;
 }
