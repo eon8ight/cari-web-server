@@ -8,6 +8,7 @@ import java.util.List;
 import com.cari.web.server.dto.SimilarAesthetic;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("tb_aesthetic")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Aesthetic implements Serializable {
     private static final long serialVersionUID = -3086472542529813307L;
 
@@ -54,12 +56,15 @@ public class Aesthetic implements Serializable {
     private String mediaSourceUrl;
 
     @Transient
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<SimilarAesthetic> similarAesthetics = Collections.emptyList();
 
     @Transient
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Media> media = Collections.emptyList();
 
     @Transient
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Website> websites = Collections.emptyList();
 
     @Transient

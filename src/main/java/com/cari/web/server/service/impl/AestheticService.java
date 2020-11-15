@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.CariPage;
-import com.cari.web.server.dto.AestheticName;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.service.IAestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -125,8 +124,13 @@ public class AestheticService implements IAestheticService {
     }
 
     @Override
-    public List<AestheticName> findNames(Optional<String> query) {
+    public List<Aesthetic> findNames(Optional<String> query) {
         return repository.findNames(query.orElse(""));
+    }
+
+    @Override
+    public String edit(Aesthetic aesthetic) {
+        return null; // TODO
     }
 
     private Sort validateAndGetSort(Map<String, String> filters) {

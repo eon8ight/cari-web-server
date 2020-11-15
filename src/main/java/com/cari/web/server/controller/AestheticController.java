@@ -4,14 +4,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.dto.AestheticName;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
 import com.cari.web.server.service.IAestheticService;
 import com.cari.web.server.service.IArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -71,7 +74,15 @@ public class AestheticController {
     }
 
     @GetMapping("/aesthetic/names")
-    public List<AestheticName> findNames(@RequestParam Optional<String> query) {
+    public List<Aesthetic> findNames(@RequestParam Optional<String> query) {
         return aestheticService.findNames(query);
+    }
+
+    @PostMapping("/aesthetic/edit")
+    public ResponseEntity<String> edit(@RequestBody Aesthetic aesthetic) {
+        String errMsg = aestheticService.edit(aesthetic);
+
+        return StringUtils.isEmpty(errMsg) ? ResponseEntity.ok().build()
+                : ResponseEntity.badRequest().body(errMsg);
     }
 }

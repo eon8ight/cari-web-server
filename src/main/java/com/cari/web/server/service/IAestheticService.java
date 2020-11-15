@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.dto.AestheticName;
 import org.springframework.data.domain.Page;
 
 public interface IAestheticService {
@@ -16,5 +15,7 @@ public interface IAestheticService {
 
     Aesthetic find(int aesthetic);
 
-    List<AestheticName> findNames(Optional<String> query);
+    List<Aesthetic> findNames(Optional<String> query);
+
+    String edit(Aesthetic aesthetic);
 }
