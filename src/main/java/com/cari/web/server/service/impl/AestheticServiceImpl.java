@@ -9,8 +9,15 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.CariPage;
+import com.cari.web.server.domain.MediaCreator;
+import com.cari.web.server.dto.EditResponse;
+import com.cari.web.server.repository.AestheticMediaRepository;
+import com.cari.web.server.repository.AestheticRelationshipRepository;
 import com.cari.web.server.repository.AestheticRepository;
-import com.cari.web.server.service.IAestheticService;
+import com.cari.web.server.repository.AestheticWebsiteRepository;
+import com.cari.web.server.repository.MediaCreatorRepository;
+import com.cari.web.server.repository.WebsiteRepository;
+import com.cari.web.server.service.AestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -21,7 +28,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
 @Service
-public class AestheticService implements IAestheticService {
+public class AestheticServiceImpl implements AestheticService {
 
     private static final int MAX_PER_PAGE = 20;
 
@@ -36,7 +43,22 @@ public class AestheticService implements IAestheticService {
             Map.of("name", "name", "startYear", "start_year", "peakYear", "peak_year");
 
     @Autowired
-    private AestheticRepository repository;
+    private AestheticRepository aestheticRepository;
+
+    @Autowired
+    private AestheticWebsiteRepository aestheticWebsiteRepository;
+
+    @Autowired
+    private AestheticMediaRepository aestheticMediaRepository;
+
+    @Autowired
+    private AestheticRelationshipRepository aestheticRelationshipRepository;
+
+    @Autowired
+    private MediaCreatorRepository mediaCreatorRepository;
+
+    @Autowired
+    private WebsiteRepository websiteRepository;
 
     @Autowired
     private DataSource dbHandle;
@@ -110,27 +132,56 @@ public class AestheticService implements IAestheticService {
 
     @Override
     public Aesthetic findForPage(String urlSlug) {
-        return repository.findForPage(urlSlug);
+        return aestheticRepository.findForPage(urlSlug);
     }
 
     @Override
     public Aesthetic findForEdit(int aesthetic) {
-        return repository.findForEdit(aesthetic);
+        return aestheticRepository.findForEdit(aesthetic);
     }
 
     @Override
     public Aesthetic find(int aesthetic) {
-        return repository.simpleFind(aesthetic);
+        return aestheticRepository.simpleFind(aesthetic);
     }
 
     @Override
     public List<Aesthetic> findNames(Optional<String> query) {
-        return repository.findNames(query.orElse(""));
+        return aestheticRepository.findNames(query.orElse(""));
     }
 
     @Override
-    public String edit(Aesthetic aesthetic) {
-        return null; // TODO
+    public EditResponse createOrUpdate(Aesthetic aesthetic) {
+        int pkAesthetic = aesthetic.getAesthetic();
+
+        aesthetic.getWebsites().forEach(website -> {
+            int pkWebsite = websiteRepository.getOrCreate(website.getUrl(),
+                    website.getWebsiteType().getWebsiteType());
+
+            aestheticWebsiteRepository.createOrUpdate(pkAesthetic, pkWebsite);
+        });
+
+        aesthetic.getSimilarAesthetics().forEach(similarAesthetic -> {
+            int pkSimilarAesthetic = similarAesthetic.getAesthetic();
+
+            aestheticRelationshipRepository.createOrUpdate(pkAesthetic, pkSimilarAesthetic,
+                    similarAesthetic.getDescription(), similarAesthetic.getReverseDescription());
+        });
+
+        aesthetic.getMedia().forEach(media -> {
+            MediaCreator mediaCreator = media.getMediaCreator();
+            Integer pkMediaCreator = mediaCreator.getMediaCreator();
+
+            if (pkMediaCreator == null) {
+                pkMediaCreator = mediaCreatorRepository.getOrCreate(mediaCreator.getName());
+            }
+
+            aestheticMediaRepository.createOrUpdate(pkAesthetic, media.getUrl(),
+                    media.getPreviewImageUrl(), media.getLabel(), media.getDescription(),
+                    pkMediaCreator, media.getYear());
+        });
+
+        return EditResponse.success();
     }
 
     private Sort validateAndGetSort(Map<String, String> filters) {

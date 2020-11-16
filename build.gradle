@@ -36,7 +36,7 @@ dependencies {
 	}
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
-	implementation 'com.google.code.findbugs:jsr305:3.0.2'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 dependencyManagement {

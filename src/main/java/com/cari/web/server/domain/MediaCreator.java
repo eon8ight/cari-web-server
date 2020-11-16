@@ -1,6 +1,7 @@
 package com.cari.web.server.domain;
 
 import java.io.Serializable;
+import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -21,7 +22,8 @@ public class MediaCreator implements Serializable {
     @Id
     @Column(COLUMN_MEDIA_CREATOR)
     @JsonAlias({COLUMN_MEDIA_CREATOR})
-    private int mediaCreator;
+    private Integer mediaCreator;
 
+    @NotNull
     private String name;
 }

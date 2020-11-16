@@ -1,6 +1,8 @@
 package com.cari.web.server.domain;
 
 import java.io.Serializable;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -20,12 +22,15 @@ public class Website implements Serializable {
     private static final String COLUMN_WEBSITE_TYPE = "website_type";
 
     @Id
-    private int website;
+    private Integer website;
 
+    @NotNull
     private String url;
 
     @Column(COLUMN_WEBSITE_TYPE)
     @JsonAlias({COLUMN_WEBSITE_TYPE})
     @MappedCollection
+    @NotNull
+    @Valid
     private WebsiteType websiteType;
 }

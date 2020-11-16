@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
+import com.cari.web.server.dto.EditResponse;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
-import com.cari.web.server.service.IAestheticService;
-import com.cari.web.server.service.IArenaApiService;
+import com.cari.web.server.enums.RequestStatus;
+import com.cari.web.server.service.AestheticService;
+import com.cari.web.server.service.ArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,11 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class AestheticController {
-    @Autowired
-    private IAestheticService aestheticService;
 
     @Autowired
-    private IArenaApiService arenaApiService;
+    private AestheticService aestheticService;
+
+    @Autowired
+    private ArenaApiService arenaApiService;
 
     @GetMapping("/aesthetic/findForList")
     public Page<Aesthetic> findForList(@RequestParam Map<String, String> filters) {
@@ -55,7 +57,8 @@ public class AestheticController {
 
     @GetMapping("/aesthetic/findForEdit/{aesthetic}")
     public Aesthetic findForEdit(@PathVariable int aesthetic) {
-        return aestheticService.findForEdit(aesthetic);
+        Aesthetic rval = aestheticService.findForEdit(aesthetic);
+        return rval;
     }
 
     @GetMapping("/aesthetic/findGalleryContent/{aesthetic}")
@@ -79,10 +82,13 @@ public class AestheticController {
     }
 
     @PostMapping("/aesthetic/edit")
-    public ResponseEntity<String> edit(@RequestBody Aesthetic aesthetic) {
-        String errMsg = aestheticService.edit(aesthetic);
+    public ResponseEntity<EditResponse> edit(@RequestBody Aesthetic aesthetic) {
+        EditResponse response = aestheticService.createOrUpdate(aesthetic);
 
-        return StringUtils.isEmpty(errMsg) ? ResponseEntity.ok().build()
-                : ResponseEntity.badRequest().body(errMsg);
+        ResponseEntity.BodyBuilder responseBuilder =
+                response.getStatus().equals(RequestStatus.SUCCESS) ? ResponseEntity.ok()
+                        : ResponseEntity.badRequest();
+
+        return responseBuilder.body(response);
     }
 }

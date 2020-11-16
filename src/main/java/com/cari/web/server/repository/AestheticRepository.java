@@ -15,23 +15,23 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
     String FIND_FOR_PAGE_QUERY =
         "with tt_website as ( " +
         "  select w.*, " +
-        "         to_jsonb(wt.*) as website_type " +
+        "         jsonb_build_object( " +
+        "           'websiteType', wt.website_type, " +
+        "           'label', wt.label " +
+        "         ) as website_type " +
         "    from tb_website w " +
         "    join tb_website_type wt " +
         "      on w.website_type = wt.website_type " +
         "), tt_media as ( " +
         "     select m.*, " +
-        "            to_jsonb(mi.*) as media_image, " +
         "            to_jsonb(mc.*) as media_creator " +
-        "       from tb_media m " +
-        "       join tb_media_image mi " +
-        "         on m.media_image = mi.media_image " +
+        "       from tb_aesthetic_media m " +
         "  left join tb_media_creator mc " +
         "         on m.media_creator = mc.media_creator" +
         ")" +
         "   select a.*, " +
-        "          jsonb_agg(distinct w.*)    as websites, " +
-        "          jsonb_agg(distinct m.*)    as media, " +
+        "          jsonb_agg(distinct w.*) as websites, " +
+        "          jsonb_agg(distinct m.*) as media, " +
         "          jsonb_agg(distinct case " +
         "            when to_a.aesthetic is not null then " +
         "              jsonb_build_object( " +
@@ -47,10 +47,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "       on a.aesthetic = aw.aesthetic " +
         "left join tt_website w " +
         "       on aw.website = w.website " +
-        "left join tb_aesthetic_media am " +
-        "       on a.aesthetic = am.aesthetic " +
         "left join tt_media m " +
-        "       on am.media = m.media " +
+        "       on a.aesthetic = m.aesthetic " +
         "left join tb_aesthetic_relationship ar " +
         "       on a.aesthetic = ar.from_aesthetic " +
         "left join tb_aesthetic to_a " +
@@ -58,7 +56,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "    where a.url_slug = :urlSlug " +
         " group by a.aesthetic";
 
-    String FIND_FOR_EDIT_QUERY = "with tt_website as ( " +
+    String FIND_FOR_EDIT_QUERY =
+        "with tt_website as ( " +
         "  select aw.aesthetic, " +
         "         w.website, " +
         "         w.url, " +
@@ -69,27 +68,20 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "    join tb_website_type wt " +
         "      on w.website_type = wt.website_type " +
         "), tt_media as ( " +
-        "     select am.aesthetic, " +
-        "            m.media, " +
-        "            m.label, " +
-        "            m.description, " +
-        "            m.year, " +
-        "            jsonb_build_object( " +
-        "              'media_image',       mi.media_image, " +
-        "              'url',               mi.url, " +
-        "              'preview_image_url', mi.preview_image_url " +
-        "            ) as media_image, " +
+        "     select am.aesthetic_media, " +
+        "            am.aesthetic, " +
+        "            am.url, " +
+        "            am.preview_image_url, " +
+        "            am.label, " +
+        "            am.description, " +
+        "            am.year, " +
         "            jsonb_build_object( " +
         "              'media_creator', mc.media_creator, " +
         "              'name',          mc.name " +
         "            ) as media_creator " +
         "       from tb_aesthetic_media am " +
-        "       join tb_media m " +
-        "         on am.media = m.media " +
-        "       join tb_media_image mi " +
-        "         on m.media_image = mi.media_image " +
         "  left join tb_media_creator mc " +
-        "         on m.media_creator = mc.media_creator " +
+        "         on am.media_creator = mc.media_creator " +
         "), tt_relationship as ( " +
         "  select ar.from_aesthetic as this_aesthetic, " +
         "         ar.to_aesthetic as aesthetic, " +

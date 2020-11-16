@@ -5,6 +5,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import com.cari.web.server.dto.SimilarAesthetic;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -31,24 +35,31 @@ public class Aesthetic implements Serializable {
     private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
 
     @Id
-    private int aesthetic;
+    @Column
+    private Integer aesthetic;
 
+    @Column
+    @NotNull
     private String name;
 
     @Column(COLUMN_URL_SLUG)
     @JsonAlias({COLUMN_URL_SLUG})
     private String urlSlug;
 
+    @Pattern(regexp = "^[A-Z][a-z]{1,2}")
     private String symbol;
 
     @Column(COLUMN_START_YEAR)
     @JsonAlias({COLUMN_START_YEAR})
+    @NotBlank
     private Integer startYear;
 
     @Column(COLUMN_PEAK_YEAR)
     @JsonAlias({COLUMN_PEAK_YEAR})
     private Integer peakYear;
 
+    @Column
+    @NotNull
     private String description;
 
     @Column(COLUMN_MEDIA_SOURCE_URL)
@@ -56,12 +67,13 @@ public class Aesthetic implements Serializable {
     private String mediaSourceUrl;
 
     @Transient
+    @Valid
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<SimilarAesthetic> similarAesthetics = Collections.emptyList();
 
     @Transient
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<Media> media = Collections.emptyList();
+    private List<AestheticMedia> media = Collections.emptyList();
 
     @Transient
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

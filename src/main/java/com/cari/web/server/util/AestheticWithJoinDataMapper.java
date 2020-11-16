@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.domain.Media;
+import com.cari.web.server.domain.AestheticMedia;
 import com.cari.web.server.domain.Website;
 import com.cari.web.server.dto.SimilarAesthetic;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.RowMapper;
 public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
 
     private static final Website[] EMPTY_WEBSITES = new Website[] {null};
-    private static final Media[] EMPTY_MEDIA = new Media[] {null};
+    private static final AestheticMedia[] EMPTY_MEDIA = new AestheticMedia[] {null};
 
     private static final SimilarAesthetic[] EMPTY_SIMILAR_AESTHETICS =
             new SimilarAesthetic[] {null};
@@ -25,7 +25,7 @@ public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
 
         try {
             Website[] websites = mapper.readValue(rs.getString("websites"), Website[].class);
-            Media[] media = mapper.readValue(rs.getString("media"), Media[].class);
+            AestheticMedia[] media = mapper.readValue(rs.getString("media"), AestheticMedia[].class);
 
             SimilarAesthetic[] similarAesthetics =
                     mapper.readValue(rs.getString("similar_aesthetics"), SimilarAesthetic[].class);

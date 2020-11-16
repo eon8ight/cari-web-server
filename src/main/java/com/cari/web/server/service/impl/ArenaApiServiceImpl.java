@@ -2,14 +2,14 @@ package com.cari.web.server.service.impl;
 
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
-import com.cari.web.server.service.IArenaApiService;
+import com.cari.web.server.service.ArenaApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-public class ArenaApiService implements IArenaApiService {
+public class ArenaApiServiceImpl implements ArenaApiService {
     private static final int MAX_PER_PAGE = 15;
 
     private ArenaApiResponse callApi(String url) {
