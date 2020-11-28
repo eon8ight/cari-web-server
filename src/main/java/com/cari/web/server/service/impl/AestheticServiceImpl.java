@@ -38,42 +38,9 @@ public class AestheticServiceImpl implements AestheticService {
     private static final String FILTER_START_YEAR = "startYear";
     private static final String FILTER_END_YEAR = "endYear";
 
-    // @formatter:off
-    private static final String SORT_BY_START_YEAR =
-        "case " +
-        "  when start_year ~ '^\\d+$'         then start_year::integer " +
-        "  when lower(start_year) = 'present' then date_part('year', CURRENT_DATE)::integer " +
-        "  else regexp_replace((regexp_split_to_array(start_year, '\\s+(?=\\S*$)'))[2], 's$', '')::integer " +
-        "       + ( " +
-        "           case lower((regexp_split_to_array(start_year, '\\s+(?=\\S*$)'))[1]) " +
-        "             when 'very early' then 1 " +
-        "             when 'early'      then 3 " +
-        "             when 'mid'        then 5 " +
-        "             when 'late'       then 7 " +
-        "             when 'very late'  then 9 " +
-        "           end " +
-        "         ) " +
-        "end ";
-
-    private static final String SORT_BY_END_YEAR =
-        "case " +
-        "  when end_year ~ '^\\d+$'         then end_year::integer " +
-        "  when lower(end_year) = 'present' then date_part('year', CURRENT_DATE)::integer " +
-        "  else regexp_replace((regexp_split_to_array(end_year, '\\s+(?=\\S*$)'))[2], 's$', '')::integer " +
-        "       + ( " +
-        "           case lower((regexp_split_to_array(end_year, '\\s+(?=\\S*$)'))[1]) " +
-        "             when 'very early' then 1 " +
-        "             when 'early'      then 3 " +
-        "             when 'mid'        then 5 " +
-        "             when 'late'       then 7 " +
-        "             when 'very late'  then 9 " +
-        "           end " +
-        "         ) " +
-        "end ";
-    // @formatter:on
-
     private static final Map<String, String> SORT_FIELDS =
-            Map.of("name", "name", "startYear", SORT_BY_START_YEAR, "endYear", SORT_BY_END_YEAR);
+            Map.of("name", "name", "startYear", "fn_get_approximate_start_year(aesthetic)",
+                    "endYear", "fn_get_approximate_end_year(aesthetic)");
 
     @Autowired
     private AestheticRepository aestheticRepository;
@@ -117,12 +84,12 @@ public class AestheticServiceImpl implements AestheticService {
         }
 
         if (startYear.isPresent()) {
-            filterClauses.add("start_year >= :startYear");
+            filterClauses.add("abs(fn_get_approximate_start_year(aesthetic) - :startYear) <= 3");
             params.addValue("startYear", startYear.get().intValue());
         }
 
         if (endYear.isPresent()) {
-            filterClauses.add("coalesce(end_year, date_part('year', CURRENT_DATE)) <= :endYear");
+            filterClauses.add("abs(fn_get_approximate_end_year(aesthetic) - :endYear) <= 3");
             params.addValue("endYear", endYear.get().intValue());
         }
 
