@@ -11,21 +11,25 @@ import org.springframework.stereotype.Repository;
 public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebsite, Integer> {
 
     // @formatter:off
-    String CREATE_OR_UPDATE_QUERY =
+    String GET_OR_CREATE_QUERY =
         "insert into tb_aesthetic_website ( " +
         "  aesthetic, " +
-        "  website " +
+        "  url, " +
+        "  website_type " +
         ") values ( " +
         "  :aesthetic, " +
-        "  :website, " +
+        "  :url, " +
+        "  :websiteType " +
         ") " +
-        "       on conflict ( aesthetic, website ) " +
+        "       on conflict ( aesthetic, url ) " +
         "       do update " +
-        "      set website = EXCLUDED.website " +
-        "returning aesthetic_website";
+        "      set url = EXCLUDED.url, " +
+        "          website_type = EXCLUDED.website_type " +
+        "returning website";
     // @formatter:on
 
     @Modifying
-    @Query(CREATE_OR_UPDATE_QUERY)
-    int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("website") int website);
+    @Query(GET_OR_CREATE_QUERY)
+    int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("url") String url,
+            @Param("websiteType") int websiteType);
 }

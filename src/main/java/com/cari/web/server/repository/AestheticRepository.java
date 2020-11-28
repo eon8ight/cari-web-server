@@ -19,7 +19,7 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "           'websiteType', wt.website_type, " +
         "           'label', wt.label " +
         "         ) as website_type " +
-        "    from tb_website w " +
+        "    from tb_aesthetic_website w " +
         "    join tb_website_type wt " +
         "      on w.website_type = wt.website_type " +
         "), tt_media as ( " +
@@ -43,10 +43,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "              null " +
         "          end) as similar_aesthetics " +
         "     from tb_aesthetic a " +
-        "left join tb_aesthetic_website aw " +
-        "       on a.aesthetic = aw.aesthetic " +
         "left join tt_website w " +
-        "       on aw.website = w.website " +
+        "       on a.aesthetic = w.aesthetic " +
         "left join tt_media m " +
         "       on a.aesthetic = m.aesthetic " +
         "left join tb_aesthetic_relationship ar " +
@@ -58,8 +56,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
 
     String FIND_FOR_EDIT_QUERY =
         "with tt_website as ( " +
-        "  select aw.aesthetic, " +
-        "         w.website, " +
+        "  select aw.aesthetic_website, " +
+        "         aw.aesthetic, " +
         "         w.url, " +
         "         jsonb_build_object('website_type', wt.website_type) as website_type " +
         "    from tb_aesthetic_website aw " +
@@ -97,7 +95,7 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "          a.url_slug, " +
         "          a.symbol, " +
         "          a.start_year, " +
-        "          a.peak_year, " +
+        "          a.end_year, " +
         "          a.description, " +
         "          a.media_source_url, " +
         "          jsonb_pretty(jsonb_agg(distinct to_jsonb(w.*) - 'aesthetic'))      as websites, " +

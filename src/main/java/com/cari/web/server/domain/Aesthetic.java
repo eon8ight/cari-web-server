@@ -18,12 +18,14 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table("tb_aesthetic")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Aesthetic implements Serializable {
@@ -31,7 +33,7 @@ public class Aesthetic implements Serializable {
 
     private static final String COLUMN_URL_SLUG = "url_slug";
     private static final String COLUMN_START_YEAR = "start_year";
-    private static final String COLUMN_PEAK_YEAR = "peak_year";
+    private static final String COLUMN_END_YEAR = "end_year";
     private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
 
     @Id
@@ -52,11 +54,11 @@ public class Aesthetic implements Serializable {
     @Column(COLUMN_START_YEAR)
     @JsonAlias({COLUMN_START_YEAR})
     @NotBlank
-    private Integer startYear;
+    private String startYear;
 
-    @Column(COLUMN_PEAK_YEAR)
-    @JsonAlias({COLUMN_PEAK_YEAR})
-    private Integer peakYear;
+    @Column(COLUMN_END_YEAR)
+    @JsonAlias({COLUMN_END_YEAR})
+    private String endYear;
 
     @Column
     @NotNull
@@ -69,44 +71,34 @@ public class Aesthetic implements Serializable {
     @Transient
     @Valid
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Builder.Default
     private List<SimilarAesthetic> similarAesthetics = Collections.emptyList();
 
     @Transient
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @Builder.Default
     private List<AestheticMedia> media = Collections.emptyList();
 
     @Transient
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<Website> websites = Collections.emptyList();
+    @Builder.Default
+    private List<AestheticWebsite> websites = Collections.emptyList();
 
     @Transient
     private ArenaApiResponse galleryContent;
 
     public static Aesthetic fromResultSet(ResultSet rs, int rowNum) throws SQLException {
-        Integer startYear = null;
-        Integer peakYear = null;
-
-        String startYearString = rs.getString("start_year");
-        String peakYearString = rs.getString("peak_year");
-
-        if(startYearString != null) {
-            startYear = Integer.parseInt(startYearString);
-        }
-
-        if (peakYearString != null) {
-            peakYear = Integer.parseInt(peakYearString);
-        }
-
-        Aesthetic aesthetic = new Aesthetic();
-        aesthetic.setAesthetic(rs.getInt("aesthetic"));
-        aesthetic.setName(rs.getString("name"));
-        aesthetic.setUrlSlug(rs.getString("url_slug"));
-        aesthetic.setSymbol(rs.getString("symbol"));
-        aesthetic.setStartYear(startYear);
-        aesthetic.setPeakYear(peakYear);
-        aesthetic.setDescription(rs.getString("description"));
-        aesthetic.setMediaSourceUrl(rs.getString("media_source_url"));
-
-        return aesthetic;
+        // @formatter:off
+        return Aesthetic.builder()
+            .aesthetic(rs.getInt("aesthetic"))
+            .name(rs.getString("name"))
+            .urlSlug(rs.getString("url_slug"))
+            .symbol(rs.getString("symbol"))
+            .startYear(rs.getString("start_year"))
+            .endYear(rs.getString("end_year"))
+            .description(rs.getString("description"))
+            .mediaSourceUrl(rs.getString("media_source_url"))
+            .build();
+        // @formatter:on
     }
 }

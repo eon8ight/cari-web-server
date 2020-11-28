@@ -16,7 +16,6 @@ import com.cari.web.server.repository.AestheticRelationshipRepository;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.repository.AestheticWebsiteRepository;
 import com.cari.web.server.repository.MediaCreatorRepository;
-import com.cari.web.server.repository.WebsiteRepository;
 import com.cari.web.server.service.AestheticService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,10 +36,44 @@ public class AestheticServiceImpl implements AestheticService {
     private static final String FILTER_ASC = "asc";
     private static final String FILTER_KEYWORD = "keyword";
     private static final String FILTER_START_YEAR = "startYear";
-    private static final String FILTER_PEAK_YEAR = "peakYear";
+    private static final String FILTER_END_YEAR = "endYear";
+
+    // @formatter:off
+    private static final String SORT_BY_START_YEAR =
+        "case " +
+        "  when start_year ~ '^\\d+$'         then start_year::integer " +
+        "  when lower(start_year) = 'present' then date_part('year', CURRENT_DATE)::integer " +
+        "  else regexp_replace((regexp_split_to_array(start_year, '\\s+(?=\\S*$)'))[2], 's$', '')::integer " +
+        "       + ( " +
+        "           case lower((regexp_split_to_array(start_year, '\\s+(?=\\S*$)'))[1]) " +
+        "             when 'very early' then 1 " +
+        "             when 'early'      then 3 " +
+        "             when 'mid'        then 5 " +
+        "             when 'late'       then 7 " +
+        "             when 'very late'  then 9 " +
+        "           end " +
+        "         ) " +
+        "end ";
+
+    private static final String SORT_BY_END_YEAR =
+        "case " +
+        "  when end_year ~ '^\\d+$'         then end_year::integer " +
+        "  when lower(end_year) = 'present' then date_part('year', CURRENT_DATE)::integer " +
+        "  else regexp_replace((regexp_split_to_array(end_year, '\\s+(?=\\S*$)'))[2], 's$', '')::integer " +
+        "       + ( " +
+        "           case lower((regexp_split_to_array(end_year, '\\s+(?=\\S*$)'))[1]) " +
+        "             when 'very early' then 1 " +
+        "             when 'early'      then 3 " +
+        "             when 'mid'        then 5 " +
+        "             when 'late'       then 7 " +
+        "             when 'very late'  then 9 " +
+        "           end " +
+        "         ) " +
+        "end ";
+    // @formatter:on
 
     private static final Map<String, String> SORT_FIELDS =
-            Map.of("name", "name", "startYear", "start_year", "peakYear", "peak_year");
+            Map.of("name", "name", "startYear", SORT_BY_START_YEAR, "endYear", SORT_BY_END_YEAR);
 
     @Autowired
     private AestheticRepository aestheticRepository;
@@ -58,9 +91,6 @@ public class AestheticServiceImpl implements AestheticService {
     private MediaCreatorRepository mediaCreatorRepository;
 
     @Autowired
-    private WebsiteRepository websiteRepository;
-
-    @Autowired
     private DataSource dbHandle;
 
     @Override
@@ -74,7 +104,7 @@ public class AestheticServiceImpl implements AestheticService {
 
         String keyword = filters.get(FILTER_KEYWORD);
         Optional<Integer> startYear = validateAndGetInt(filters, FILTER_START_YEAR);
-        Optional<Integer> peakYear = validateAndGetInt(filters, FILTER_PEAK_YEAR);
+        Optional<Integer> endYear = validateAndGetInt(filters, FILTER_END_YEAR);
 
         List<String> filterClauses = new ArrayList<String>();
 
@@ -91,9 +121,9 @@ public class AestheticServiceImpl implements AestheticService {
             params.addValue("startYear", startYear.get().intValue());
         }
 
-        if (peakYear.isPresent()) {
-            filterClauses.add("coalesce(peak_year, date_part('year', CURRENT_DATE)) <= :peakYear");
-            params.addValue("peakYear", peakYear.get().intValue());
+        if (endYear.isPresent()) {
+            filterClauses.add("coalesce(end_year, date_part('year', CURRENT_DATE)) <= :endYear");
+            params.addValue("endYear", endYear.get().intValue());
         }
 
         if (!filterClauses.isEmpty()) {
@@ -154,12 +184,14 @@ public class AestheticServiceImpl implements AestheticService {
     public EditResponse createOrUpdate(Aesthetic aesthetic) {
         int pkAesthetic = aesthetic.getAesthetic();
 
-        aesthetic.getWebsites().forEach(website -> {
-            int pkWebsite = websiteRepository.getOrCreate(website.getUrl(),
-                    website.getWebsiteType().getWebsiteType());
+        // remove aesthetic websites not in payload
 
-            aestheticWebsiteRepository.createOrUpdate(pkAesthetic, pkWebsite);
+        aesthetic.getWebsites().forEach(website -> {
+            aestheticWebsiteRepository.createOrUpdate(pkAesthetic, website.getUrl(),
+                    website.getWebsiteType().getWebsiteType());
         });
+
+        // remove relationships not in payload
 
         aesthetic.getSimilarAesthetics().forEach(similarAesthetic -> {
             int pkSimilarAesthetic = similarAesthetic.getAesthetic();
@@ -167,6 +199,8 @@ public class AestheticServiceImpl implements AestheticService {
             aestheticRelationshipRepository.createOrUpdate(pkAesthetic, pkSimilarAesthetic,
                     similarAesthetic.getDescription(), similarAesthetic.getReverseDescription());
         });
+
+        // remove media not in payload
 
         aesthetic.getMedia().forEach(media -> {
             MediaCreator mediaCreator = media.getMediaCreator();
@@ -188,7 +222,7 @@ public class AestheticServiceImpl implements AestheticService {
         String sortField = filters.get(FILTER_SORT_FIELD);
 
         if (sortField == null) {
-            return Sort.by(Sort.Order.asc("startYear"), Sort.Order.asc("peakYear"));
+            return Sort.by(Sort.Order.asc("startYear"), Sort.Order.asc("endYear"));
         } else if (!SORT_FIELDS.containsKey(sortField)) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_SORT_FIELD)
                     .append("` must be one of the following values: ").append(SORT_FIELDS.keySet()
