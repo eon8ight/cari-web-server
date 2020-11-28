@@ -106,9 +106,14 @@ public class AestheticServiceImpl implements AestheticService {
         Sort sort = validateAndGetSort(filters);
 
         if (sort.isSorted()) {
-            String orderByParts = sort.toList().stream().map(sortOrder -> SORT_FIELDS
-                    .get(sortOrder.getProperty())
-                    + (sortOrder.getDirection().equals(Sort.Direction.ASC) ? " asc " : " desc "))
+            String orderByParts = sort
+                    .toList().stream().map(
+                            sortOrder -> SORT_FIELDS.get(sortOrder.getProperty())
+                                    + (sortOrder.getDirection()
+                                            .equals(Sort.Direction.ASC) ? " asc " : " desc ")
+                                    + " nulls "
+                                    + (sortOrder.getNullHandling().equals(
+                                            Sort.NullHandling.NULLS_FIRST) ? " first " : " last "))
                     .collect(Collectors.joining(", "));
 
             queryBuilder.append("order by ").append(orderByParts);
@@ -189,7 +194,8 @@ public class AestheticServiceImpl implements AestheticService {
         String sortField = filters.get(FILTER_SORT_FIELD);
 
         if (sortField == null) {
-            return Sort.by(Sort.Order.asc("startYear"), Sort.Order.asc("endYear"));
+            return Sort.by(Sort.Order.asc("startYear").nullsLast(),
+                    Sort.Order.asc("endYear").nullsLast());
         } else if (!SORT_FIELDS.containsKey(sortField)) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_SORT_FIELD)
                     .append("` must be one of the following values: ").append(SORT_FIELDS.keySet()

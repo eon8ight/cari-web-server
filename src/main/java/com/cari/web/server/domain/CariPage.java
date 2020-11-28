@@ -103,7 +103,7 @@ public class CariPage<T> implements Page<T> {
 
     @Override
     public int getTotalPages() {
-        return (int) Math.ceil(totalCount / maxPerPage) + 1;
+        return (int) Math.ceil(totalCount / maxPerPage);
     }
 
     @Override
