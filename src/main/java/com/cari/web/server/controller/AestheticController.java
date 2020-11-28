@@ -4,18 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.dto.EditResponse;
 import com.cari.web.server.dto.arena.ArenaApiResponse;
-import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.service.AestheticService;
 import com.cari.web.server.service.ArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -81,7 +76,8 @@ public class AestheticController {
         return aestheticService.findNames(query);
     }
 
-    @PostMapping("/aesthetic/edit")
+    /*
+    @PutMapping("/aesthetic/edit")
     public ResponseEntity<EditResponse> edit(@RequestBody Aesthetic aesthetic) {
         EditResponse response = aestheticService.createOrUpdate(aesthetic);
 
@@ -91,4 +87,5 @@ public class AestheticController {
 
         return responseBuilder.body(response);
     }
+    */
 }
