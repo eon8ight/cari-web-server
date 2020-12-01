@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -153,28 +154,45 @@ public class AestheticServiceImpl implements AestheticService {
     }
 
     @Override
+    @Transactional
     public EditResponse createOrUpdate(Aesthetic aesthetic) {
+        /*
+         * TODO:
+         * 1. Validate name not in use
+         * 2. Validate symbol not in use
+         */
+
+        String urlSlug = aesthetic.getName().toLowerCase().strip()
+                .replaceAll("[^a-zA-Z0-9-\\s]", "").replaceAll("\\s+", "-");
+
+        aesthetic.setUrlSlug(urlSlug);
         int pkAesthetic = aesthetic.getAesthetic();
 
-        // remove aesthetic websites not in payload
+        List<Integer> pkWebsites = aesthetic.getWebsites().stream()
+                .map(website -> aestheticWebsiteRepository.createOrUpdate(pkAesthetic,
+                        website.getUrl(), website.getWebsiteType().getWebsiteType()))
+                .collect(Collectors.toList());
 
-        aesthetic.getWebsites().forEach(website -> {
-            aestheticWebsiteRepository.createOrUpdate(pkAesthetic, website.getUrl(),
-                    website.getWebsiteType().getWebsiteType());
-        });
+        if (pkWebsites.isEmpty()) {
+            aestheticWebsiteRepository.deleteByAesthetic(pkAesthetic);
+        } else {
+            aestheticWebsiteRepository.deleteByAestheticExcept(pkAesthetic, pkWebsites);
+        }
 
-        // remove relationships not in payload
+        List<Integer> pkAestheticRelationships = aesthetic.getSimilarAesthetics().stream()
+                .map(similarAesthetic -> aestheticRelationshipRepository.createOrUpdate(pkAesthetic,
+                        similarAesthetic.getAesthetic(), similarAesthetic.getDescription(),
+                        similarAesthetic.getReverseDescription()))
+                .flatMap(List::stream).collect(Collectors.toList());
 
-        aesthetic.getSimilarAesthetics().forEach(similarAesthetic -> {
-            int pkSimilarAesthetic = similarAesthetic.getAesthetic();
+        if (pkAestheticRelationships.isEmpty()) {
+            aestheticRelationshipRepository.deleteByAesthetic(pkAesthetic);
+        } else {
+            aestheticRelationshipRepository.deleteByAestheticExcept(pkAesthetic,
+                    pkAestheticRelationships);
+        }
 
-            aestheticRelationshipRepository.createOrUpdate(pkAesthetic, pkSimilarAesthetic,
-                    similarAesthetic.getDescription(), similarAesthetic.getReverseDescription());
-        });
-
-        // remove media not in payload
-
-        aesthetic.getMedia().forEach(media -> {
+        List<Integer> pkMedia = aesthetic.getMedia().stream().map(media -> {
             MediaCreator mediaCreator = media.getMediaCreator();
             Integer pkMediaCreator = mediaCreator.getMediaCreator();
 
@@ -182,11 +200,18 @@ public class AestheticServiceImpl implements AestheticService {
                 pkMediaCreator = mediaCreatorRepository.getOrCreate(mediaCreator.getName());
             }
 
-            aestheticMediaRepository.createOrUpdate(pkAesthetic, media.getUrl(),
+            return aestheticMediaRepository.createOrUpdate(pkAesthetic, media.getUrl(),
                     media.getPreviewImageUrl(), media.getLabel(), media.getDescription(),
                     pkMediaCreator, media.getYear());
-        });
+        }).collect(Collectors.toList());
 
+        if (pkMedia.isEmpty()) {
+            aestheticMediaRepository.deleteByAesthetic(pkAesthetic);
+        } else {
+            aestheticMediaRepository.deleteByAestheticExcept(pkAesthetic, pkMedia);
+        }
+
+        aestheticRepository.save(aesthetic);
         return EditResponse.success();
     }
 

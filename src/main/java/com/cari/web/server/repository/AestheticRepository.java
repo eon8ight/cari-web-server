@@ -58,13 +58,11 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "with tt_website as ( " +
         "  select aw.aesthetic_website, " +
         "         aw.aesthetic, " +
-        "         w.url, " +
+        "         aw.url, " +
         "         jsonb_build_object('website_type', wt.website_type) as website_type " +
         "    from tb_aesthetic_website aw " +
-        "    join tb_website w " +
-        "      on aw.website = w.website " +
         "    join tb_website_type wt " +
-        "      on w.website_type = wt.website_type " +
+        "      on aw.website_type = wt.website_type " +
         "), tt_media as ( " +
         "     select am.aesthetic_media, " +
         "            am.aesthetic, " +

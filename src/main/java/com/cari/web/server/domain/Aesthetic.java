@@ -70,17 +70,14 @@ public class Aesthetic implements Serializable {
 
     @Transient
     @Valid
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @Builder.Default
     private List<SimilarAesthetic> similarAesthetics = Collections.emptyList();
 
     @Transient
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @Builder.Default
     private List<AestheticMedia> media = Collections.emptyList();
 
     @Transient
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @Builder.Default
     private List<AestheticWebsite> websites = Collections.emptyList();
 
