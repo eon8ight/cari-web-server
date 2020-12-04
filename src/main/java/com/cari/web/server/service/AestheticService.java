@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.dto.EditResponse;
+import com.cari.web.server.dto.response.EditResponse;
 import org.springframework.data.domain.Page;
 
 public interface AestheticService {

@@ -1,4 +1,4 @@
-package com.cari.web.server.dto.arena;
+package com.cari.web.server.dto.response.arena;
 
 import java.io.Serializable;
 import java.util.List;

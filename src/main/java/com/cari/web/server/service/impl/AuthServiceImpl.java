@@ -3,18 +3,17 @@ package com.cari.web.server.service.impl;
 import java.util.Arrays;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.Entity;
-import com.cari.web.server.dto.ClientRequestEntity;
+import com.cari.web.server.dto.request.ClientRequestEntity;
+import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -32,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private EntityRepository entityRepository;
 
     @Override
-    public String login(ClientRequestEntity clientRequestEntity) {
+    public AuthResponse login(ClientRequestEntity clientRequestEntity) {
         String username = clientRequestEntity.getUsername();
 
         try {
@@ -40,26 +39,48 @@ public class AuthServiceImpl implements AuthService {
                     clientRequestEntity.getPassword(),
                     Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER))));
 
-            Entity entity = entityRepository.findByUsername(username);
-            return jwtProvider.createToken(entity);
+            Entity entity = entityRepository.findByUsernameOrEmailAddress(username);
+            String jwt = jwtProvider.createToken(entity);
+            return AuthResponse.success(jwt);
         } catch (AuthenticationException ex) {
-            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, ex.getLocalizedMessage());
+            String message = ex.getLocalizedMessage();
+
+            if (message.equals("Bad credentials")) {
+                message = "Password is incorrect.";
+            }
+
+            return AuthResponse.failure(message);
         }
     }
 
     @Override
-    public String register(ClientRequestEntity clientRequestEntity) {
+    public AuthResponse register(ClientRequestEntity clientRequestEntity) {
+        String emailAddress = clientRequestEntity.getEmailAddress();
         String username = clientRequestEntity.getUsername();
+
+        Entity entityWithEmailAddress = entityRepository.findByEmailAddress(emailAddress);
+
+        if (entityWithEmailAddress != null) {
+            return AuthResponse.failure("Email address is already in use.");
+        }
+
+        Entity entityWithUsername = entityRepository.findByUsername(username);
+
+        if (entityWithUsername != null) {
+            return AuthResponse.failure("Username is already in use.");
+        }
 
         // @formatter:off
         Entity entity = Entity.builder()
             .username(username)
-            .emailAddress(clientRequestEntity.getEmailAddress())
+            .emailAddress(emailAddress)
             .passwordHash(passwordEncoder.encode(clientRequestEntity.getPassword()))
             .build();
         // @formatter:on
 
         entityRepository.save(entity);
-        return jwtProvider.createToken(entity);
+        String jwt = jwtProvider.createToken(entity);
+
+        return AuthResponse.success(jwt);
     }
 }

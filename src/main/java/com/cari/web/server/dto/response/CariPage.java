@@ -1,4 +1,4 @@
-package com.cari.web.server.domain;
+package com.cari.web.server.dto.response;
 
 import java.util.Iterator;
 import java.util.List;

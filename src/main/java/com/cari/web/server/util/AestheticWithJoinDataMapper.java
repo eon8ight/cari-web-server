@@ -6,7 +6,7 @@ import java.util.Arrays;
 import com.cari.web.server.domain.Aesthetic;
 import com.cari.web.server.domain.AestheticMedia;
 import com.cari.web.server.domain.AestheticWebsite;
-import com.cari.web.server.dto.SimilarAesthetic;
+import com.cari.web.server.domain.SimilarAesthetic;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.RowMapper;

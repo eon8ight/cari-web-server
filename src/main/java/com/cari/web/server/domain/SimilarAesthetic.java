@@ -1,4 +1,4 @@
-package com.cari.web.server.dto;
+package com.cari.web.server.domain;
 
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;

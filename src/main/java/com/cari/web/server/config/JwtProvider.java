@@ -1,10 +1,12 @@
 package com.cari.web.server.config;
 
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.domain.Entity;
+import com.cari.web.server.service.impl.CariUserDetailsService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import io.jsonwebtoken.Claims;
@@ -36,7 +38,7 @@ public class JwtProvider {
     private long expireLength;
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private CariUserDetailsService userDetailsService;
 
     @PostConstruct
     protected void init() {
@@ -58,17 +60,17 @@ public class JwtProvider {
         // @formatter:on
     }
 
-    public String getUsername(String token) {
+    public Authentication getAuthentication(String token) {
         JwtParser jwtParser = createJwtParser();
         Jws<Claims> jwsClaims = jwtParser.parseClaimsJws(token);
+
         Claims claims = jwsClaims.getBody();
+        int pkEntity = Integer.parseInt(claims.getSubject());
 
-        return claims.getSubject();
-    }
+        UserDetails userDetails = userDetailsService.loadByEntity(pkEntity);
 
-    public Authentication getAuthentication(String token) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(getUsername(token));
-        return new UsernamePasswordAuthenticationToken(userDetails, "");
+        return new UsernamePasswordAuthenticationToken(userDetails, "",
+                Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER)));
     }
 
     public String createToken(Entity entity) {
@@ -83,6 +85,7 @@ public class JwtProvider {
             .setClaims(claims)
             .setIssuedAt(iat)
             .setExpiration(exp)
+            .setNotBefore(iat)
             .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)))
             .serializeToJsonWith(new GsonSerializer<>(gson))
             .compact();

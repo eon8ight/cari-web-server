@@ -1,7 +1,7 @@
 package com.cari.web.server.service.impl;
 
 import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.dto.arena.ArenaApiResponse;
+import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.cari.web.server.service.ArenaApiService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

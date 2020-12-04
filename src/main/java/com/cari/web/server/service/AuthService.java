@@ -1,10 +1,11 @@
 package com.cari.web.server.service;
 
-import com.cari.web.server.dto.ClientRequestEntity;
+import com.cari.web.server.dto.request.ClientRequestEntity;
+import com.cari.web.server.dto.response.AuthResponse;
 
 public interface AuthService {
 
-    String login(ClientRequestEntity clientRequestEntity);
+    AuthResponse login(ClientRequestEntity clientRequestEntity);
 
-    String register(ClientRequestEntity clientRequestEntity);
+    AuthResponse register(ClientRequestEntity clientRequestEntity);
 }

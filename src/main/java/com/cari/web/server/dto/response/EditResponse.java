@@ -1,4 +1,4 @@
-package com.cari.web.server.dto;
+package com.cari.web.server.dto.response;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -21,11 +21,20 @@ public class EditResponse implements Serializable {
     private List<FieldError> errors = Collections.emptyList();
 
     public static EditResponse success() {
-        return EditResponse.builder().status(RequestStatus.SUCCESS).build();
+        // @formatter:off
+        return EditResponse.builder()
+            .status(RequestStatus.SUCCESS)
+            .build();
+        // @formatter:on
     }
 
     public static EditResponse failure(FieldError... fieldErrors) {
-        return EditResponse.builder().status(RequestStatus.FAILURE)
-                .errors(Arrays.asList(fieldErrors)).build();
+        // @formatter:off
+        return EditResponse
+            .builder()
+            .status(RequestStatus.FAILURE)
+            .errors(Arrays.asList(fieldErrors))
+            .build();
+        // @formatter:on
     }
 }

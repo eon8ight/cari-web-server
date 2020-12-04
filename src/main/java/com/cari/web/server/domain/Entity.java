@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,4 +43,18 @@ public class Entity implements Serializable {
     @JsonAlias({COLUMN_PASSWORD_HASH})
     @NotNull
     private String passwordHash;
+
+    public UserDetails toUserDetails() {
+        // @formatter:off
+        return User
+            .withUsername(Integer.toString(entity))
+            .password(passwordHash)
+            .accountExpired(false)
+            .accountLocked(false)
+            .credentialsExpired(false)
+            .disabled(false)
+            .roles(Entity.ROLE_USER)
+            .build();
+        // @formatter:on
+    }
 }

@@ -1,4 +1,4 @@
-package com.cari.web.server.dto;
+package com.cari.web.server.dto.request;
 
 import java.io.Serializable;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,8 @@
-package com.cari.web.server.dto.arena;
+package com.cari.web.server.dto.response.arena;
 
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,23 +13,16 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ArenaAttachment implements Serializable {
+@JsonInclude(Include.NON_NULL)
+public class ArenaImageScale implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5591895042955700664L;
 
-    @JsonProperty("file_name")
-    private String fileName;
+    private String url;
 
     @JsonProperty("file_size")
     private int fileSize;
 
     @JsonProperty("file_size_display")
     private String fileSizeDisplay;
-
-    @JsonProperty("content_type")
-    private String contentType;
-
-    private String extension;
-
-    private String url;
 }
