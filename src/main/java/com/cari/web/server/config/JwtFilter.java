@@ -30,7 +30,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } catch (HttpClientErrorException ex) {
             SecurityContextHolder.clearContext();
-            response.sendError(ex.getRawStatusCode(), ex.getLocalizedMessage());
         }
 
         filterChain.doFilter(request, response);

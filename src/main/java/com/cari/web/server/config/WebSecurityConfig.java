@@ -56,8 +56,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .accessDeniedHandler((request, response, accessDeniedException) -> response
                     .sendError(401, accessDeniedException.getLocalizedMessage()))
                 .and()
-            .apply(new JwtFilterConfigurer(jwtProvider))
-                .and();
+            .apply(new JwtFilterConfigurer(jwtProvider));
         // @formatter:on
     }
 
@@ -65,6 +64,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsAllowedOrigins);
+        configuration.setAllowCredentials(true);
 
         configuration.setAllowedMethods(
                 Arrays.asList(HttpMethod.GET.name(), HttpMethod.HEAD.name(), HttpMethod.POST.name(),

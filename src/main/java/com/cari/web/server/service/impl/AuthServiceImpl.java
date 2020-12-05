@@ -44,12 +44,14 @@ public class AuthServiceImpl implements AuthService {
             return AuthResponse.success(jwt);
         } catch (AuthenticationException ex) {
             String message = ex.getLocalizedMessage();
+            String field = "username";
 
             if (message.equals("Bad credentials")) {
                 message = "Password is incorrect.";
+                field = "password";
             }
 
-            return AuthResponse.failure(message);
+            return AuthResponse.failure(message, field);
         }
     }
 

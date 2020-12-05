@@ -16,7 +16,9 @@ public class AuthResponse implements Serializable {
 
     private String message;
 
-    private String token;
+    private transient String token;
+
+    private String field;
 
     public static AuthResponse success(String token) {
         // @formatter:off
@@ -28,10 +30,15 @@ public class AuthResponse implements Serializable {
     }
 
     public static AuthResponse failure(String message) {
+        return failure(message, null);
+    }
+
+    public static AuthResponse failure(String message, String field) {
         // @formatter:off
         return AuthResponse.builder()
             .status(RequestStatus.FAILURE)
             .message(message)
+            .field(field)
             .build();
         // @formatter:on
     }

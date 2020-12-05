@@ -3,7 +3,9 @@ package com.cari.web.server.config;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Optional;
 import javax.annotation.PostConstruct;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.domain.Entity;
 import com.cari.web.server.service.impl.CariUserDetailsService;
@@ -93,10 +95,17 @@ public class JwtProvider {
     }
 
     public String resolveToken(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
+        Cookie[] cookies = request.getCookies();
 
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            return authorization.substring(7);
+        if (cookies == null) {
+            return null;
+        }
+
+        Optional<Cookie> sessionTokenCookie = Arrays.stream(cookies)
+                .filter(cookie -> cookie.getName().equals("sessionToken")).findFirst();
+
+        if (sessionTokenCookie.isPresent()) {
+            return sessionTokenCookie.get().getValue();
         }
 
         return null;
