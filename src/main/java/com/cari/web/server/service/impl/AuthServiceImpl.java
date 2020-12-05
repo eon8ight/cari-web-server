@@ -5,6 +5,7 @@ import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
+import com.cari.web.server.dto.response.CariFieldError;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,9 +20,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtProvider jwtProvider;
@@ -51,38 +48,8 @@ public class AuthServiceImpl implements AuthService {
                 field = "password";
             }
 
-            return AuthResponse.failure(message, field);
+            CariFieldError fieldError = new CariFieldError(field, message);
+            return AuthResponse.failure(Arrays.asList(fieldError));
         }
-    }
-
-    @Override
-    public AuthResponse register(ClientRequestEntity clientRequestEntity) {
-        String emailAddress = clientRequestEntity.getEmailAddress();
-        String username = clientRequestEntity.getUsername();
-
-        Entity entityWithEmailAddress = entityRepository.findByEmailAddress(emailAddress);
-
-        if (entityWithEmailAddress != null) {
-            return AuthResponse.failure("Email address is already in use.");
-        }
-
-        Entity entityWithUsername = entityRepository.findByUsername(username);
-
-        if (entityWithUsername != null) {
-            return AuthResponse.failure("Username is already in use.");
-        }
-
-        // @formatter:off
-        Entity entity = Entity.builder()
-            .username(username)
-            .emailAddress(emailAddress)
-            .passwordHash(passwordEncoder.encode(clientRequestEntity.getPassword()))
-            .build();
-        // @formatter:on
-
-        entityRepository.save(entity);
-        String jwt = jwtProvider.createToken(entity);
-
-        return AuthResponse.success(jwt);
     }
 }

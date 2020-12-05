@@ -50,16 +50,6 @@ public class AuthController {
         return response;
     }
 
-    @PostMapping("/auth/register")
-    public ResponseEntity<AuthResponse> register(
-            @RequestBody ClientRequestEntity clientRequestEntity) {
-        AuthResponse res = authService.register(clientRequestEntity);
-        HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.FORBIDDEN
-                : HttpStatus.OK;
-
-        return new ResponseEntity<>(res, status);
-    }
-
     @GetMapping("/auth/checkSession")
     public ResponseEntity<Boolean> checkSession() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
