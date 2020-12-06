@@ -21,6 +21,10 @@ public class AuthResponse implements Serializable {
 
     private List<CariFieldError> fieldErrors;
 
+    public static AuthResponse success() {
+        return success(null);
+    }
+
     public static AuthResponse success(String token) {
         // @formatter:off
         return AuthResponse.builder()

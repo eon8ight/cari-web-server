@@ -3,6 +3,7 @@ package com.cari.web.server.config;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
@@ -33,6 +34,9 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtProvider {
 
+    public static final String TYPE_SESSION_TOKEN = "sessionToken";
+    public static final String TYPE_CONFIRM_TOKEN = "confirmToken";
+
     @Value("${security.jwt.token.secret-key}")
     private String secretKey;
 
@@ -62,24 +66,39 @@ public class JwtProvider {
         // @formatter:on
     }
 
-    public Authentication getAuthentication(String token) {
+    public int getEntityFromToken(String token) {
         JwtParser jwtParser = createJwtParser();
         Jws<Claims> jwsClaims = jwtParser.parseClaimsJws(token);
-
         Claims claims = jwsClaims.getBody();
-        int pkEntity = Integer.parseInt(claims.getSubject());
+        return Integer.parseInt(claims.getSubject());
+    }
 
+    public Authentication getAuthentication(String token) {
+        int pkEntity = getEntityFromToken(token);
         UserDetails userDetails = userDetailsService.loadByEntity(pkEntity);
 
         return new UsernamePasswordAuthenticationToken(userDetails, "",
                 Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER)));
     }
 
-    public String createToken(Entity entity) {
+    public String createSessionToken(Entity entity, Map<String, ?> payload) {
+        return createToken(entity, TYPE_SESSION_TOKEN, payload);
+    }
+
+    public String createConfirmToken(Entity entity, Map<String, ?> payload) {
+        return createToken(entity, TYPE_CONFIRM_TOKEN, payload);
+    }
+
+    private String createToken(Entity entity, String tokenType, Map<String, ?> payload) {
         Claims claims = Jwts.claims().setSubject(Integer.toString(entity.getEntity()));
+        claims.put("type", tokenType);
+
+        if(payload != null) {
+            claims.putAll(payload);
+        }
+
         Date iat = new Date();
         Date exp = new Date(iat.getTime() + expireLength);
-
         Gson gson = createGson();
 
         // @formatter:off
@@ -111,10 +130,27 @@ public class JwtProvider {
         return null;
     }
 
-    public boolean validateToken(String token) throws HttpClientErrorException {
+    public boolean validateSessionToken(String token) throws HttpClientErrorException {
+        return validateToken(token, TYPE_SESSION_TOKEN);
+    }
+
+    public boolean validateConfirmToken(String token) throws HttpClientErrorException {
+        return validateToken(token, TYPE_CONFIRM_TOKEN);
+    }
+
+    public boolean validateAnyToken(String token) throws HttpClientErrorException {
+        return validateToken(token, null);
+    }
+
+    private boolean validateToken(String token, String tokenType) throws HttpClientErrorException {
         try {
             JwtParser jwtParser = createJwtParser();
-            jwtParser.parseClaimsJws(token);
+            Jws<Claims> jws = jwtParser.parseClaimsJws(token);
+            Claims claims = jws.getBody();
+
+            if(tokenType != null && !claims.get("type").equals(tokenType)) {
+                throw new JwtException("Token is an incorrect type.");
+            }
         } catch (JwtException | IllegalArgumentException ex) {
             throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED,
                     "Token is invalid or expired");

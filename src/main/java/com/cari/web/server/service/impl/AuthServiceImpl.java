@@ -14,9 +14,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+
+    private static final String FIELD_USERNAME = "username";
+    private static final String FIELD_PASSWORD = "password";
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -37,19 +41,37 @@ public class AuthServiceImpl implements AuthService {
                     Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER))));
 
             Entity entity = entityRepository.findByUsernameOrEmailAddress(username);
-            String jwt = jwtProvider.createToken(entity);
+
+            if (entity.getConfirmed() == null) {
+                return AuthResponse.failure(Arrays.asList(new CariFieldError(FIELD_USERNAME,
+                        "You have not yet confirmed your account.")));
+            }
+
+            String jwt = jwtProvider.createSessionToken(entity, null);
+
             return AuthResponse.success(jwt);
         } catch (AuthenticationException ex) {
             String message = ex.getLocalizedMessage();
-            String field = "username";
+            String field = FIELD_USERNAME;
 
             if (message.equals("Bad credentials")) {
                 message = "Password is incorrect.";
-                field = "password";
+                field = FIELD_PASSWORD;
             }
 
             CariFieldError fieldError = new CariFieldError(field, message);
             return AuthResponse.failure(Arrays.asList(fieldError));
         }
+    }
+
+    @Override
+    public boolean checkToken(String token) {
+        try {
+            jwtProvider.validateAnyToken(token);
+        } catch (HttpClientErrorException ex) {
+            return false;
+        }
+
+        return true;
     }
 }

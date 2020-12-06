@@ -1,6 +1,7 @@
 package com.cari.web.server.domain;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import org.springframework.data.annotation.Id;
@@ -43,6 +44,13 @@ public class Entity implements Serializable {
     @JsonAlias({COLUMN_PASSWORD_HASH})
     @NotNull
     private String passwordHash;
+
+    @Column
+    @NotNull
+    private Timestamp created;
+
+    @Column
+    private Timestamp confirmed;
 
     public UserDetails toUserDetails() {
         // @formatter:off

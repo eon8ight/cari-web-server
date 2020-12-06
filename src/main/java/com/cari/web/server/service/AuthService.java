@@ -6,4 +6,6 @@ import com.cari.web.server.dto.response.AuthResponse;
 public interface AuthService {
 
     AuthResponse login(ClientRequestEntity clientRequestEntity);
+
+    boolean checkToken(String token);
 }
