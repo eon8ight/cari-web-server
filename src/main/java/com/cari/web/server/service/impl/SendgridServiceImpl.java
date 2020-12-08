@@ -6,8 +6,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.config.JwtProvider;
-import com.cari.web.server.domain.Entity;
-import com.cari.web.server.domain.MessageTemplate;
+import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.domain.db.MessageTemplate;
 import com.cari.web.server.repository.MessageTemplateRepository;
 import com.cari.web.server.service.SendgridService;
 import com.sendgrid.Method;
@@ -28,13 +28,8 @@ import org.springframework.web.client.HttpServerErrorException;
 @Service
 public class SendgridServiceImpl implements SendgridService {
 
-    private static final String ENVIRONMENT_PRODUCTION = "production";
-
     @Value("${sendgrid.api.key}")
     private String sendgridApiKey;
-
-    @Value("${env:" + ENVIRONMENT_PRODUCTION + "}")
-    private String environment;
 
     @Autowired
     private JwtProvider jwtProvider;
@@ -42,17 +37,12 @@ public class SendgridServiceImpl implements SendgridService {
     @Autowired
     private MessageTemplateRepository messageTemplateRepository;
 
-    private String getUrl(HttpServletRequest request, String path, Map<String, String> parameters) {
-        String host = request.getServerName();
+    private String getUrl(HttpServletRequest request, String path,
+            Optional<Map<String, String>> parameters) {
+        String url = String.format("%s://%s%s", request.getScheme(), request.getServerName(), path);
 
-        if (!environment.equals(ENVIRONMENT_PRODUCTION)) {
-            host += ":" + request.getServerPort();
-        }
-
-        String url = String.format("%s://%s%s", request.getScheme(), host, path);
-
-        if (parameters != null) {
-            url += "?" + parameters.entrySet().stream()
+        if (parameters.isPresent()) {
+            url += "?" + parameters.get().entrySet().stream()
                     .map(entry -> entry.getKey() + '=' + entry.getValue())
                     .collect(Collectors.joining("&"));
         }
@@ -60,9 +50,8 @@ public class SendgridServiceImpl implements SendgridService {
         return url;
     }
 
-    @Override
-    public Response sendConfirmAccountEmail(HttpServletRequest request, Entity toEntity,
-            int pkMessageTemplate) {
+    private Response sendEmail(Entity toEntity, int pkMessageTemplate,
+            Map<String, String> templateParams) {
         Optional<MessageTemplate> messageTemplateOptional =
                 messageTemplateRepository.findById(pkMessageTemplate);
 
@@ -74,16 +63,15 @@ public class SendgridServiceImpl implements SendgridService {
         MessageTemplate messageTemplate = messageTemplateOptional.get();
         String username = toEntity.getUsername();
 
-        String jwt = jwtProvider.createConfirmToken(toEntity, null);
-        String confirmUrl = getUrl(request, "/user/confirm", Map.of("token", jwt));
-
         Email from = new Email("no-reply@c-a-r-i.org", "CARIbot 2.0");
         Email to = new Email(toEntity.getEmailAddress(), username);
 
         Personalization personalization = new Personalization();
         personalization.addTo(to);
-        personalization.addDynamicTemplateData("username", username);
-        personalization.addDynamicTemplateData("confirmUrl", confirmUrl);
+
+        templateParams.entrySet().stream().forEach(entry -> {
+            personalization.addDynamicTemplateData(entry.getKey(), entry.getValue());
+        });
 
         OpenTrackingSetting openTrackingSetting = new OpenTrackingSetting();
         openTrackingSetting.setEnable(true);
@@ -113,5 +101,31 @@ public class SendgridServiceImpl implements SendgridService {
         }
 
         return sendgridResponse;
+    }
+
+    @Override
+    public Response sendConfirmAccountEmail(HttpServletRequest request, Entity toEntity,
+            int pkMessageTemplate) {
+        String jwt = jwtProvider.createConfirmToken(toEntity, Optional.empty());
+        String confirmUrl = getUrl(request, "/user/confirm", Optional.of(Map.of("token", jwt)));
+
+        Map<String, String> templateParams =
+                Map.of("username", toEntity.getUsername(), "confirmUrl", confirmUrl);
+
+        return sendEmail(toEntity, pkMessageTemplate, templateParams);
+    }
+
+    @Override
+    public Response sendForgotPasswordEmail(HttpServletRequest request, Entity toEntity,
+            int pkMessageTemplate) {
+        String jwt = jwtProvider.createResetPasswordToken(toEntity, Optional.empty());
+
+        String confirmUrl =
+                getUrl(request, "/user/resetPassword", Optional.of(Map.of("token", jwt)));
+
+        Map<String, String> templateParams =
+                Map.of("username", toEntity.getUsername(), "resetPasswordUrl", confirmUrl);
+
+        return sendEmail(toEntity, pkMessageTemplate, templateParams);
     }
 }

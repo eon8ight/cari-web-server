@@ -1,4 +1,4 @@
-package com.cari.web.server.domain;
+package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
 import javax.validation.Valid;
@@ -28,12 +28,12 @@ public class AestheticMedia implements Serializable {
     @Id
     @Column(COLUMN_AESTHETIC_MEDIA)
     @JsonAlias({COLUMN_AESTHETIC_MEDIA})
-    private Integer aestheticMedia;
+    private int aestheticMedia;
 
     @Column
-    @NotNull
-    private int aesthetic = 0;
+    private int aesthetic;
 
+    @Column
     @NotNull
     private String url;
 
@@ -42,19 +42,18 @@ public class AestheticMedia implements Serializable {
     @NotNull
     private String previewImageUrl;
 
-    @NotNull
+    @Column
     private String label;
 
-    @NotNull
+    @Column
     private String description;
 
     @Column(COLUMN_MEDIA_CREATOR)
     @JsonAlias({COLUMN_MEDIA_CREATOR})
     @MappedCollection
-    @NotNull
     @Valid
     private MediaCreator mediaCreator;
 
-    @NotNull
-    private Integer year;
+    @Column
+    private int year;
 }

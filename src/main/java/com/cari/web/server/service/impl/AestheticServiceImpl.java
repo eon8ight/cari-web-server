@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
-import com.cari.web.server.domain.Aesthetic;
-import com.cari.web.server.domain.MediaCreator;
+import com.cari.web.server.domain.db.Aesthetic;
+import com.cari.web.server.domain.db.MediaCreator;
 import com.cari.web.server.dto.response.CariPage;
 import com.cari.web.server.dto.response.EditResponse;
 import com.cari.web.server.repository.AestheticMediaRepository;
@@ -78,10 +78,9 @@ public class AestheticServiceImpl implements AestheticService {
 
         if (keyword != null) {
             filterClauses.add(
-                    "name ilike '%' || :nameKeyword || '%' or description ilike '%' || :descriptionKeyword || '%'");
+                    "name ilike '%' || :keyword || '%' or description ilike '%' || :keyword || '%'");
 
-            params.addValue("nameKeyword", keyword);
-            params.addValue("descriptionKeyword", keyword);
+            params.addValue("keyword", keyword);
         }
 
         if (startYear.isPresent()) {
@@ -134,17 +133,17 @@ public class AestheticServiceImpl implements AestheticService {
     }
 
     @Override
-    public Aesthetic findForPage(String urlSlug) {
+    public Optional<Aesthetic> findForPage(String urlSlug) {
         return aestheticRepository.findForPage(urlSlug);
     }
 
     @Override
-    public Aesthetic findForEdit(int aesthetic) {
+    public Optional<Aesthetic> findForEdit(int aesthetic) {
         return aestheticRepository.findForEdit(aesthetic);
     }
 
     @Override
-    public Aesthetic find(int aesthetic) {
+    public Optional<Aesthetic> find(int aesthetic) {
         return aestheticRepository.simpleFind(aesthetic);
     }
 
@@ -157,9 +156,7 @@ public class AestheticServiceImpl implements AestheticService {
     @Transactional
     public EditResponse createOrUpdate(Aesthetic aesthetic) {
         /*
-         * TODO:
-         * 1. Validate name not in use
-         * 2. Validate symbol not in use
+         * TODO: 1. Validate name not in use 2. Validate symbol not in use
          */
 
         String urlSlug = aesthetic.getName().toLowerCase().strip()
@@ -233,8 +230,7 @@ public class AestheticServiceImpl implements AestheticService {
         Boolean[] ascValues = new Boolean[] {Boolean.TRUE, Boolean.FALSE};
         String ascString = filters.getOrDefault(FILTER_ASC, "true");
 
-        if (ascString != null && Arrays.stream(ascValues)
-                .noneMatch(b -> ascString.equalsIgnoreCase(b.toString()))) {
+        if (Arrays.stream(ascValues).noneMatch(b -> ascString.equalsIgnoreCase(b.toString()))) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_ASC)
                     .append("` must be one of the following values: ")
                     .append(Arrays.stream(ascValues).map(b -> "\"" + b.toString() + "\"")

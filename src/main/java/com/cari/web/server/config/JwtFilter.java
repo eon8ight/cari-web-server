@@ -1,6 +1,8 @@
 package com.cari.web.server.config;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -21,14 +23,16 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        String token = jwtProvider.resolveToken(request);
+        Optional<String> tokenOptional = jwtProvider.resolveToken(request);
 
         try {
-            if (token != null && jwtProvider.validateSessionToken(token)) {
+            String token = tokenOptional.get();
+
+            if (jwtProvider.validateSessionToken(token)) {
                 Authentication auth = jwtProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        } catch (HttpClientErrorException ex) {
+        } catch (NoSuchElementException | HttpClientErrorException ex) {
             SecurityContextHolder.clearContext();
         }
 

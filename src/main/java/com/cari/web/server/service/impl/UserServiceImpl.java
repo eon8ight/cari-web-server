@@ -6,11 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
-import com.cari.web.server.config.JwtProvider;
-import com.cari.web.server.domain.Entity;
-import com.cari.web.server.domain.MessageTemplate;
+import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.domain.db.MessageTemplate;
 import com.cari.web.server.dto.request.ClientRequestEntity;
-import com.cari.web.server.dto.request.ClientRequestToken;
 import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.dto.response.CariFieldError;
 import com.cari.web.server.repository.EntityRepository;
@@ -20,19 +18,17 @@ import com.sendgrid.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private JwtProvider jwtProvider;
+
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private SendgridService mailgunService;
+    private SendgridService sendgridService;
 
     @Autowired
     private EntityRepository entityRepository;
@@ -44,15 +40,15 @@ public class UserServiceImpl implements UserService {
         String username = clientRequestEntity.getUsername();
         List<CariFieldError> fieldErrors = new ArrayList<>(2);
 
-        Entity entityWithEmailAddress = entityRepository.findByEmailAddress(emailAddress);
+        Optional<Entity> entityWithEmailAddress = entityRepository.findByEmailAddress(emailAddress);
 
-        if (entityWithEmailAddress != null) {
+        if (entityWithEmailAddress.isEmpty()) {
             fieldErrors.add(new CariFieldError("emailAddress", "Email address is already in use."));
         }
 
-        Entity entityWithUsername = entityRepository.findByUsername(username);
+        Optional<Entity> entityWithUsername = entityRepository.findByUsername(username);
 
-        if (entityWithUsername != null) {
+        if (entityWithUsername.isEmpty()) {
             fieldErrors.add(new CariFieldError("username", "Username is already in use."));
         }
 
@@ -71,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
         entity = entityRepository.save(entity);
 
-        Response response = mailgunService.sendConfirmAccountEmail(request, entity,
+        Response response = sendgridService.sendConfirmAccountEmail(request, entity,
                 MessageTemplate.CONFIRM_ACCOUNT);
 
         return response.getStatusCode() >= 400 ? AuthResponse.failure(response.getBody())
@@ -79,16 +75,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthResponse confirm(ClientRequestToken token) {
-        int pkEntity;
-
-        try {
-            jwtProvider.validateConfirmToken(token.getToken());
-            pkEntity = jwtProvider.getEntityFromToken(token.getToken());
-        } catch (HttpClientErrorException ex) {
-            return AuthResponse.failure("Token is invalid");
-        }
-
+    public AuthResponse confirm(int pkEntity) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
         if (entityOptional.isEmpty()) {
@@ -97,6 +84,21 @@ public class UserServiceImpl implements UserService {
 
         Entity entity = entityOptional.get();
         entity.setConfirmed(Timestamp.from(Instant.now()));
+        entityRepository.save(entity);
+
+        return AuthResponse.success();
+    }
+
+    @Override
+    public AuthResponse resetPassword(int pkEntity, String password) {
+        Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
+
+        if (entityOptional.isEmpty()) {
+            return AuthResponse.failure("Entity with PK " + pkEntity + " does not exist!");
+        }
+
+        Entity entity = entityOptional.get();
+        entity.setPasswordHash(passwordEncoder.encode(password));
         entityRepository.save(entity);
 
         return AuthResponse.success();

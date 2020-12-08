@@ -1,7 +1,7 @@
 package com.cari.web.server.repository;
 
 import java.util.List;
-import com.cari.web.server.domain.AestheticMedia;
+import com.cari.web.server.domain.db.AestheticMedia;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;

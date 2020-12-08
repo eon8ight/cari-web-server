@@ -1,6 +1,6 @@
 package com.cari.web.server.service.impl;
 
-import com.cari.web.server.domain.Aesthetic;
+import java.util.Optional;
 import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.cari.web.server.service.ArenaApiService;
 import org.springframework.http.HttpStatus;
@@ -10,39 +10,29 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class ArenaApiServiceImpl implements ArenaApiService {
+
     private static final int MAX_PER_PAGE = 15;
 
-    private ArenaApiResponse callApi(String url) {
-        RestTemplate restTemplate = new RestTemplate();
-        ArenaApiResponse response = restTemplate.getForObject(url, ArenaApiResponse.class);
-
-        return response;
-    }
-
     @Override
-    public ArenaApiResponse findInitialBlocksForPagination(Aesthetic aesthetic) {
-        StringBuilder urlBuilder = new StringBuilder(aesthetic.getMediaSourceUrl())
-                .append("?page=1&per=").append(MAX_PER_PAGE);
+    public Optional<ArenaApiResponse> findBlocksForPagination(String mediaSourceUrl, int page) {
+        StringBuilder urlBuilder = new StringBuilder(mediaSourceUrl).append("?page=").append(page)
+                .append("&per=").append(MAX_PER_PAGE);
 
-        ArenaApiResponse response;
+        Optional<ArenaApiResponse> response;
 
         try {
-            response = callApi(urlBuilder.toString());
+            RestTemplate restTemplate = new RestTemplate();
+
+            response = Optional
+                    .of(restTemplate.getForObject(urlBuilder.toString(), ArenaApiResponse.class));
         } catch (HttpClientErrorException ex) {
             if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                response = null;
+                response = Optional.empty();
             } else {
                 throw ex;
             }
         }
 
         return response;
-    }
-
-    public ArenaApiResponse findBlocksForPagination(Aesthetic aesthetic, int page) {
-        StringBuilder urlBuilder = new StringBuilder(aesthetic.getMediaSourceUrl()).append("?page=")
-                .append(page).append("&per=").append(MAX_PER_PAGE);
-
-        return callApi(urlBuilder.toString());
     }
 }

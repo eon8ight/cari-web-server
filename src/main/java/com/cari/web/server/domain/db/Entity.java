@@ -1,4 +1,4 @@
-package com.cari.web.server.domain;
+package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
 import java.sql.Timestamp;

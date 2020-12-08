@@ -1,4 +1,4 @@
-package com.cari.web.server.domain;
+package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -34,6 +34,7 @@ public class AestheticRelationship implements Serializable {
     @JsonAlias({COLUMN_TO_AESTHETIC})
     private int toAesthetic;
 
+    @Column
     private String description;
 
     @Transient

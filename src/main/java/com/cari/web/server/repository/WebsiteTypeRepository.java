@@ -1,6 +1,6 @@
 package com.cari.web.server.repository;
 
-import com.cari.web.server.domain.WebsiteType;
+import com.cari.web.server.domain.db.WebsiteType;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 

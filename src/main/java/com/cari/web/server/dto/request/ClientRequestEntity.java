@@ -19,4 +19,6 @@ public class ClientRequestEntity implements Serializable {
     private String password;
 
     private boolean rememberMe;
+
+    private String token;
 }

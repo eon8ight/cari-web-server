@@ -1,4 +1,4 @@
-package com.cari.web.server.domain;
+package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
 import javax.validation.constraints.NotNull;
@@ -19,6 +19,7 @@ public class MessageTemplate implements Serializable {
     private static final long serialVersionUID = 1834636000891676566L;
 
     public static final int CONFIRM_ACCOUNT = 1;
+    public static final int RESET_PASSWORD = 2;
 
     private static final String COLUMN_MESSAGE_TEMPLATE = "message_template";
     private static final String COLUMN_BODY_PLAINTEXT = "body_plaintext";
@@ -28,23 +29,24 @@ public class MessageTemplate implements Serializable {
     @Id
     @Column(COLUMN_MESSAGE_TEMPLATE)
     @JsonAlias({COLUMN_MESSAGE_TEMPLATE})
+    @NotNull
     private int messageTemplate;
 
     @NotNull
     private String subject;
 
-    @NotNull
     @Column(COLUMN_BODY_PLAINTEXT)
     @JsonAlias({COLUMN_BODY_PLAINTEXT})
+    @NotNull
     private String bodyPlaintext;
 
-    @NotNull
     @Column(COLUMN_BODY_HTML)
     @JsonAlias({COLUMN_BODY_HTML})
+    @NotNull
     private String bodyHtml;
 
-    @NotNull
     @Column(COLUMN_EXT_ID)
     @JsonAlias({COLUMN_EXT_ID})
+    @NotNull
     private String extId;
 }

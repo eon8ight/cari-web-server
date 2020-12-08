@@ -1,6 +1,6 @@
 package com.cari.web.server.repository;
 
-import com.cari.web.server.domain.MediaCreator;
+import com.cari.web.server.domain.db.MediaCreator;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;

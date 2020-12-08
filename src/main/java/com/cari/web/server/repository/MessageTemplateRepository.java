@@ -1,6 +1,7 @@
 package com.cari.web.server.repository;
 
-import com.cari.web.server.domain.MessageTemplate;
+import java.util.Optional;
+import com.cari.web.server.domain.db.MessageTemplate;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -17,5 +18,5 @@ public interface MessageTemplateRepository extends CrudRepository<MessageTemplat
     // @formatter:on
 
     @Query(FIND_BY_LABEL_QUERY)
-    MessageTemplate findByLabel(@Param("label") String label);
+    Optional<MessageTemplate> findByLabel(@Param("label") String label);
 }

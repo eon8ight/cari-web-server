@@ -2,6 +2,7 @@ package com.cari.web.server.dto.response;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 import com.cari.web.server.enums.RequestStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
@@ -17,15 +18,15 @@ public class AuthResponse implements Serializable {
 
     private String message;
 
-    private transient String token;
+    private transient Optional<String> token;
 
     private List<CariFieldError> fieldErrors;
 
     public static AuthResponse success() {
-        return success(null);
+        return success(Optional.empty());
     }
 
-    public static AuthResponse success(String token) {
+    public static AuthResponse success(Optional<String> token) {
         // @formatter:off
         return AuthResponse.builder()
             .status(RequestStatus.SUCCESS)

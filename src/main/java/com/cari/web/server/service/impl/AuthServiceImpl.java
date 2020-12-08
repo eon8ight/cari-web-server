@@ -1,8 +1,9 @@
 package com.cari.web.server.service.impl;
 
 import java.util.Arrays;
+import java.util.Optional;
 import com.cari.web.server.config.JwtProvider;
-import com.cari.web.server.domain.Entity;
+import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.dto.response.CariFieldError;
@@ -40,16 +41,18 @@ public class AuthServiceImpl implements AuthService {
                     clientRequestEntity.getPassword(),
                     Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER))));
 
-            Entity entity = entityRepository.findByUsernameOrEmailAddress(username);
+            // If we got this far, an entity with the given username or email address is guaranteed
+            // to exist
+            Entity entity = entityRepository.findByUsernameOrEmailAddress(username).get();
 
             if (entity.getConfirmed() == null) {
                 return AuthResponse.failure(Arrays.asList(new CariFieldError(FIELD_USERNAME,
                         "You have not yet confirmed your account.")));
             }
 
-            String jwt = jwtProvider.createSessionToken(entity, null);
+            String jwt = jwtProvider.createSessionToken(entity, Optional.empty());
 
-            return AuthResponse.success(jwt);
+            return AuthResponse.success(Optional.of(jwt));
         } catch (AuthenticationException ex) {
             String message = ex.getLocalizedMessage();
             String field = FIELD_USERNAME;

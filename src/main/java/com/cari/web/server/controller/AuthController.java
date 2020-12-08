@@ -1,6 +1,7 @@
 package com.cari.web.server.controller;
 
 import java.time.Duration;
+import java.util.Optional;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.enums.RequestStatus;
@@ -37,7 +38,7 @@ public class AuthController {
         } else {
             // @formatter:off
             ResponseCookie tokenCookie = ResponseCookie
-                .from("sessionToken", res.getToken())
+                .from("sessionToken", res.getToken().get())
                 .maxAge(clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1)
                 .path("/")
                 .httpOnly(true)
@@ -76,6 +77,6 @@ public class AuthController {
         // @formatter:on
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
-                .body(AuthResponse.success(null));
+                .body(AuthResponse.success(Optional.empty()));
     }
 }

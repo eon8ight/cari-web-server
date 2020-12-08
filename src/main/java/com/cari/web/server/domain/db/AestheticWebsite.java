@@ -1,4 +1,4 @@
-package com.cari.web.server.domain;
+package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
 import javax.validation.Valid;
@@ -6,7 +6,6 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
@@ -33,7 +32,6 @@ public class AestheticWebsite implements Serializable {
     private int aestheticWebsite;
 
     @Column
-    @NotNull
     private int aesthetic;
 
     @Column
@@ -46,7 +44,4 @@ public class AestheticWebsite implements Serializable {
     @NotNull
     @Valid
     private WebsiteType websiteType;
-
-    @Transient
-    private Aesthetic aestheticObj;
 }

@@ -1,6 +1,7 @@
 package com.cari.web.server.repository;
 
-import com.cari.web.server.domain.Entity;
+import java.util.Optional;
+import com.cari.web.server.domain.db.Entity;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -13,8 +14,8 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
     String FIND_BY_USERNAME_OR_EMAIL_ADDRESS_QUERY =
         "select * " +
         "  from tb_entity " +
-        " where username      = :username " +
-        "    or email_address = :username";
+        " where username      = :usernameOrEmailAddress " +
+        "    or email_address = :usernameOrEmailAddress";
 
     String FIND_BY_USERNAME_QUERY =
         "select * " +
@@ -28,11 +29,12 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
     // @formatter:on
 
     @Query(FIND_BY_USERNAME_OR_EMAIL_ADDRESS_QUERY)
-    Entity findByUsernameOrEmailAddress(@Param("username") String username);
+    Optional<Entity> findByUsernameOrEmailAddress(
+            @Param("usernameOrEmailAddress") String usernameOrEmailAddress);
 
     @Query(FIND_BY_USERNAME_QUERY)
-    Entity findByUsername(@Param("username") String username);
+    Optional<Entity> findByUsername(@Param("username") String username);
 
     @Query(FIND_BY_EMAIL_ADDRESS_QUERY)
-    Entity findByEmailAddress(@Param("emailAddress") String emailAddress);
+    Optional<Entity> findByEmailAddress(@Param("emailAddress") String emailAddress);
 }

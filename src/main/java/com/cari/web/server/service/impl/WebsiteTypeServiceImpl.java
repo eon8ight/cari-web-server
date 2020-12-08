@@ -3,7 +3,7 @@ package com.cari.web.server.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import com.cari.web.server.domain.WebsiteType;
+import com.cari.web.server.domain.db.WebsiteType;
 import com.cari.web.server.repository.WebsiteTypeRepository;
 import com.cari.web.server.service.WebsiteTypeService;
 import org.springframework.beans.factory.annotation.Autowired;

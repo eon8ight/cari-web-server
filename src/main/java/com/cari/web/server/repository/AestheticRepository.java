@@ -1,7 +1,8 @@
 package com.cari.web.server.repository;
 
 import java.util.List;
-import com.cari.web.server.domain.Aesthetic;
+import java.util.Optional;
+import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.util.AestheticWithJoinDataMapper;
 import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -122,13 +123,13 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
     // @formatter:on
 
     @Query(value = FIND_FOR_PAGE_QUERY, rowMapperClass = AestheticWithJoinDataMapper.class)
-    Aesthetic findForPage(@Param("urlSlug") String urlSlug);
+    Optional<Aesthetic> findForPage(@Param("urlSlug") String urlSlug);
 
     @Query(value = FIND_FOR_EDIT_QUERY, rowMapperClass = AestheticWithJoinDataMapper.class)
-    Aesthetic findForEdit(@Param("aesthetic") int aesthetic);
+    Optional<Aesthetic> findForEdit(@Param("aesthetic") int aesthetic);
 
     @Query(value = SIMPLE_FIND_QUERY)
-    Aesthetic simpleFind(@Param("aesthetic") int aesthetic);
+    Optional<Aesthetic> simpleFind(@Param("aesthetic") int aesthetic);
 
     @Query(value = FIND_AESTHETIC_NAMES_QUERY)
     List<Aesthetic> findNames(@Param("query") String query);
