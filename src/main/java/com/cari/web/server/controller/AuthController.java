@@ -39,6 +39,22 @@ public class AuthController {
     @Autowired
     private JwtProvider jwtProvider;
 
+    private ResponseCookie buildTokenCookie(String token, long maxAge) {
+        // @formatter:off
+        ResponseCookieBuilder tokenCookieBuilder = ResponseCookie
+            .from("sessionToken", token)
+            .maxAge(maxAge)
+            .path("/")
+            .httpOnly(true);
+        // @formatter:on
+
+        if (!springEnvironment.equals("local")) {
+            tokenCookieBuilder.sameSite("None").secure(true);
+        }
+
+        return tokenCookieBuilder.build();
+    }
+
     @PostMapping("/auth/login")
     public ResponseEntity<AuthResponse> login(
             @RequestBody ClientRequestEntity clientRequestEntity) {
@@ -48,19 +64,8 @@ public class AuthController {
         if (res.getStatus().equals(RequestStatus.FAILURE)) {
             response = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
         } else {
-            // @formatter:off
-            ResponseCookieBuilder tokenCookieBuilder = ResponseCookie
-                .from("sessionToken", res.getToken().get())
-                .maxAge(clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1)
-                .path("/")
-                .httpOnly(true);
-            // @formatter:on
-
-            if(!springEnvironment.equals("local")) {
-                tokenCookieBuilder.sameSite("None").secure(true);
-            }
-
-            ResponseCookie tokenCookie = tokenCookieBuilder.build();
+            ResponseCookie tokenCookie = buildTokenCookie(res.getToken().get(),
+                    clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1);
 
             response = ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
                     .body(res);
@@ -96,14 +101,7 @@ public class AuthController {
 
     @PostMapping("/auth/logout")
     public ResponseEntity<AuthResponse> logout() {
-        // @formatter:off
-        ResponseCookie tokenCookie = ResponseCookie
-            .from("sessionToken", "")
-            .maxAge(Duration.ZERO)
-            .path("/")
-            .httpOnly(true)
-            .build();
-        // @formatter:on
+        ResponseCookie tokenCookie = buildTokenCookie("", Duration.ZERO.toSeconds());
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
                 .body(AuthResponse.success(Optional.empty()));
