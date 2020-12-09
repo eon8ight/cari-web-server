@@ -40,7 +40,7 @@ public class SendgridServiceImpl implements SendgridService {
     private MessageTemplateRepository messageTemplateRepository;
 
     private String getUrl(String path, Optional<Map<String, String>> parameters) {
-        String url = String.format("%s/%s", baseUrl, path);
+        String url = String.format("%s%s", baseUrl, path);
 
         if (parameters.isPresent()) {
             url += "?" + parameters.get().entrySet().stream()
