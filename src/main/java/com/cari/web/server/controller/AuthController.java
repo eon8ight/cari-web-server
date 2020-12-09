@@ -49,7 +49,8 @@ public class AuthController {
                 .maxAge(clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1)
                 .path("/")
                 .httpOnly(true)
-                .sameSite("Lax")
+                .sameSite("None")
+                .secure(true)
                 .build();
             // @formatter:on
 
