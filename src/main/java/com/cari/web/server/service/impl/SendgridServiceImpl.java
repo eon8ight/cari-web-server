@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.domain.db.MessageTemplate;
@@ -28,6 +27,9 @@ import org.springframework.web.client.HttpServerErrorException;
 @Service
 public class SendgridServiceImpl implements SendgridService {
 
+    @Value("${base.url}")
+    private String baseUrl;
+
     @Value("${sendgrid.api.key}")
     private String sendgridApiKey;
 
@@ -37,9 +39,8 @@ public class SendgridServiceImpl implements SendgridService {
     @Autowired
     private MessageTemplateRepository messageTemplateRepository;
 
-    private String getUrl(HttpServletRequest request, String path,
-            Optional<Map<String, String>> parameters) {
-        String url = String.format("%s://%s%s", request.getScheme(), request.getServerName(), path);
+    private String getUrl(String path, Optional<Map<String, String>> parameters) {
+        String url = String.format("%s/%s", baseUrl, path);
 
         if (parameters.isPresent()) {
             url += "?" + parameters.get().entrySet().stream()
@@ -104,9 +105,9 @@ public class SendgridServiceImpl implements SendgridService {
     }
 
     @Override
-    public Response sendConfirmAccountEmail(HttpServletRequest request, Entity toEntity) {
+    public Response sendConfirmAccountEmail(Entity toEntity) {
         String jwt = jwtProvider.createConfirmToken(toEntity);
-        String confirmUrl = getUrl(request, "/user/confirm", Optional.of(Map.of("token", jwt)));
+        String confirmUrl = getUrl("/user/confirm", Optional.of(Map.of("token", jwt)));
 
         Map<String, String> templateParams =
                 Map.of("username", toEntity.getUsername(), "confirmUrl", confirmUrl);
@@ -115,11 +116,10 @@ public class SendgridServiceImpl implements SendgridService {
     }
 
     @Override
-    public Response sendForgotPasswordEmail(HttpServletRequest request, Entity toEntity) {
+    public Response sendForgotPasswordEmail(Entity toEntity) {
         String jwt = jwtProvider.createResetPasswordToken(toEntity);
 
-        String confirmUrl =
-                getUrl(request, "/user/resetPassword", Optional.of(Map.of("token", jwt)));
+        String confirmUrl = getUrl("/user/resetPassword", Optional.of(Map.of("token", jwt)));
 
         Map<String, String> templateParams =
                 Map.of("username", toEntity.getUsername(), "resetPasswordUrl", confirmUrl);
@@ -128,11 +128,10 @@ public class SendgridServiceImpl implements SendgridService {
     }
 
     @Override
-    public Response sendInviteEmail(HttpServletRequest request, Entity fromEntity,
-            Entity toEntity) {
+    public Response sendInviteEmail(Entity fromEntity, Entity toEntity) {
         String jwt = jwtProvider.createInviteToken(fromEntity, toEntity);
 
-        String registerUrl = getUrl(request, "/user/register", Optional.of(Map.of("token", jwt)));
+        String registerUrl = getUrl("/user/register", Optional.of(Map.of("token", jwt)));
 
         Map<String, String> templateParams =
                 Map.of("inviter", fromEntity.getUsername(), "registerUrl", registerUrl);

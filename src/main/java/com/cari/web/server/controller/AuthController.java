@@ -11,9 +11,11 @@ import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.enums.TokenType;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseCookie.ResponseCookieBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -27,6 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class AuthController {
+
+    @Value("${spring.environment:local}")
+    private String springEnvironment;
 
     @Autowired
     private AuthService authService;
@@ -44,15 +49,18 @@ public class AuthController {
             response = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
         } else {
             // @formatter:off
-            ResponseCookie tokenCookie = ResponseCookie
+            ResponseCookieBuilder tokenCookieBuilder = ResponseCookie
                 .from("sessionToken", res.getToken().get())
                 .maxAge(clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1)
                 .path("/")
-                .httpOnly(true)
-                .sameSite("None")
-                .secure(true)
-                .build();
+                .httpOnly(true);
             // @formatter:on
+
+            if(!springEnvironment.equals("local")) {
+                tokenCookieBuilder.sameSite("None").secure(true);
+            }
+
+            ResponseCookie tokenCookie = tokenCookieBuilder.build();
 
             response = ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
                     .body(res);

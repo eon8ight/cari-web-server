@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
@@ -52,8 +51,7 @@ public class UserServiceImpl implements UserService {
     private DataSource dbHandle;
 
     @Override
-    public AuthResponse register(HttpServletRequest request, int pkEntity,
-            ClientRequestEntity clientRequestEntity) {
+    public AuthResponse register(int pkEntity, ClientRequestEntity clientRequestEntity) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
         if (entityOptional.isEmpty()) {
@@ -75,7 +73,7 @@ public class UserServiceImpl implements UserService {
 
         entity = entityRepository.save(entity);
 
-        Response response = sendgridService.sendConfirmAccountEmail(request, entity);
+        Response response = sendgridService.sendConfirmAccountEmail(entity);
 
         return response.getStatusCode() >= 400 ? AuthResponse.failure(response.getBody())
                 : AuthResponse.success();
@@ -151,8 +149,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthResponse invite(HttpServletRequest request,
-            ClientRequestEntity clientRequestEntity) {
+    public AuthResponse invite(ClientRequestEntity clientRequestEntity) {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
         UserDetails principal = (UserDetails) authentication.getPrincipal();
@@ -184,7 +181,7 @@ public class UserServiceImpl implements UserService {
 
         entityRepository.save(entity);
 
-        Response response = sendgridService.sendInviteEmail(request, inviter, entity);
+        Response response = sendgridService.sendInviteEmail(inviter, entity);
 
         return response.getStatusCode() >= 400 ? AuthResponse.failure(response.getBody())
                 : AuthResponse.success();

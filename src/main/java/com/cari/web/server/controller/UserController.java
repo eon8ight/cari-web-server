@@ -1,7 +1,6 @@
 package com.cari.web.server.controller;
 
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
@@ -29,7 +28,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/user/register")
-    public ResponseEntity<AuthResponse> register(HttpServletRequest request,
+    public ResponseEntity<AuthResponse> register(
             @RequestBody ClientRequestEntity clientRequestEntity) {
         String token = clientRequestEntity.getToken();
         AuthResponse res;
@@ -37,7 +36,7 @@ public class UserController {
         try {
             jwtProvider.validateInviteToken(token);
             int pkEntity = jwtProvider.getEntityFromToken(token);
-            res = userService.register(request, pkEntity, clientRequestEntity);
+            res = userService.register(pkEntity, clientRequestEntity);
         } catch (HttpClientErrorException ex) {
             res = AuthResponse.failure("Token is invalid");
         }
@@ -94,9 +93,9 @@ public class UserController {
     }
 
     @PostMapping("/user/invite")
-    public ResponseEntity<AuthResponse> invite(HttpServletRequest request,
+    public ResponseEntity<AuthResponse> invite(
             @RequestBody ClientRequestEntity clientRequestEntity) {
-        AuthResponse res = userService.invite(request, clientRequestEntity);
+        AuthResponse res = userService.invite(clientRequestEntity);
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.BAD_REQUEST
                 : HttpStatus.OK;

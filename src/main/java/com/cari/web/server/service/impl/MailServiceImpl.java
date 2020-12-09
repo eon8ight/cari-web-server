@@ -1,7 +1,6 @@
 package com.cari.web.server.service.impl;
 
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
@@ -22,8 +21,7 @@ public class MailServiceImpl implements MailService {
     private EntityRepository entityRepository;
 
     @Override
-    public AuthResponse sendForgotPasswordEmail(HttpServletRequest request,
-            ClientRequestEntity clientRequestEntity) {
+    public AuthResponse sendForgotPasswordEmail(ClientRequestEntity clientRequestEntity) {
         String username = clientRequestEntity.getUsername();
         Optional<Entity> entity = entityRepository.findByUsernameOrEmailAddress(username);
 
@@ -32,7 +30,7 @@ public class MailServiceImpl implements MailService {
                     + " is not associated with an account.");
         }
 
-        Response response = sendgridService.sendForgotPasswordEmail(request, entity.get());
+        Response response = sendgridService.sendForgotPasswordEmail(entity.get());
 
         return response.getStatusCode() >= 400 ? AuthResponse.failure(response.getBody())
                 : AuthResponse.success();

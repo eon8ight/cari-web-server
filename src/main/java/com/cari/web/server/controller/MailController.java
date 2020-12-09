@@ -1,6 +1,5 @@
 package com.cari.web.server.controller;
 
-import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.enums.RequestStatus;
@@ -19,9 +18,9 @@ public class MailController {
     private MailService mailService;
 
     @PostMapping("/mail/forgotPassword")
-    public ResponseEntity<AuthResponse> forgotPassword(HttpServletRequest request,
+    public ResponseEntity<AuthResponse> forgotPassword(
             @RequestBody ClientRequestEntity clientRequestEntity) {
-        AuthResponse res = mailService.sendForgotPasswordEmail(request, clientRequestEntity);
+        AuthResponse res = mailService.sendForgotPasswordEmail(clientRequestEntity);
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.BAD_REQUEST
                 : HttpStatus.OK;
