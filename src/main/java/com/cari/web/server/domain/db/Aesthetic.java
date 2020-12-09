@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 @Table("tb_aesthetic")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Aesthetic implements Serializable {
+
     private static final long serialVersionUID = -3086472542529813307L;
 
     private static final String COLUMN_URL_SLUG = "url_slug";
@@ -85,12 +86,12 @@ public class Aesthetic implements Serializable {
         return Aesthetic.builder()
             .aesthetic(rs.getInt("aesthetic"))
             .name(rs.getString("name"))
-            .urlSlug(rs.getString("url_slug"))
+            .urlSlug(rs.getString(COLUMN_URL_SLUG))
             .symbol(rs.getString("symbol"))
-            .startYear(rs.getString("start_year"))
-            .endYear(rs.getString("end_year"))
+            .startYear(rs.getString(COLUMN_START_YEAR))
+            .endYear(rs.getString(COLUMN_END_YEAR))
             .description(rs.getString("description"))
-            .mediaSourceUrl(rs.getString("media_source_url"))
+            .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL))
             .build();
         // @formatter:on
     }

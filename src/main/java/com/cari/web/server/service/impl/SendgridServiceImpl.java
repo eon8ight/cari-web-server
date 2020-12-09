@@ -104,21 +104,19 @@ public class SendgridServiceImpl implements SendgridService {
     }
 
     @Override
-    public Response sendConfirmAccountEmail(HttpServletRequest request, Entity toEntity,
-            int pkMessageTemplate) {
-        String jwt = jwtProvider.createConfirmToken(toEntity, Optional.empty());
+    public Response sendConfirmAccountEmail(HttpServletRequest request, Entity toEntity) {
+        String jwt = jwtProvider.createConfirmToken(toEntity);
         String confirmUrl = getUrl(request, "/user/confirm", Optional.of(Map.of("token", jwt)));
 
         Map<String, String> templateParams =
                 Map.of("username", toEntity.getUsername(), "confirmUrl", confirmUrl);
 
-        return sendEmail(toEntity, pkMessageTemplate, templateParams);
+        return sendEmail(toEntity, MessageTemplate.CONFIRM_ACCOUNT, templateParams);
     }
 
     @Override
-    public Response sendForgotPasswordEmail(HttpServletRequest request, Entity toEntity,
-            int pkMessageTemplate) {
-        String jwt = jwtProvider.createResetPasswordToken(toEntity, Optional.empty());
+    public Response sendForgotPasswordEmail(HttpServletRequest request, Entity toEntity) {
+        String jwt = jwtProvider.createResetPasswordToken(toEntity);
 
         String confirmUrl =
                 getUrl(request, "/user/resetPassword", Optional.of(Map.of("token", jwt)));
@@ -126,6 +124,19 @@ public class SendgridServiceImpl implements SendgridService {
         Map<String, String> templateParams =
                 Map.of("username", toEntity.getUsername(), "resetPasswordUrl", confirmUrl);
 
-        return sendEmail(toEntity, pkMessageTemplate, templateParams);
+        return sendEmail(toEntity, MessageTemplate.RESET_PASSWORD, templateParams);
+    }
+
+    @Override
+    public Response sendInviteEmail(HttpServletRequest request, Entity fromEntity,
+            Entity toEntity) {
+        String jwt = jwtProvider.createInviteToken(fromEntity, toEntity);
+
+        String registerUrl = getUrl(request, "/user/register", Optional.of(Map.of("token", jwt)));
+
+        Map<String, String> templateParams =
+                Map.of("inviter", fromEntity.getUsername(), "registerUrl", registerUrl);
+
+        return sendEmail(toEntity, MessageTemplate.INVITE, templateParams);
     }
 }

@@ -6,9 +6,9 @@ import com.sendgrid.Response;
 
 public interface SendgridService {
 
-    Response sendConfirmAccountEmail(HttpServletRequest request, Entity entity,
-            int pkMessageTemplate);
+    Response sendConfirmAccountEmail(HttpServletRequest request, Entity entity);
 
-    Response sendForgotPasswordEmail(HttpServletRequest request, Entity entity,
-            int pkMessageTemplate);
+    Response sendForgotPasswordEmail(HttpServletRequest request, Entity entity);
+
+    Response sendInviteEmail(HttpServletRequest request, Entity fromEntity, Entity entity);
 }

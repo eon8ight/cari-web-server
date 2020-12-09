@@ -2,9 +2,13 @@ package com.cari.web.server.controller;
 
 import java.time.Duration;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
+import com.cari.web.server.dto.response.CheckedTokenResponse;
 import com.cari.web.server.enums.RequestStatus;
+import com.cari.web.server.enums.TokenType;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +30,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private JwtProvider jwtProvider;
 
     @PostMapping("/auth/login")
     public ResponseEntity<AuthResponse> login(
@@ -53,16 +60,28 @@ public class AuthController {
     }
 
     @GetMapping("/auth/checkSession")
-    public ResponseEntity<Boolean> checkSession() {
+    public ResponseEntity<CheckedTokenResponse> checkSession(HttpServletRequest request) {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
-        return new ResponseEntity<>(authentication.getPrincipal() instanceof User, HttpStatus.OK);
+
+        CheckedTokenResponse response = authentication.getPrincipal() instanceof User
+                ? CheckedTokenResponse
+                        .valid(jwtProvider.extractClaims(jwtProvider.resolveToken(request).get()))
+                : CheckedTokenResponse.invalid();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/auth/checkToken")
-    public ResponseEntity<Boolean> checkToken(@RequestParam("token") String token) {
-        boolean tokenValid = authService.checkToken(token);
-        return new ResponseEntity<>(tokenValid, HttpStatus.OK);
+    public ResponseEntity<CheckedTokenResponse> checkToken(@RequestParam("token") String token,
+            @RequestParam("type") TokenType type) {
+        boolean tokenValid = authService.checkToken(token, type);
+
+        CheckedTokenResponse response =
+                tokenValid ? CheckedTokenResponse.valid(jwtProvider.extractClaims(token))
+                        : CheckedTokenResponse.invalid();
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/auth/logout")

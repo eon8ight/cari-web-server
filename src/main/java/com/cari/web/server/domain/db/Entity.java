@@ -1,6 +1,8 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -32,7 +34,6 @@ public class Entity implements Serializable {
     private int entity;
 
     @Column
-    @NotNull
     private String username;
 
     @Column(COLUMN_EMAIL_ADDRESS)
@@ -42,12 +43,17 @@ public class Entity implements Serializable {
 
     @Column(COLUMN_PASSWORD_HASH)
     @JsonAlias({COLUMN_PASSWORD_HASH})
-    @NotNull
     private String passwordHash;
 
     @Column
+    private int inviter;
+
+    @Column
     @NotNull
-    private Timestamp created;
+    private Timestamp invited;
+
+    @Column
+    private Timestamp registered;
 
     @Column
     private Timestamp confirmed;
@@ -62,6 +68,21 @@ public class Entity implements Serializable {
             .credentialsExpired(false)
             .disabled(false)
             .roles(Entity.ROLE_USER)
+            .build();
+        // @formatter:on
+    }
+
+    public static Entity fromResultSet(ResultSet rs, int rowNum) throws SQLException {
+        // @formatter:off
+        return Entity.builder()
+            .entity(rs.getInt("entity"))
+            .emailAddress(rs.getString(COLUMN_EMAIL_ADDRESS))
+            .username(rs.getString("username"))
+            .passwordHash(rs.getString(COLUMN_PASSWORD_HASH))
+            .inviter(rs.getInt("inviter"))
+            .invited(rs.getTimestamp("invited"))
+            .confirmed(rs.getTimestamp("confirmed"))
+            .registered(rs.getTimestamp("registered"))
             .build();
         // @formatter:on
     }

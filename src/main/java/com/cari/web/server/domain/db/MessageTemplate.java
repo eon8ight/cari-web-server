@@ -20,10 +20,9 @@ public class MessageTemplate implements Serializable {
 
     public static final int CONFIRM_ACCOUNT = 1;
     public static final int RESET_PASSWORD = 2;
+    public static final int INVITE = 3;
 
     private static final String COLUMN_MESSAGE_TEMPLATE = "message_template";
-    private static final String COLUMN_BODY_PLAINTEXT = "body_plaintext";
-    private static final String COLUMN_BODY_HTML = "body_html";
     private static final String COLUMN_EXT_ID = "ext_id";
 
     @Id
@@ -31,19 +30,6 @@ public class MessageTemplate implements Serializable {
     @JsonAlias({COLUMN_MESSAGE_TEMPLATE})
     @NotNull
     private int messageTemplate;
-
-    @NotNull
-    private String subject;
-
-    @Column(COLUMN_BODY_PLAINTEXT)
-    @JsonAlias({COLUMN_BODY_PLAINTEXT})
-    @NotNull
-    private String bodyPlaintext;
-
-    @Column(COLUMN_BODY_HTML)
-    @JsonAlias({COLUMN_BODY_HTML})
-    @NotNull
-    private String bodyHtml;
 
     @Column(COLUMN_EXT_ID)
     @JsonAlias({COLUMN_EXT_ID})

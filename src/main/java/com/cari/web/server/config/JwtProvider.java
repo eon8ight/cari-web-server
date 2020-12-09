@@ -9,6 +9,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.enums.TokenType;
 import com.cari.web.server.service.impl.CariUserDetailsService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -33,10 +34,6 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtProvider {
-
-    public static final String TYPE_SESSION_TOKEN = "sessionToken";
-    public static final String TYPE_CONFIRM_TOKEN = "confirmToken";
-    public static final String TYPE_RESET_PASSWORD_TOKEN = "resetPasswordToken";
 
     @Value("${security.jwt.token.secret-key}")
     private String secretKey;
@@ -82,37 +79,52 @@ public class JwtProvider {
                 Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER)));
     }
 
-    public String createSessionToken(Entity entity, Optional<Map<String, ?>> payload) {
-        return createToken(entity, TYPE_SESSION_TOKEN, payload, Optional.empty());
+    public String createSessionToken(Entity entity) {
+        return createToken(entity, TokenType.SESSION, Optional.empty(), Optional.empty(),
+                Optional.empty());
     }
 
-    public String createConfirmToken(Entity entity, Optional<Map<String, ?>> payload) {
-        return createToken(entity, TYPE_CONFIRM_TOKEN, payload, Optional.empty());
+    public String createConfirmToken(Entity entity) {
+        return createToken(entity, TokenType.CONFIRM, Optional.empty(), Optional.empty(),
+                Optional.empty());
     }
 
-    public String createResetPasswordToken(Entity entity, Optional<Map<String, ?>> payload) {
-        return createToken(entity, TYPE_RESET_PASSWORD_TOKEN, payload, Optional.of(3_600_000L));
+    public String createResetPasswordToken(Entity entity) {
+        return createToken(entity, TokenType.RESET_PASSWORD, Optional.of(3_600_000L),
+                Optional.empty(), Optional.empty());
     }
 
-    private String createToken(Entity entity, String tokenType, Optional<Map<String, ?>> payload,
-            Optional<Long> expLength) {
-        Claims claims = Jwts.claims().setSubject(Integer.toString(entity.getEntity()));
-        claims.put("type", tokenType);
+    public String createInviteToken(Entity inviter, Entity entity) {
+        return createToken(entity, TokenType.INVITE, Optional.of(259_200_000L),
+                Optional.of(inviter.getEntity()),
+                Optional.of(Map.of("emailAddress", entity.getEmailAddress())));
+    }
+
+    private String createToken(Entity entity, TokenType tokenType, Optional<Long> expLength,
+            Optional<Integer> issuerEntity, Optional<Map<String, Object>> payload) {
+        Date iat = new Date();
+        Date exp = new Date(iat.getTime() + expLength.orElse(expireLength));
+
+        // @formatter:off
+        Claims claims = Jwts.claims()
+            .setSubject(Integer.toString(entity.getEntity()))
+            .setIssuer(Integer.toString(issuerEntity.orElse(0)))
+            .setIssuedAt(iat)
+            .setExpiration(exp)
+            .setNotBefore(iat);
+        // @formatter:on
 
         if (payload.isPresent()) {
             claims.putAll(payload.get());
         }
 
-        Date iat = new Date();
-        Date exp = new Date(iat.getTime() + expLength.orElse(expireLength));
+        claims.put("type", tokenType.toString());
+
         Gson gson = createGson();
 
         // @formatter:off
         return Jwts.builder()
             .setClaims(claims)
-            .setIssuedAt(iat)
-            .setExpiration(exp)
-            .setNotBefore(iat)
             .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)))
             .serializeToJsonWith(new GsonSerializer<>(gson))
             .compact();
@@ -137,29 +149,27 @@ public class JwtProvider {
     }
 
     public boolean validateSessionToken(String token) throws HttpClientErrorException {
-        return validateToken(token, Optional.of(TYPE_SESSION_TOKEN));
+        return validateToken(token, TokenType.SESSION);
     }
 
     public boolean validateConfirmToken(String token) throws HttpClientErrorException {
-        return validateToken(token, Optional.of(TYPE_CONFIRM_TOKEN));
+        return validateToken(token, TokenType.CONFIRM);
     }
 
     public boolean validateResetPasswordToken(String token) throws HttpClientErrorException {
-        return validateToken(token, Optional.of(TYPE_RESET_PASSWORD_TOKEN));
+        return validateToken(token, TokenType.RESET_PASSWORD);
     }
 
-    public boolean validateAnyToken(String token) throws HttpClientErrorException {
-        return validateToken(token, Optional.empty());
+    public boolean validateInviteToken(String token) throws HttpClientErrorException {
+        return validateToken(token, TokenType.INVITE);
     }
 
-    private boolean validateToken(String token, Optional<String> tokenType)
+    public boolean validateToken(String token, TokenType tokenType)
             throws HttpClientErrorException {
         try {
-            JwtParser jwtParser = createJwtParser();
-            Jws<Claims> jws = jwtParser.parseClaimsJws(token);
-            Claims claims = jws.getBody();
+            Claims claims = extractClaims(token);
 
-            if (tokenType.isPresent() && !claims.get("type").equals(tokenType.get())) {
+            if (!claims.get("type").equals(tokenType.toString())) {
                 throw new JwtException("Token is an incorrect type.");
             }
         } catch (JwtException | IllegalArgumentException ex) {
@@ -168,5 +178,11 @@ public class JwtProvider {
         }
 
         return true;
+    }
+
+    public Claims extractClaims(String token) {
+        JwtParser jwtParser = createJwtParser();
+        Jws<Claims> jws = jwtParser.parseClaimsJws(token);
+        return jws.getBody();
     }
 }

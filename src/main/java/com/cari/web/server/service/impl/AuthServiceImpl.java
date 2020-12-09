@@ -7,6 +7,7 @@ import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.dto.response.CariFieldError;
+import com.cari.web.server.enums.TokenType;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
                         "You have not yet confirmed your account.")));
             }
 
-            String jwt = jwtProvider.createSessionToken(entity, Optional.empty());
+            String jwt = jwtProvider.createSessionToken(entity);
 
             return AuthResponse.success(Optional.of(jwt));
         } catch (AuthenticationException ex) {
@@ -68,9 +69,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean checkToken(String token) {
+    public boolean checkToken(String token, TokenType type) {
         try {
-            jwtProvider.validateAnyToken(token);
+            jwtProvider.validateToken(token, type);
         } catch (HttpClientErrorException ex) {
             return false;
         }
