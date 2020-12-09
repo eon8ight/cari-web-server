@@ -30,8 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-    @Value("${spring.environment:local}")
+    @Value("${spring.environment}")
     private String springEnvironment;
+
+    @Value("${base.url}")
+    private String baseUrl;
 
     @Autowired
     private AuthService authService;
@@ -48,12 +51,15 @@ public class AuthController {
         if (res.getStatus().equals(RequestStatus.FAILURE)) {
             response = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
         } else {
+            String baseUrlWithoutSchema = baseUrl.replaceFirst("https?://", "");
+
             // @formatter:off
             ResponseCookieBuilder tokenCookieBuilder = ResponseCookie
                 .from("sessionToken", res.getToken().get())
                 .maxAge(clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1)
                 .path("/")
-                .httpOnly(true);
+                .httpOnly(true)
+                .domain(baseUrlWithoutSchema);
             // @formatter:on
 
             if(!springEnvironment.equals("local")) {
