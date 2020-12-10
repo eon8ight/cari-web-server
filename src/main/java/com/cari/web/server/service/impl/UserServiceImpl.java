@@ -11,6 +11,7 @@ import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.dto.response.CariPage;
+import com.cari.web.server.dto.response.UserInviteResponse;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
@@ -133,6 +134,8 @@ public class UserServiceImpl implements UserService {
         Sort sort = QueryUtils.validateAndGetSort(filters, SORT_FIELDS,
                 () -> Sort.by(Sort.Order.asc("username")));
 
+        queryBuilder.append(QueryUtils.toOrderByClause(sort, SORT_FIELDS));
+
         /* LIMIT and OFFSET */
 
         Optional<Integer> pageNumOptional =
@@ -149,7 +152,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AuthResponse invite(ClientRequestEntity clientRequestEntity) {
+    public UserInviteResponse invite(ClientRequestEntity clientRequestEntity) {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
         UserDetails principal = (UserDetails) authentication.getPrincipal();
@@ -158,7 +161,7 @@ public class UserServiceImpl implements UserService {
         Optional<Entity> inviterOptional = entityRepository.findById(pkInviter);
 
         if (inviterOptional.isEmpty()) {
-            return AuthResponse.failure("Entity with PK " + pkInviter + " does no exist!");
+            return UserInviteResponse.failure("Entity with PK " + pkInviter + " does no exist!");
         }
 
         Entity inviter = inviterOptional.get();
@@ -167,7 +170,7 @@ public class UserServiceImpl implements UserService {
         Optional<Entity> entityWithEmailAddress = entityRepository.findByEmailAddress(emailAddress);
 
         if (entityWithEmailAddress.isPresent()) {
-            return AuthResponse
+            return UserInviteResponse
                     .failure("An invitation has already been sent to this email address.");
         }
 
@@ -183,7 +186,7 @@ public class UserServiceImpl implements UserService {
 
         Response response = sendgridService.sendInviteEmail(inviter, entity);
 
-        return response.getStatusCode() >= 400 ? AuthResponse.failure(response.getBody())
-                : AuthResponse.success();
+        return response.getStatusCode() >= 400 ? UserInviteResponse.failure(response.getBody())
+                : UserInviteResponse.success(entity);
     }
 }

@@ -4,6 +4,7 @@ import java.util.Map;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
+import com.cari.web.server.dto.response.UserInviteResponse;
 import org.springframework.data.domain.Page;
 
 public interface UserService {
@@ -16,5 +17,5 @@ public interface UserService {
 
     Page<Entity> findForList(Map<String, String> filters);
 
-    AuthResponse invite(ClientRequestEntity clientRequestEntity);
+    UserInviteResponse invite(ClientRequestEntity clientRequestEntity);
 }

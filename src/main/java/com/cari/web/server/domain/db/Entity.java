@@ -6,6 +6,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -21,6 +23,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Table("tb_entity")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Entity implements Serializable {
 
     private static final long serialVersionUID = -1485850596199572023L;
@@ -43,6 +46,7 @@ public class Entity implements Serializable {
 
     @Column(COLUMN_PASSWORD_HASH)
     @JsonAlias({COLUMN_PASSWORD_HASH})
+    @JsonIgnore
     private String passwordHash;
 
     @Column

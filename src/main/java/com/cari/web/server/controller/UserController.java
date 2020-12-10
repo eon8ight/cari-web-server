@@ -5,6 +5,7 @@ import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.AuthResponse;
+import com.cari.web.server.dto.response.UserInviteResponse;
 import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,9 +94,9 @@ public class UserController {
     }
 
     @PostMapping("/user/invite")
-    public ResponseEntity<AuthResponse> invite(
+    public ResponseEntity<UserInviteResponse> invite(
             @RequestBody ClientRequestEntity clientRequestEntity) {
-        AuthResponse res = userService.invite(clientRequestEntity);
+        UserInviteResponse res = userService.invite(clientRequestEntity);
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.BAD_REQUEST
                 : HttpStatus.OK;
