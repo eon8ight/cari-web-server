@@ -3,7 +3,7 @@ package com.cari.web.server.config;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import com.cari.web.server.service.impl.CariUserDetailsService;
+import com.cari.web.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +33,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private JwtProvider jwtProvider;
 
     @Autowired
-    private CariUserDetailsService userDetailsService;
+    private UserService userDetailsService;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {

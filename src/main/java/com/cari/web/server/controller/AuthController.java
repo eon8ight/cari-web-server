@@ -1,14 +1,14 @@
 package com.cari.web.server.controller;
 
 import java.time.Duration;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.config.JwtProvider;
+import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
-import com.cari.web.server.dto.response.AuthResponse;
+import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.CheckedTokenResponse;
-import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.enums.TokenType;
+import com.cari.web.server.exception.LoginException;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,22 +55,22 @@ public class AuthController {
     }
 
     @PostMapping("/auth/login")
-    public ResponseEntity<AuthResponse> login(
+    public ResponseEntity<CariResponse> login(
             @RequestBody ClientRequestEntity clientRequestEntity) {
-        AuthResponse res = authService.login(clientRequestEntity);
-        ResponseEntity<AuthResponse> response;
+        String jwt;
 
-        if (res.getStatus().equals(RequestStatus.FAILURE)) {
-            response = ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
-        } else {
-            ResponseCookie tokenCookie = buildTokenCookie(res.getToken().get(),
-                    clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1);
-
-            response = ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
-                    .body(res);
+        try {
+            jwt = authService.login(clientRequestEntity);
+        } catch (LoginException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(CariResponse.failure(ex.getErrors()));
         }
 
-        return response;
+        ResponseCookie tokenCookie = buildTokenCookie(jwt,
+                clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1);
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
+                .body(CariResponse.success());
     }
 
     @GetMapping("/auth/checkSession")
@@ -79,7 +78,7 @@ public class AuthController {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         Authentication authentication = securityContext.getAuthentication();
 
-        CheckedTokenResponse response = authentication.getPrincipal() instanceof User
+        CheckedTokenResponse response = authentication.getPrincipal() instanceof Entity
                 ? CheckedTokenResponse
                         .valid(jwtProvider.extractClaims(jwtProvider.resolveToken(request).get()))
                 : CheckedTokenResponse.invalid();
@@ -100,10 +99,10 @@ public class AuthController {
     }
 
     @PostMapping("/auth/logout")
-    public ResponseEntity<AuthResponse> logout() {
+    public ResponseEntity<CariResponse> logout() {
         ResponseCookie tokenCookie = buildTokenCookie("", Duration.ZERO.toSeconds());
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
-                .body(AuthResponse.success(Optional.empty()));
+                .body(CariResponse.success());
     }
 }

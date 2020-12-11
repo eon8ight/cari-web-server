@@ -29,7 +29,9 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = tokenOptional.get();
 
             if (jwtProvider.validateSessionToken(token)) {
-                Authentication auth = jwtProvider.getAuthentication(token);
+                // If we pass validation, getAuthentication() will always return an optional with a
+                // value present
+                Authentication auth = jwtProvider.getAuthentication(token).get();
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (NoSuchElementException | HttpClientErrorException ex) {

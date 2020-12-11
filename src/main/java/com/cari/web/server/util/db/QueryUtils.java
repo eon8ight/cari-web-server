@@ -1,4 +1,4 @@
-package com.cari.web.server.util;
+package com.cari.web.server.util.db;
 
 import java.util.Arrays;
 import java.util.List;

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.db.Aesthetic;
-import com.cari.web.server.dto.response.EditResponse;
+import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.service.AestheticService;
@@ -100,8 +100,8 @@ public class AestheticController {
     }
 
     @PutMapping("/aesthetic/edit")
-    public ResponseEntity<EditResponse> edit(@RequestBody Aesthetic aesthetic) {
-        EditResponse response = aestheticService.createOrUpdate(aesthetic);
+    public ResponseEntity<CariResponse> edit(@RequestBody Aesthetic aesthetic) {
+        CariResponse response = aestheticService.createOrUpdate(aesthetic);
 
         ResponseEntity.BodyBuilder responseBuilder =
                 response.getStatus().equals(RequestStatus.SUCCESS) ? ResponseEntity.ok()

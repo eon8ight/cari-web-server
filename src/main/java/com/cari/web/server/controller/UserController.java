@@ -4,7 +4,7 @@ import java.util.Map;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
-import com.cari.web.server.dto.response.AuthResponse;
+import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
 import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.service.UserService;
@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,17 +30,17 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/user/register")
-    public ResponseEntity<AuthResponse> register(
+    public ResponseEntity<CariResponse> register(
             @RequestBody ClientRequestEntity clientRequestEntity) {
         String token = clientRequestEntity.getToken();
-        AuthResponse res;
+        CariResponse res;
 
         try {
             jwtProvider.validateInviteToken(token);
             int pkEntity = jwtProvider.getEntityFromToken(token);
             res = userService.register(pkEntity, clientRequestEntity);
         } catch (HttpClientErrorException ex) {
-            res = AuthResponse.failure("Token is invalid");
+            res = CariResponse.failure("Token is invalid");
         }
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.BAD_REQUEST
@@ -49,17 +50,17 @@ public class UserController {
     }
 
     @PostMapping("/user/confirm")
-    public ResponseEntity<AuthResponse> confirm(
+    public ResponseEntity<CariResponse> confirm(
             @RequestBody ClientRequestEntity clientRequestEntity) {
         String token = clientRequestEntity.getToken();
-        AuthResponse res;
+        CariResponse res;
 
         try {
             jwtProvider.validateConfirmToken(token);
             int pkEntity = jwtProvider.getEntityFromToken(token);
             res = userService.confirm(pkEntity);
         } catch (HttpClientErrorException ex) {
-            res = AuthResponse.failure("Token is invalid");
+            res = CariResponse.failure("Token is invalid");
         }
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.FORBIDDEN
@@ -69,17 +70,17 @@ public class UserController {
     }
 
     @PostMapping("/user/resetPassword")
-    public ResponseEntity<AuthResponse> resetPassword(
+    public ResponseEntity<CariResponse> resetPassword(
             @RequestBody ClientRequestEntity clientRequestEntity) {
         String token = clientRequestEntity.getToken();
-        AuthResponse res;
+        CariResponse res;
 
         try {
             jwtProvider.validateResetPasswordToken(token);
             int pkEntity = jwtProvider.getEntityFromToken(token);
             res = userService.resetPassword(pkEntity, clientRequestEntity.getPassword());
         } catch (HttpClientErrorException ex) {
-            res = AuthResponse.failure("Token is invalid");
+            res = CariResponse.failure("Token is invalid");
         }
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.FORBIDDEN
@@ -102,5 +103,21 @@ public class UserController {
                 : HttpStatus.OK;
 
         return new ResponseEntity<>(res, status);
+    }
+
+    @PutMapping("/user/edit")
+    public ResponseEntity<CariResponse> edit(@RequestBody ClientRequestEntity clientRequestEntity) {
+        CariResponse res = userService.edit(clientRequestEntity);
+
+        HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.BAD_REQUEST
+                : HttpStatus.OK;
+
+        return new ResponseEntity<>(res, status);
+    }
+
+    @GetMapping("/user/findForEdit")
+    public ResponseEntity<Entity> edit() {
+        Entity entityObj = userService.findForEdit();
+        return ResponseEntity.ok().body(entityObj);
     }
 }

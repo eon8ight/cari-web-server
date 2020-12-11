@@ -18,6 +18,18 @@ public class ClientRequestEntity implements Serializable {
 
     private String password;
 
+    private String firstName;
+
+    private String lastName;
+
+    private String biography;
+
+    private String title;
+
+    private String profileImageUrl;
+
+    private Integer favoriteAesthetic;
+
     private boolean rememberMe;
 
     private String token;

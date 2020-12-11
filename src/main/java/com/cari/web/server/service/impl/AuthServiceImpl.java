@@ -1,21 +1,18 @@
 package com.cari.web.server.service.impl;
 
-import java.util.Arrays;
-import java.util.Optional;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
-import com.cari.web.server.dto.response.AuthResponse;
-import com.cari.web.server.dto.response.CariFieldError;
 import com.cari.web.server.enums.TokenType;
+import com.cari.web.server.exception.LoginException;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.FieldError;
 import org.springframework.web.client.HttpClientErrorException;
 
 @Service
@@ -34,37 +31,35 @@ public class AuthServiceImpl implements AuthService {
     private EntityRepository entityRepository;
 
     @Override
-    public AuthResponse login(ClientRequestEntity clientRequestEntity) {
+    public String login(ClientRequestEntity clientRequestEntity) throws LoginException {
         String username = clientRequestEntity.getUsername();
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,
-                    clientRequestEntity.getPassword(),
-                    Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER))));
-
             // If we got this far, an entity with the given username or email address is guaranteed
             // to exist
             Entity entity = entityRepository.findByUsernameOrEmailAddress(username).get();
 
-            if (entity.getConfirmed() == null) {
-                return AuthResponse.failure(Arrays.asList(new CariFieldError(FIELD_USERNAME,
-                        "You have not yet confirmed your account.")));
-            }
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,
+                    clientRequestEntity.getPassword(), entity.getAuthorities()));
 
-            String jwt = jwtProvider.createSessionToken(entity);
-
-            return AuthResponse.success(Optional.of(jwt));
+            return jwtProvider.createSessionToken(entity);
         } catch (AuthenticationException ex) {
             String message = ex.getLocalizedMessage();
             String field = FIELD_USERNAME;
 
-            if (message.equals("Bad credentials")) {
-                message = "Password is incorrect.";
-                field = FIELD_PASSWORD;
+            switch (message) {
+                case "User is disabled":
+                    message = "You have not yet confirmed your account.";
+                    field = FIELD_USERNAME;
+                    break;
+                case "Bad credentials":
+                    message = "Password is incorrect.";
+                    field = FIELD_PASSWORD;
+                    break;
             }
 
-            CariFieldError fieldError = new CariFieldError(field, message);
-            return AuthResponse.failure(Arrays.asList(fieldError));
+            FieldError fieldError = new FieldError(field, field, message);
+            throw new LoginException(fieldError);
         }
     }
 

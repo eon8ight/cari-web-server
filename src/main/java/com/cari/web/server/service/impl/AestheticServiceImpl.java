@@ -9,14 +9,14 @@ import javax.sql.DataSource;
 import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.domain.db.MediaCreator;
 import com.cari.web.server.dto.response.CariPage;
-import com.cari.web.server.dto.response.EditResponse;
+import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.repository.AestheticMediaRepository;
 import com.cari.web.server.repository.AestheticRelationshipRepository;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.repository.AestheticWebsiteRepository;
 import com.cari.web.server.repository.MediaCreatorRepository;
 import com.cari.web.server.service.AestheticService;
-import com.cari.web.server.util.QueryUtils;
+import com.cari.web.server.util.db.QueryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -124,7 +124,7 @@ public class AestheticServiceImpl implements AestheticService {
 
     @Override
     public Optional<Aesthetic> find(int aesthetic) {
-        return aestheticRepository.simpleFind(aesthetic);
+        return aestheticRepository.findById(aesthetic);
     }
 
     @Override
@@ -134,7 +134,7 @@ public class AestheticServiceImpl implements AestheticService {
 
     @Override
     @Transactional
-    public EditResponse createOrUpdate(Aesthetic aesthetic) {
+    public CariResponse createOrUpdate(Aesthetic aesthetic) {
         /*
          * TODO: 1. Validate name not in use 2. Validate symbol not in use
          */
@@ -189,6 +189,6 @@ public class AestheticServiceImpl implements AestheticService {
         }
 
         aestheticRepository.save(aesthetic);
-        return EditResponse.success();
+        return CariResponse.success();
     }
 }

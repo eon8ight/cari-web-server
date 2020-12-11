@@ -9,13 +9,13 @@ import java.util.Optional;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
-import com.cari.web.server.dto.response.AuthResponse;
 import com.cari.web.server.dto.response.CariPage;
+import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
-import com.cari.web.server.util.QueryUtils;
+import com.cari.web.server.util.db.QueryUtils;
 import com.sendgrid.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,8 +25,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.FieldError;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -51,12 +53,35 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private DataSource dbHandle;
 
+    private Entity getSessionEntity() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication authentication = securityContext.getAuthentication();
+        return (Entity) authentication.getPrincipal();
+    }
+
     @Override
-    public AuthResponse register(int pkEntity, ClientRequestEntity clientRequestEntity) {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<Entity> entity = entityRepository.findByUsernameOrEmailAddress(username);
+
+        if (entity.isEmpty()) {
+            throw new UsernameNotFoundException(
+                    "User with username or email address \"" + username + "\" does not exist");
+        }
+
+        return entity.get();
+    }
+
+    @Override
+    public Optional<Entity> find(int pkEntity) {
+        return entityRepository.findByPk(pkEntity);
+    }
+
+    @Override
+    public CariResponse register(int pkEntity, ClientRequestEntity clientRequestEntity) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
         if (entityOptional.isEmpty()) {
-            return AuthResponse.failure("Token contains an invalid entity PK!");
+            return CariResponse.failure("Token contains an invalid entity PK!");
         }
 
         Entity entity = entityOptional.get();
@@ -65,7 +90,7 @@ public class UserServiceImpl implements UserService {
         Optional<Entity> entityWithUsername = entityRepository.findByUsername(username);
 
         if (entityWithUsername.isPresent()) {
-            return AuthResponse.failure("Username is already in use.");
+            return CariResponse.failure("Username is already in use.");
         }
 
         entity.setUsername(username);
@@ -76,38 +101,38 @@ public class UserServiceImpl implements UserService {
 
         Response response = sendgridService.sendConfirmAccountEmail(entity);
 
-        return response.getStatusCode() >= 400 ? AuthResponse.failure(response.getBody())
-                : AuthResponse.success();
+        return response.getStatusCode() >= 400 ? CariResponse.failure(response.getBody())
+                : CariResponse.success();
     }
 
     @Override
-    public AuthResponse confirm(int pkEntity) {
+    public CariResponse confirm(int pkEntity) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
         if (entityOptional.isEmpty()) {
-            return AuthResponse.failure("Entity with PK " + pkEntity + " does not exist!");
+            return CariResponse.failure("Entity with PK " + pkEntity + " does not exist!");
         }
 
         Entity entity = entityOptional.get();
         entity.setConfirmed(Timestamp.from(Instant.now()));
         entityRepository.save(entity);
 
-        return AuthResponse.success();
+        return CariResponse.success();
     }
 
     @Override
-    public AuthResponse resetPassword(int pkEntity, String password) {
+    public CariResponse resetPassword(int pkEntity, String password) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
         if (entityOptional.isEmpty()) {
-            return AuthResponse.failure("Entity with PK " + pkEntity + " does not exist!");
+            return CariResponse.failure("Entity with PK " + pkEntity + " does not exist!");
         }
 
         Entity entity = entityOptional.get();
         entity.setPasswordHash(passwordEncoder.encode(password));
         entityRepository.save(entity);
 
-        return AuthResponse.success();
+        return CariResponse.success();
     }
 
     @Override
@@ -153,9 +178,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInviteResponse invite(ClientRequestEntity clientRequestEntity) {
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Authentication authentication = securityContext.getAuthentication();
-        UserDetails principal = (UserDetails) authentication.getPrincipal();
+        Entity principal = getSessionEntity();
 
         int pkInviter = Integer.parseInt(principal.getUsername());
         Optional<Entity> inviterOptional = entityRepository.findById(pkInviter);
@@ -188,5 +211,89 @@ public class UserServiceImpl implements UserService {
 
         return response.getStatusCode() >= 400 ? UserInviteResponse.failure(response.getBody())
                 : UserInviteResponse.success(entity);
+    }
+
+    @Override
+    public Entity findForEdit() {
+        return getSessionEntity();
+    }
+
+    @Override
+    public CariResponse edit(ClientRequestEntity clientRequestEntity) {
+        Entity principal = getSessionEntity();
+
+        String newUsername = clientRequestEntity.getUsername();
+        String newEmailAddress = clientRequestEntity.getEmailAddress();
+        String newPassword = clientRequestEntity.getPassword();
+        String newFirstName = clientRequestEntity.getFirstName();
+        String newLastName = clientRequestEntity.getLastName();
+        String newBiography = clientRequestEntity.getBiography();
+        String newTitle = clientRequestEntity.getTitle();
+        String newProfileImageUrl = clientRequestEntity.getProfileImageUrl();
+        Integer newFavoriteAesthetic = clientRequestEntity.getFavoriteAesthetic();
+
+        List<FieldError> fieldErrors = new ArrayList<>(2);
+
+        if (newUsername != null) {
+            Optional<Entity> entityWithUsername = entityRepository.findByUsername(newUsername);
+
+            if (entityWithUsername.isPresent()) {
+                if (entityWithUsername.get().getEntity() != principal.getEntity()) {
+                    fieldErrors
+                            .add(new FieldError("username", "username", "Username is already in use."));
+                }
+            }
+
+            principal.setUsername(newUsername);
+        }
+
+        if (newEmailAddress != null) {
+            Optional<Entity> entityWithEmailAddress =
+                    entityRepository.findByEmailAddress(newEmailAddress);
+
+            if (entityWithEmailAddress.isPresent()) {
+                if (entityWithEmailAddress.get().getEntity() != principal.getEntity()) {
+                    fieldErrors.add(new FieldError("emailAddress", "emailAddress",
+                            "Email address is already in use."));
+                }
+            } else {
+                principal.setEmailAddress(newEmailAddress);
+            }
+        }
+
+        if (!fieldErrors.isEmpty()) {
+            return CariResponse.failure(fieldErrors);
+        }
+
+        if (newPassword != null) {
+            principal.setPasswordHash(passwordEncoder.encode(newPassword));
+        }
+
+        if (newFirstName != null) {
+            principal.setFirstName(newFirstName);
+        }
+
+        if (newLastName != null) {
+            principal.setLastName(newLastName);
+        }
+
+        if (newBiography != null) {
+            principal.setBiography(newBiography);
+        }
+
+        if (newTitle != null) {
+            principal.setTitle(newTitle);
+        }
+
+        if (newProfileImageUrl != null) {
+            principal.setProfileImageUrl(newProfileImageUrl);
+        }
+
+        if (newFavoriteAesthetic != null) {
+            principal.setFavoriteAesthetic(newFavoriteAesthetic);
+        }
+
+        entityRepository.save(principal);
+        return CariResponse.success();
     }
 }

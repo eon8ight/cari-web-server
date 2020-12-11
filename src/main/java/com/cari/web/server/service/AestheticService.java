@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.db.Aesthetic;
-import com.cari.web.server.dto.response.EditResponse;
+import com.cari.web.server.dto.response.CariResponse;
 import org.springframework.data.domain.Page;
 
 public interface AestheticService {
@@ -18,5 +18,5 @@ public interface AestheticService {
 
     List<Aesthetic> findNames(Optional<String> query);
 
-    EditResponse createOrUpdate(Aesthetic aesthetic);
+    CariResponse createOrUpdate(Aesthetic aesthetic);
 }

@@ -1,17 +1,20 @@
 package com.cari.web.server.domain.db;
 
-import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collection;
+import java.util.List;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,14 +27,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table("tb_entity")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Entity implements Serializable {
+public class Entity implements UserDetails {
 
     private static final long serialVersionUID = -1485850596199572023L;
 
     private static final String COLUMN_EMAIL_ADDRESS = "email_address";
     private static final String COLUMN_PASSWORD_HASH = "password_hash";
-
-    public static final String ROLE_USER = "USER";
+    private static final String COLUMN_FIRST_NAME = "first_name";
+    private static final String COLUMN_LAST_NAME = "last_name";
+    private static final String COLUMN_PROFILE_IMAGE_URL = "profile_image_url";
+    private static final String COLUMN_FAVORITE_AESTHETIC = "favorite_aesthetic";
 
     @Id
     private int entity;
@@ -62,21 +67,68 @@ public class Entity implements Serializable {
     @Column
     private Timestamp confirmed;
 
-    public UserDetails toUserDetails() {
-        // @formatter:off
-        return User
-            .withUsername(Integer.toString(entity))
-            .password(passwordHash)
-            .accountExpired(false)
-            .accountLocked(false)
-            .credentialsExpired(false)
-            .disabled(false)
-            .roles(Entity.ROLE_USER)
-            .build();
-        // @formatter:on
+    @Column(COLUMN_FIRST_NAME)
+    @JsonAlias({COLUMN_FIRST_NAME})
+    private String firstName;
+
+    @Column(COLUMN_LAST_NAME)
+    @JsonAlias({COLUMN_LAST_NAME})
+    private String lastName;
+
+    private String biography;
+
+    private String title;
+
+    @Column(COLUMN_PROFILE_IMAGE_URL)
+    @JsonAlias({COLUMN_PROFILE_IMAGE_URL})
+    private String profileImageUrl;
+
+    @Column(COLUMN_FAVORITE_AESTHETIC)
+    @JsonAlias({COLUMN_FAVORITE_AESTHETIC})
+    private Integer favoriteAesthetic;
+
+    @Transient
+    @Valid
+    private List<Role> roles;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
+    public String getPassword() {
+        return passwordHash;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return confirmed != null;
     }
 
     public static Entity fromResultSet(ResultSet rs, int rowNum) throws SQLException {
+        Integer favoriteAesthetic = null;
+        String favoriteAestheticString = rs.getString(COLUMN_FAVORITE_AESTHETIC);
+
+        if (favoriteAestheticString != null) {
+            favoriteAesthetic = Integer.parseInt(favoriteAestheticString);
+        }
+
         // @formatter:off
         return Entity.builder()
             .entity(rs.getInt("entity"))
@@ -87,6 +139,12 @@ public class Entity implements Serializable {
             .invited(rs.getTimestamp("invited"))
             .confirmed(rs.getTimestamp("confirmed"))
             .registered(rs.getTimestamp("registered"))
+            .firstName(rs.getString(COLUMN_FIRST_NAME))
+            .lastName(rs.getString(COLUMN_LAST_NAME))
+            .biography(rs.getString("biography"))
+            .title(rs.getString("title"))
+            .profileImageUrl(rs.getString(COLUMN_PROFILE_IMAGE_URL))
+            .favoriteAesthetic(favoriteAesthetic)
             .build();
         // @formatter:on
     }

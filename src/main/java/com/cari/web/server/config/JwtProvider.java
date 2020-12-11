@@ -10,7 +10,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.enums.TokenType;
-import com.cari.web.server.service.impl.CariUserDetailsService;
+import com.cari.web.server.service.UserService;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import io.jsonwebtoken.Claims;
@@ -42,7 +40,7 @@ public class JwtProvider {
     private long expireLength;
 
     @Autowired
-    private CariUserDetailsService userDetailsService;
+    private UserService userDetailsService;
 
     @PostConstruct
     protected void init() {
@@ -71,12 +69,20 @@ public class JwtProvider {
         return Integer.parseInt(claims.getSubject());
     }
 
-    public Authentication getAuthentication(String token) {
+    public Optional<Authentication> getAuthentication(String token) {
         int pkEntity = getEntityFromToken(token);
-        UserDetails userDetails = userDetailsService.loadByEntity(pkEntity);
+        Optional<Entity> userDetailsOptional = userDetailsService.find(pkEntity);
 
-        return new UsernamePasswordAuthenticationToken(userDetails, "",
-                Arrays.asList(new SimpleGrantedAuthority(Entity.ROLE_USER)));
+        if (userDetailsOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Entity userDetails = userDetailsOptional.get();
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, "",
+                userDetails.getAuthorities());
+
+        return Optional.of(authentication);
     }
 
     public String createSessionToken(Entity entity) {
