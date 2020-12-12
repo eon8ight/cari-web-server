@@ -44,7 +44,7 @@ public class Aesthetic implements Serializable {
     private String name;
 
     @Column(COLUMN_URL_SLUG)
-    @JsonAlias({COLUMN_URL_SLUG})
+    @JsonAlias(COLUMN_URL_SLUG)
     @NotNull
     private String urlSlug;
 
@@ -53,11 +53,11 @@ public class Aesthetic implements Serializable {
     private String symbol;
 
     @Column(COLUMN_START_YEAR)
-    @JsonAlias({COLUMN_START_YEAR})
+    @JsonAlias(COLUMN_START_YEAR)
     private String startYear;
 
     @Column(COLUMN_END_YEAR)
-    @JsonAlias({COLUMN_END_YEAR})
+    @JsonAlias(COLUMN_END_YEAR)
     private String endYear;
 
     @Column
@@ -65,7 +65,7 @@ public class Aesthetic implements Serializable {
     private String description;
 
     @Column(COLUMN_MEDIA_SOURCE_URL)
-    @JsonAlias({COLUMN_MEDIA_SOURCE_URL})
+    @JsonAlias(COLUMN_MEDIA_SOURCE_URL)
     private String mediaSourceUrl;
 
     @Transient

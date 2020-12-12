@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebsite, Integer> {
 
     // @formatter:off
-    String GET_OR_CREATE_QUERY =
+    String CREATE_OR_UPDATE_QUERY =
         "insert into tb_aesthetic_website ( " +
         "    aesthetic, " +
         "    url, " +
@@ -38,7 +38,7 @@ public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebs
         "      where aesthetic = :aesthetic";
     // @formatter:on
 
-    @Query(GET_OR_CREATE_QUERY)
+    @Query(CREATE_OR_UPDATE_QUERY)
     int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("url") String url,
             @Param("websiteType") int websiteType);
 

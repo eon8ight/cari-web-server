@@ -2,6 +2,7 @@ package com.cari.web.server.dto.response;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import com.cari.web.server.enums.RequestStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.validation.FieldError;
@@ -19,6 +20,8 @@ public class CariResponse implements Serializable {
     private String message;
 
     private List<FieldError> fieldErrors;
+
+    private Map<String, Object> updatedData;
 
     public static CariResponse success() {
         return CariResponse.builder().status(RequestStatus.SUCCESS).build();

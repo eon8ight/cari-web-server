@@ -24,7 +24,7 @@ public class WebsiteType implements Serializable {
 
     @Id
     @Column(COLUMN_WEBSITE_TYPE)
-    @JsonAlias({COLUMN_WEBSITE_TYPE})
+    @JsonAlias(COLUMN_WEBSITE_TYPE)
     private int websiteType;
 
     @Column
@@ -32,7 +32,7 @@ public class WebsiteType implements Serializable {
     private String label;
 
     @Column(COLUMN_VALIDATION_REGEX)
-    @JsonAlias({COLUMN_VALIDATION_REGEX})
+    @JsonAlias(COLUMN_VALIDATION_REGEX)
     @NotNull
     private String validationRegex;
 }

@@ -27,12 +27,12 @@ public class MessageTemplate implements Serializable {
 
     @Id
     @Column(COLUMN_MESSAGE_TEMPLATE)
-    @JsonAlias({COLUMN_MESSAGE_TEMPLATE})
+    @JsonAlias(COLUMN_MESSAGE_TEMPLATE)
     @NotNull
     private int messageTemplate;
 
     @Column(COLUMN_EXT_ID)
-    @JsonAlias({COLUMN_EXT_ID})
+    @JsonAlias(COLUMN_EXT_ID)
     @NotNull
     private String extId;
 }

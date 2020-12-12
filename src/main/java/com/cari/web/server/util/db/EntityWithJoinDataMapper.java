@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.domain.db.File;
 import com.cari.web.server.domain.db.Role;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +24,17 @@ public class EntityWithJoinDataMapper implements RowMapper<Entity> {
 
             if (!Arrays.equals(EMPTY_ROLES, roles)) {
                 entity.setRoles(Arrays.asList(roles));
+            }
+
+            try {
+                String profileImageFileString = rs.getString("profile_image");
+
+                if (profileImageFileString != null) {
+                    File profileImageFile = mapper.readValue(profileImageFileString, File.class);
+                    entity.setProfileImage(profileImageFile);
+                }
+            } catch (SQLException ex) {
+                // Ignore
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();

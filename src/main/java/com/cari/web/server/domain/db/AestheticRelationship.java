@@ -27,11 +27,11 @@ public class AestheticRelationship implements Serializable {
     private int aestheticRelationship;
 
     @Column(COLUMN_FROM_AESTHETIC)
-    @JsonAlias({COLUMN_FROM_AESTHETIC})
+    @JsonAlias(COLUMN_FROM_AESTHETIC)
     private int fromAesthetic;
 
     @Column(COLUMN_TO_AESTHETIC)
-    @JsonAlias({COLUMN_TO_AESTHETIC})
+    @JsonAlias(COLUMN_TO_AESTHETIC)
     private int toAesthetic;
 
     @Column

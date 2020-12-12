@@ -28,7 +28,7 @@ public class AestheticWebsite implements Serializable {
 
     @Id
     @Column(COLUMN_AESTHETIC_WEBSITE)
-    @JsonAlias({COLUMN_AESTHETIC_WEBSITE})
+    @JsonAlias(COLUMN_AESTHETIC_WEBSITE)
     private int aestheticWebsite;
 
     @Column
@@ -39,7 +39,7 @@ public class AestheticWebsite implements Serializable {
     private String url;
 
     @Column(COLUMN_WEBSITE_TYPE)
-    @JsonAlias({COLUMN_WEBSITE_TYPE})
+    @JsonAlias(COLUMN_WEBSITE_TYPE)
     @MappedCollection
     @NotNull
     @Valid

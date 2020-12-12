@@ -47,15 +47,32 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "group by e.entity";
 
     String FIND_BY_PK_QUERY =
-        "  select e.*, " +
-        "         jsonb_agg(distinct r.*) as roles " +
-        "    from tb_entity e " +
-        "    join tb_entity_role er " +
-        "      on e.entity = er.entity " +
-        "    join tb_role r " +
-        "      on er.role = r.role " +
-        "   where e.entity = :entity " +
-        "group by e.entity";
+        "   select e.entity, " +
+        "          e.email_address, " +
+        "          e.username, " +
+        "          e.password_hash, " +
+        "          e.invited, " +
+        "          e.confirmed, " +
+        "          e.registered, " +
+        "          e.inviter, " +
+        "          e.first_name, " +
+        "          e.last_name, " +
+        "          e.biography, " +
+        "          e.title, " +
+        "          e.profile_image_file, " +
+        "          e.favorite_aesthetic, " +
+        "          to_jsonb(f.*)           as profile_image, " +
+        "          jsonb_agg(distinct r.*) as roles " +
+        "     from tb_entity e " +
+        "     join tb_entity_role er " +
+        "       on e.entity = er.entity " +
+        "left join tb_file f " +
+        "       on e.profile_image_file = f.file " +
+        "     join tb_role r " +
+        "       on er.role = r.role " +
+        "    where e.entity = :entity " +
+        " group by e.entity, " +
+        "          f.file";
     // @formatter:on
 
     @Query(value = FIND_BY_USERNAME_OR_EMAIL_ADDRESS_QUERY, rowMapperClass = EntityWithJoinDataMapper.class)

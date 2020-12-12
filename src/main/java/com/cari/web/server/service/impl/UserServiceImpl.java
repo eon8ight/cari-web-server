@@ -3,16 +3,21 @@ package com.cari.web.server.service.impl;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.domain.db.File;
+import com.cari.web.server.domain.db.FileType;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.CariPage;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
+import com.cari.web.server.exception.FileUploadException;
 import com.cari.web.server.repository.EntityRepository;
+import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
 import com.cari.web.server.util.db.QueryUtils;
@@ -29,6 +34,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.FieldError;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -37,15 +43,24 @@ public class UserServiceImpl implements UserService {
 
     private static final String FILTER_INVITER = "inviter";
 
-    private static final Map<String, String> SORT_FIELDS =
-            Map.of("emailAddress", "email_address", "invited", "invited", "registered",
-                    "registered", "confirmed", "confirmed", "username", "username");
+    // @formatter:off
+    private static final Map<String, String> SORT_FIELDS = Map.of(
+        "emailAddress", "email_address",
+        "invited", "invited",
+        "registered", "registered",
+        "confirmed", "confirmed",
+        "username", "username"
+    );
+    // @formatter:on
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private SendgridService sendgridService;
+
+    @Autowired
+    private FileService fileService;
 
     @Autowired
     private EntityRepository entityRepository;
@@ -229,18 +244,19 @@ public class UserServiceImpl implements UserService {
         String newLastName = clientRequestEntity.getLastName();
         String newBiography = clientRequestEntity.getBiography();
         String newTitle = clientRequestEntity.getTitle();
-        String newProfileImageUrl = clientRequestEntity.getProfileImageUrl();
+        MultipartFile newProfileImage = clientRequestEntity.getProfileImage();
         Integer newFavoriteAesthetic = clientRequestEntity.getFavoriteAesthetic();
 
-        List<FieldError> fieldErrors = new ArrayList<>(2);
+        List<FieldError> fieldErrors = new ArrayList<>(3);
+        Map<String, Object> updatedData = new HashMap<>(1);
 
         if (newUsername != null) {
             Optional<Entity> entityWithUsername = entityRepository.findByUsername(newUsername);
 
             if (entityWithUsername.isPresent()) {
                 if (entityWithUsername.get().getEntity() != principal.getEntity()) {
-                    fieldErrors
-                            .add(new FieldError("username", "username", "Username is already in use."));
+                    fieldErrors.add(
+                            new FieldError("username", "username", "Username is already in use."));
                 }
             }
 
@@ -258,6 +274,17 @@ public class UserServiceImpl implements UserService {
                 }
             } else {
                 principal.setEmailAddress(newEmailAddress);
+            }
+        }
+
+        if (newProfileImage != null) {
+            try {
+                File dbProfileImage = fileService.upload(newProfileImage, FileType.FILE_TYPE_IMAGE);
+                principal.setProfileImageFile(dbProfileImage.getFile());
+                updatedData.put("profileImageUrl", dbProfileImage.getUrl());
+            } catch (FileUploadException ex) {
+                fieldErrors.add(
+                        new FieldError("profileImage", "profileImage", ex.getLocalizedMessage()));
             }
         }
 
@@ -285,15 +312,15 @@ public class UserServiceImpl implements UserService {
             principal.setTitle(newTitle);
         }
 
-        if (newProfileImageUrl != null) {
-            principal.setProfileImageUrl(newProfileImageUrl);
-        }
-
         if (newFavoriteAesthetic != null) {
             principal.setFavoriteAesthetic(newFavoriteAesthetic);
         }
 
         entityRepository.save(principal);
-        return CariResponse.success();
+
+        CariResponse res = CariResponse.success();
+        res.setUpdatedData(updatedData);
+
+        return res;
     }
 }

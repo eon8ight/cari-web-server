@@ -35,7 +35,7 @@ public class Entity implements UserDetails {
     private static final String COLUMN_PASSWORD_HASH = "password_hash";
     private static final String COLUMN_FIRST_NAME = "first_name";
     private static final String COLUMN_LAST_NAME = "last_name";
-    private static final String COLUMN_PROFILE_IMAGE_URL = "profile_image_url";
+    private static final String COLUMN_PROFILE_IMAGE_FILE = "profile_image_file";
     private static final String COLUMN_FAVORITE_AESTHETIC = "favorite_aesthetic";
 
     @Id
@@ -45,12 +45,12 @@ public class Entity implements UserDetails {
     private String username;
 
     @Column(COLUMN_EMAIL_ADDRESS)
-    @JsonAlias({COLUMN_EMAIL_ADDRESS})
+    @JsonAlias(COLUMN_EMAIL_ADDRESS)
     @NotNull
     private String emailAddress;
 
     @Column(COLUMN_PASSWORD_HASH)
-    @JsonAlias({COLUMN_PASSWORD_HASH})
+    @JsonAlias(COLUMN_PASSWORD_HASH)
     @JsonIgnore
     private String passwordHash;
 
@@ -68,23 +68,27 @@ public class Entity implements UserDetails {
     private Timestamp confirmed;
 
     @Column(COLUMN_FIRST_NAME)
-    @JsonAlias({COLUMN_FIRST_NAME})
+    @JsonAlias(COLUMN_FIRST_NAME)
     private String firstName;
 
     @Column(COLUMN_LAST_NAME)
-    @JsonAlias({COLUMN_LAST_NAME})
+    @JsonAlias(COLUMN_LAST_NAME)
     private String lastName;
 
     private String biography;
 
     private String title;
 
-    @Column(COLUMN_PROFILE_IMAGE_URL)
-    @JsonAlias({COLUMN_PROFILE_IMAGE_URL})
-    private String profileImageUrl;
+    @Column(COLUMN_PROFILE_IMAGE_FILE)
+    @JsonAlias(COLUMN_PROFILE_IMAGE_FILE)
+    private Integer profileImageFile;
+
+    @Transient
+    @Valid
+    private File profileImage;
 
     @Column(COLUMN_FAVORITE_AESTHETIC)
-    @JsonAlias({COLUMN_FAVORITE_AESTHETIC})
+    @JsonAlias(COLUMN_FAVORITE_AESTHETIC)
     private Integer favoriteAesthetic;
 
     @Transient
@@ -122,6 +126,13 @@ public class Entity implements UserDetails {
     }
 
     public static Entity fromResultSet(ResultSet rs, int rowNum) throws SQLException {
+        Integer profileImageFile = null;
+        String profileImageFileString = rs.getString(COLUMN_PROFILE_IMAGE_FILE);
+
+        if(profileImageFileString != null) {
+            profileImageFile = Integer.parseInt(profileImageFileString);
+        }
+
         Integer favoriteAesthetic = null;
         String favoriteAestheticString = rs.getString(COLUMN_FAVORITE_AESTHETIC);
 
@@ -143,7 +154,7 @@ public class Entity implements UserDetails {
             .lastName(rs.getString(COLUMN_LAST_NAME))
             .biography(rs.getString("biography"))
             .title(rs.getString("title"))
-            .profileImageUrl(rs.getString(COLUMN_PROFILE_IMAGE_URL))
+            .profileImageFile(profileImageFile)
             .favoriteAesthetic(favoriteAesthetic)
             .build();
         // @formatter:on

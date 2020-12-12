@@ -13,17 +13,21 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table("tb_media_creator")
-public class MediaCreator implements Serializable {
-    private static final long serialVersionUID = -2739822601756198464L;
+@Table("tb_file_type")
+public class FileType implements Serializable {
 
-    private static final String COLUMN_MEDIA_CREATOR = "media_creator";
+    private static final long serialVersionUID = -8311730054742861454L;
+
+    private static final String COLUMN_FILE_TYPE = "file_type";
+
+    public static final int FILE_TYPE_IMAGE = 1;
 
     @Id
-    @Column(COLUMN_MEDIA_CREATOR)
-    @JsonAlias(COLUMN_MEDIA_CREATOR)
-    private Integer mediaCreator;
+    @Column(COLUMN_FILE_TYPE)
+    @JsonAlias(COLUMN_FILE_TYPE)
+    private int fileType;
 
+    @Column
     @NotNull
-    private String name;
+    private String label;
 }

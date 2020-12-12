@@ -27,7 +27,7 @@ public class AestheticMedia implements Serializable {
 
     @Id
     @Column(COLUMN_AESTHETIC_MEDIA)
-    @JsonAlias({COLUMN_AESTHETIC_MEDIA})
+    @JsonAlias(COLUMN_AESTHETIC_MEDIA)
     private int aestheticMedia;
 
     @Column
@@ -38,7 +38,7 @@ public class AestheticMedia implements Serializable {
     private String url;
 
     @Column(COLUMN_PREVIEW_IMAGE_URL)
-    @JsonAlias({COLUMN_PREVIEW_IMAGE_URL})
+    @JsonAlias(COLUMN_PREVIEW_IMAGE_URL)
     @NotNull
     private String previewImageUrl;
 
@@ -49,7 +49,7 @@ public class AestheticMedia implements Serializable {
     private String description;
 
     @Column(COLUMN_MEDIA_CREATOR)
-    @JsonAlias({COLUMN_MEDIA_CREATOR})
+    @JsonAlias(COLUMN_MEDIA_CREATOR)
     @MappedCollection
     @Valid
     private MediaCreator mediaCreator;

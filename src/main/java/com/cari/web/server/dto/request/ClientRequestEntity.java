@@ -1,6 +1,7 @@
 package com.cari.web.server.dto.request;
 
 import java.io.Serializable;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class ClientRequestEntity implements Serializable {
 
     private String title;
 
-    private String profileImageUrl;
+    private MultipartFile profileImage;
 
     private Integer favoriteAesthetic;
 
