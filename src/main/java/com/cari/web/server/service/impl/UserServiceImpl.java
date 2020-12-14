@@ -1,5 +1,8 @@
 package com.cari.web.server.service.impl;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -7,17 +10,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.imageio.ImageIO;
 import javax.sql.DataSource;
+import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.Entity;
-import com.cari.web.server.domain.db.File;
 import com.cari.web.server.domain.db.FileType;
+import com.cari.web.server.dto.FileUploadResult;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.response.CariPage;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
-import com.cari.web.server.exception.FileUploadException;
+import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.FileService;
+import com.cari.web.server.service.ImageService;
 import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
 import com.cari.web.server.util.db.QueryUtils;
@@ -40,8 +46,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserServiceImpl implements UserService {
 
     private static final int MAX_PER_PAGE = 20;
+    private static final int PROFILE_PICTURE_SIZE = 150;
 
     private static final String FILTER_INVITER = "inviter";
+    private static final String FIELD_PROFILE_IMAGE = "profileImage";
 
     // @formatter:off
     private static final Map<String, String> SORT_FIELDS = Map.of(
@@ -61,6 +69,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private ImageService imageService;
 
     @Autowired
     private EntityRepository entityRepository;
@@ -279,12 +290,45 @@ public class UserServiceImpl implements UserService {
 
         if (newProfileImage != null) {
             try {
-                File dbProfileImage = fileService.upload(newProfileImage, FileType.FILE_TYPE_IMAGE);
-                principal.setProfileImageFile(dbProfileImage.getFile());
-                updatedData.put("profileImageUrl", dbProfileImage.getUrl());
-            } catch (FileUploadException ex) {
-                fieldErrors.add(
-                        new FieldError("profileImage", "profileImage", ex.getLocalizedMessage()));
+                File tmpProfileImage = File.createTempFile("cari-", ".tmp");
+                newProfileImage.transferTo(tmpProfileImage);
+
+                BufferedImage profileImage = ImageIO.read(tmpProfileImage);
+
+                if (!imageService.isImageSquare(profileImage)) {
+                    fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
+                            "Image must be a square."));
+                } else if (!imageService.isImageMinimumSize(profileImage, PROFILE_PICTURE_SIZE)) {
+                    String errorMessage = new StringBuilder("Image must be at least ")
+                            .append(PROFILE_PICTURE_SIZE).append(" pixels by ")
+                            .append(PROFILE_PICTURE_SIZE).append(" pixels.").toString();
+
+                    fieldErrors.add(
+                            new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE, errorMessage));
+                } else {
+                    profileImage = imageService.resizeImage(profileImage, PROFILE_PICTURE_SIZE);
+                    boolean wroteImage = ImageIO.write(profileImage, "png", tmpProfileImage);
+
+                    if (wroteImage) {
+                        FileUploadResult uploadResult =
+                                fileService.upload(tmpProfileImage, FileType.FILE_TYPE_IMAGE);
+
+                        if (uploadResult.getStatus().equals(RequestStatus.SUCCESS)) {
+                            CariFile dbProfileImage = uploadResult.getFile();
+                            principal.setProfileImageFile(dbProfileImage.getFile());
+                            updatedData.put("profileImageUrl", dbProfileImage.getUrl());
+                        } else {
+                            fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
+                                    uploadResult.getMessage()));
+                        }
+                    } else {
+                        fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
+                                "Failed to resize image."));
+                    }
+                }
+            } catch (IOException ex) {
+                fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
+                        ex.getLocalizedMessage()));
             }
         }
 

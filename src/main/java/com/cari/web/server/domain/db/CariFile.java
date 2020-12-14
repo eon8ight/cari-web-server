@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Table("tb_file")
-public class File implements Serializable {
+public class CariFile implements Serializable {
 
     private static final long serialVersionUID = 8463393495949610778L;
 

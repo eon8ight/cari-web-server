@@ -1,10 +1,9 @@
 package com.cari.web.server.service;
 
-import com.cari.web.server.domain.db.File;
-import com.cari.web.server.exception.FileUploadException;
-import org.springframework.web.multipart.MultipartFile;
+import java.io.File;
+import com.cari.web.server.dto.FileUploadResult;
 
 public interface FileService {
 
-    File upload(MultipartFile file, int pkFileType) throws FileUploadException;
+    FileUploadResult upload(File file, int pkFileType);
 }

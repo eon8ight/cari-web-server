@@ -85,7 +85,7 @@ public class Entity implements UserDetails {
 
     @Transient
     @Valid
-    private File profileImage;
+    private CariFile profileImage;
 
     @Column(COLUMN_FAVORITE_AESTHETIC)
     @JsonAlias(COLUMN_FAVORITE_AESTHETIC)
@@ -129,7 +129,7 @@ public class Entity implements UserDetails {
         Integer profileImageFile = null;
         String profileImageFileString = rs.getString(COLUMN_PROFILE_IMAGE_FILE);
 
-        if(profileImageFileString != null) {
+        if (profileImageFileString != null) {
             profileImageFile = Integer.parseInt(profileImageFileString);
         }
 
