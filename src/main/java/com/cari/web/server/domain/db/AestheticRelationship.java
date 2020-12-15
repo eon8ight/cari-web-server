@@ -2,6 +2,7 @@ package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
@@ -16,6 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("tb_aesthetic_relationship")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AestheticRelationship implements Serializable {
     private static final long serialVersionUID = -3625374001558766927L;
 
@@ -24,22 +26,22 @@ public class AestheticRelationship implements Serializable {
 
     @Id
     @Column("aesthetic_relationship")
-    private int aestheticRelationship;
+    private Integer aestheticRelationship;
 
     @Column(COLUMN_FROM_AESTHETIC)
     @JsonAlias(COLUMN_FROM_AESTHETIC)
-    private int fromAesthetic;
+    private Integer fromAesthetic;
 
     @Column(COLUMN_TO_AESTHETIC)
     @JsonAlias(COLUMN_TO_AESTHETIC)
-    private int toAesthetic;
+    private Integer toAesthetic;
 
     @Column
     private String description;
 
     @Transient
-    private Aesthetic fromAestheticObj;
+    private Aesthetic from;
 
     @Transient
-    private Aesthetic toAestheticObj;
+    private Aesthetic to;
 }

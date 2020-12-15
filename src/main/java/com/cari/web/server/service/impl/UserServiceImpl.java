@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.db.CariFile;
@@ -26,6 +28,7 @@ import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.ImageService;
 import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
+import com.cari.web.server.util.db.EntityWithJoinDataMapper;
 import com.cari.web.server.util.db.QueryUtils;
 import com.sendgrid.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,15 +52,21 @@ public class UserServiceImpl implements UserService {
     private static final int PROFILE_PICTURE_SIZE = 150;
 
     private static final String FILTER_INVITER = "inviter";
+    private static final String FILTER_ROLE = "role";
+    private static final String FILTER_INCLUDE_PROFILE_IMAGE = "includeProfileImage";
+    private static final String FILTER_INCLUDE_FAVORITE_AESTHETIC = "includeFavoriteAesthetic";
+
     private static final String FIELD_PROFILE_IMAGE = "profileImage";
 
     // @formatter:off
     private static final Map<String, String> SORT_FIELDS = Map.of(
-        "emailAddress", "email_address",
-        "invited", "invited",
-        "registered", "registered",
-        "confirmed", "confirmed",
-        "username", "username"
+        "emailAddress", "e.email_address",
+        "invited", "e.invited",
+        "registered", "e.registered",
+        "confirmed", "e.confirmed",
+        "username", "e.username",
+        "lastName", "e.last_name",
+        "firstName", "e.first_name"
     );
     // @formatter:on
 
@@ -163,8 +172,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<Entity> findForList(Map<String, String> filters) {
-        StringBuilder queryBuilder =
-                new StringBuilder("select count(*) over (), * from tb_entity ");
+        StringBuilder queryBuilder = new StringBuilder("select ");
+
+        List<String> columns = new ArrayList<>(Arrays.asList("count(*) over ()", "e.entity",
+                "e.email_address", "e.username", "e.password_hash", "e.invited", "e.confirmed",
+                "e.registered", "e.inviter", "e.first_name", "e.last_name", "e.biography",
+                "e.title", "e.profile_image_file", "e.favorite_aesthetic"));
+
+        List<String> joins = new ArrayList<>(2);
+
+        if (filters.get(FILTER_INCLUDE_PROFILE_IMAGE) != null) {
+            columns.add("to_jsonb(f.*) as profile_image");
+            joins.add("left join tb_file f on e.profile_image_file = f.file");
+        }
+
+        if (filters.get(FILTER_INCLUDE_FAVORITE_AESTHETIC) != null) {
+            columns.add("to_jsonb(a.*) as favorite_aesthetic_data");
+            joins.add("left join tb_aesthetic a on e.favorite_aesthetic = a.aesthetic");
+        }
+
+        queryBuilder.append(columns.stream().collect(Collectors.joining(", ")))
+                .append(" from tb_entity e ");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
 
@@ -174,10 +202,19 @@ public class UserServiceImpl implements UserService {
         List<String> filterClauses = new ArrayList<String>();
 
         if (inviter != null) {
-            filterClauses.add("inviter = :inviter\\:\\:integer");
+            filterClauses.add("e.inviter = :inviter\\:\\:integer");
             params.addValue("inviter", inviter);
         }
 
+        String role = filters.get(FILTER_ROLE);
+
+        if (role != null) {
+            filterClauses.add("er.role = :role\\:\\:integer");
+            params.addValue("role", role);
+            joins.add("join tb_entity_role er on e.entity = er.entity");
+        }
+
+        queryBuilder.append(joins.stream().collect(Collectors.joining(" ")));
         queryBuilder.append(QueryUtils.toWhereClause(filterClauses));
 
         /* ORDER BY */
@@ -199,7 +236,7 @@ public class UserServiceImpl implements UserService {
         params.addValue("offset", pageNum * MAX_PER_PAGE);
 
         return CariPage.getPage(dbHandle, queryBuilder.toString(), params, pageNum, MAX_PER_PAGE,
-                sort, Entity::fromResultSet);
+                sort, new EntityWithJoinDataMapper());
     }
 
     @Override

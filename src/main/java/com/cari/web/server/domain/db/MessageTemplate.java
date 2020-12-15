@@ -1,8 +1,8 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("tb_message_template")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MessageTemplate implements Serializable {
 
     private static final long serialVersionUID = 1834636000891676566L;
@@ -28,11 +29,9 @@ public class MessageTemplate implements Serializable {
     @Id
     @Column(COLUMN_MESSAGE_TEMPLATE)
     @JsonAlias(COLUMN_MESSAGE_TEMPLATE)
-    @NotNull
-    private int messageTemplate;
+    private Integer messageTemplate;
 
     @Column(COLUMN_EXT_ID)
     @JsonAlias(COLUMN_EXT_ID)
-    @NotNull
     private String extId;
 }

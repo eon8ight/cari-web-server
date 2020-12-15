@@ -16,16 +16,13 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
     String FIND_FOR_PAGE_QUERY =
         "with tt_website as ( " +
         "  select w.*, " +
-        "         jsonb_build_object( " +
-        "           'websiteType', wt.website_type, " +
-        "           'label', wt.label " +
-        "         ) as website_type " +
+        "         to_jsonb(wt.*) as type " +
         "    from tb_aesthetic_website w " +
         "    join tb_website_type wt " +
         "      on w.website_type = wt.website_type " +
         "), tt_media as ( " +
         "     select m.*, " +
-        "            to_jsonb(mc.*) as media_creator " +
+        "            to_jsonb(mc.*) as creator " +
         "       from tb_aesthetic_media m " +
         "  left join tb_media_creator mc " +
         "         on m.media_creator = mc.media_creator" +

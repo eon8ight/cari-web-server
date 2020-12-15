@@ -24,22 +24,34 @@ public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            AestheticWebsite[] websites = mapper.readValue(rs.getString("websites"), AestheticWebsite[].class);
-            AestheticMedia[] media = mapper.readValue(rs.getString("media"), AestheticMedia[].class);
+            try {
+                AestheticWebsite[] websites =
+                        mapper.readValue(rs.getString("websites"), AestheticWebsite[].class);
 
-            SimilarAesthetic[] similarAesthetics =
-                    mapper.readValue(rs.getString("similar_aesthetics"), SimilarAesthetic[].class);
-
-            if (!Arrays.equals(EMPTY_WEBSITES, websites)) {
-                aesthetic.setWebsites(Arrays.asList(websites));
+                if (!Arrays.equals(EMPTY_WEBSITES, websites)) {
+                    aesthetic.setWebsites(Arrays.asList(websites));
+                }
+            } catch (SQLException ex) {
             }
 
-            if (!Arrays.equals(EMPTY_MEDIA, media)) {
-                aesthetic.setMedia(Arrays.asList(media));
+            try {
+                AestheticMedia[] media =
+                        mapper.readValue(rs.getString("media"), AestheticMedia[].class);
+
+                if (!Arrays.equals(EMPTY_MEDIA, media)) {
+                    aesthetic.setMedia(Arrays.asList(media));
+                }
+            } catch (SQLException ex) {
             }
 
-            if (!Arrays.equals(EMPTY_SIMILAR_AESTHETICS, similarAesthetics)) {
-                aesthetic.setSimilarAesthetics(Arrays.asList(similarAesthetics));
+            try {
+                SimilarAesthetic[] similarAesthetics = mapper
+                        .readValue(rs.getString("similar_aesthetics"), SimilarAesthetic[].class);
+
+                if (!Arrays.equals(EMPTY_SIMILAR_AESTHETICS, similarAesthetics)) {
+                    aesthetic.setSimilarAesthetics(Arrays.asList(similarAesthetics));
+                }
+            } catch (SQLException ex) {
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();

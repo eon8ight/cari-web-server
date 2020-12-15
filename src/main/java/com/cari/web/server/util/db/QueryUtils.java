@@ -27,28 +27,38 @@ public final class QueryUtils {
     public static final String NULLS_FIRST = " nulls first ";
     public static final String NULLS_LAST = " nulls last ";
 
+    private static final String[] SORT_DIRECTION_VALUES =
+            new String[] {Boolean.TRUE.toString(), Boolean.FALSE.toString()};
+
     public static Sort validateAndGetSort(Map<String, String> filters,
             Map<String, String> sortFields, Supplier<Sort> defaultSort) {
-        String sortField = filters.get(QueryUtils.FILTER_SORT_FIELD);
+        String sortFieldString = filters.get(QueryUtils.FILTER_SORT_FIELD);
 
-        if (filters.get(QueryUtils.FILTER_SORT_FIELD) == null) {
+        if (sortFieldString == null) {
             return defaultSort.get();
-        } else if (!sortFields.containsKey(sortField)) {
+        }
+
+        String[] sortFieldsArray = sortFieldString.split(",");
+
+        boolean allFieldsValid =
+                Arrays.stream(sortFieldsArray).allMatch(field -> sortFields.containsKey(field));
+
+        if (!allFieldsValid) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_SORT_FIELD)
-                    .append("` must be one of the following values: ").append(sortFields.keySet()
-                            .stream().map(f -> "\"" + f + "\"").collect(Collectors.joining(", ")))
+                    .append("` can only be a subset of the following values: ")
+                    .append(sortFields.keySet().stream().map(f -> "\"" + f + "\"")
+                            .collect(Collectors.joining(", ")))
                     .append(".");
 
             throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, errorBuilder.toString());
         }
 
-        Boolean[] ascValues = new Boolean[] {Boolean.TRUE, Boolean.FALSE};
         String ascString = filters.getOrDefault(FILTER_ASC, Boolean.TRUE.toString());
 
-        if (Arrays.stream(ascValues).noneMatch(b -> ascString.equalsIgnoreCase(b.toString()))) {
+        if (Arrays.stream(SORT_DIRECTION_VALUES).noneMatch(b -> ascString.equalsIgnoreCase(b))) {
             StringBuilder errorBuilder = new StringBuilder("`").append(FILTER_ASC)
                     .append("` must be one of the following values: ")
-                    .append(Arrays.stream(ascValues).map(b -> "\"" + b.toString() + "\"")
+                    .append(Arrays.stream(SORT_DIRECTION_VALUES).map(b -> "\"" + b + "\"")
                             .collect(Collectors.joining(", ")))
                     .append(".");
 
@@ -56,7 +66,7 @@ public final class QueryUtils {
         }
 
         boolean asc = Boolean.parseBoolean(ascString);
-        return Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortField);
+        return Sort.by(asc ? Sort.Direction.ASC : Sort.Direction.DESC, sortFieldsArray);
     }
 
     public static Optional<Integer> validateAndGetInt(Map<String, String> filters, String key) {

@@ -1,13 +1,11 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,19 +27,18 @@ public class AestheticWebsite implements Serializable {
     @Id
     @Column(COLUMN_AESTHETIC_WEBSITE)
     @JsonAlias(COLUMN_AESTHETIC_WEBSITE)
-    private int aestheticWebsite;
+    private Integer aestheticWebsite;
 
     @Column
-    private int aesthetic;
+    private Integer aesthetic;
 
     @Column
-    @NotNull
     private String url;
 
     @Column(COLUMN_WEBSITE_TYPE)
     @JsonAlias(COLUMN_WEBSITE_TYPE)
-    @MappedCollection
-    @NotNull
-    @Valid
-    private WebsiteType websiteType;
+    private Integer websiteType;
+
+    @Transient
+    private WebsiteType type;
 }

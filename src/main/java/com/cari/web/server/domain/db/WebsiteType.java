@@ -1,7 +1,6 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
@@ -25,14 +24,12 @@ public class WebsiteType implements Serializable {
     @Id
     @Column(COLUMN_WEBSITE_TYPE)
     @JsonAlias(COLUMN_WEBSITE_TYPE)
-    private int websiteType;
+    private Integer websiteType;
 
     @Column
-    @NotNull
     private String label;
 
     @Column(COLUMN_VALIDATION_REGEX)
     @JsonAlias(COLUMN_VALIDATION_REGEX)
-    @NotNull
     private String validationRegex;
 }

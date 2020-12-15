@@ -75,7 +75,8 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "          f.file";
     // @formatter:on
 
-    @Query(value = FIND_BY_USERNAME_OR_EMAIL_ADDRESS_QUERY, rowMapperClass = EntityWithJoinDataMapper.class)
+    @Query(value = FIND_BY_USERNAME_OR_EMAIL_ADDRESS_QUERY,
+            rowMapperClass = EntityWithJoinDataMapper.class)
     Optional<Entity> findByUsernameOrEmailAddress(
             @Param("usernameOrEmailAddress") String usernameOrEmailAddress);
 

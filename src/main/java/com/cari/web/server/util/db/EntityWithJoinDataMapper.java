@@ -3,6 +3,7 @@ package com.cari.web.server.util.db;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.domain.db.Role;
@@ -20,21 +21,36 @@ public class EntityWithJoinDataMapper implements RowMapper<Entity> {
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            Role[] roles = mapper.readValue(rs.getString("roles"), Role[].class);
+            try {
+                Role[] roles = mapper.readValue(rs.getString("roles"), Role[].class);
 
-            if (!Arrays.equals(EMPTY_ROLES, roles)) {
-                entity.setRoles(Arrays.asList(roles));
+                if (!Arrays.equals(EMPTY_ROLES, roles)) {
+                    entity.setRoles(Arrays.asList(roles));
+                }
+            } catch (SQLException ex) {
             }
 
             try {
                 String profileImageFileString = rs.getString("profile_image");
 
                 if (profileImageFileString != null) {
-                    CariFile profileImageFile = mapper.readValue(profileImageFileString, CariFile.class);
+                    CariFile profileImageFile =
+                            mapper.readValue(profileImageFileString, CariFile.class);
+
                     entity.setProfileImage(profileImageFile);
                 }
             } catch (SQLException ex) {
-                // Ignore
+            }
+
+            try {
+                String favoriteAestheticString = rs.getString("favorite_aesthetic_data");
+
+                if (favoriteAestheticString != null) {
+                    Aesthetic favoriteAesthetic =
+                            mapper.readValue(favoriteAestheticString, Aesthetic.class);
+                    entity.setFavoriteAestheticData(favoriteAesthetic);
+                }
+            } catch (SQLException ex) {
             }
         } catch (JsonProcessingException e) {
             e.printStackTrace();

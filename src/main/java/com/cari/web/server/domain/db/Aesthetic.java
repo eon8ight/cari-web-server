@@ -4,9 +4,6 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import com.cari.web.server.domain.SimilarAesthetic;
 import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.fasterxml.jackson.annotation.JsonAlias;
@@ -37,19 +34,16 @@ public class Aesthetic implements Serializable {
 
     @Id
     @Column
-    private int aesthetic;
+    private Integer aesthetic;
 
     @Column
-    @NotNull
     private String name;
 
     @Column(COLUMN_URL_SLUG)
     @JsonAlias(COLUMN_URL_SLUG)
-    @NotNull
     private String urlSlug;
 
     @Column
-    @Pattern(regexp = "^[A-Z][a-z]{1,2}")
     private String symbol;
 
     @Column(COLUMN_START_YEAR)
@@ -61,7 +55,6 @@ public class Aesthetic implements Serializable {
     private String endYear;
 
     @Column
-    @NotNull
     private String description;
 
     @Column(COLUMN_MEDIA_SOURCE_URL)
@@ -69,7 +62,6 @@ public class Aesthetic implements Serializable {
     private String mediaSourceUrl;
 
     @Transient
-    @Valid
     private List<SimilarAesthetic> similarAesthetics;
 
     @Transient

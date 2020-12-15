@@ -1,8 +1,8 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("tb_file_type")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class FileType implements Serializable {
 
     private static final long serialVersionUID = -8311730054742861454L;
@@ -25,9 +26,8 @@ public class FileType implements Serializable {
     @Id
     @Column(COLUMN_FILE_TYPE)
     @JsonAlias(COLUMN_FILE_TYPE)
-    private int fileType;
+    private Integer fileType;
 
     @Column
-    @NotNull
     private String label;
 }

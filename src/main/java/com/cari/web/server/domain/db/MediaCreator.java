@@ -1,8 +1,8 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("tb_media_creator")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MediaCreator implements Serializable {
     private static final long serialVersionUID = -2739822601756198464L;
 
@@ -24,6 +25,6 @@ public class MediaCreator implements Serializable {
     @JsonAlias(COLUMN_MEDIA_CREATOR)
     private Integer mediaCreator;
 
-    @NotNull
+    @Column
     private String name;
 }

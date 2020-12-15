@@ -5,10 +5,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -27,6 +25,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @Table("tb_entity")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties({"accountNonExpired", "accountNonLocked", "authorities",
+        "credentialsNonExpired", "enabled", "password", "passwordHash", "roles"})
 public class Entity implements UserDetails {
 
     private static final long serialVersionUID = -1485850596199572023L;
@@ -39,26 +39,24 @@ public class Entity implements UserDetails {
     private static final String COLUMN_FAVORITE_AESTHETIC = "favorite_aesthetic";
 
     @Id
-    private int entity;
+    @Column
+    private Integer entity;
 
     @Column
     private String username;
 
     @Column(COLUMN_EMAIL_ADDRESS)
     @JsonAlias(COLUMN_EMAIL_ADDRESS)
-    @NotNull
     private String emailAddress;
 
     @Column(COLUMN_PASSWORD_HASH)
     @JsonAlias(COLUMN_PASSWORD_HASH)
-    @JsonIgnore
     private String passwordHash;
 
     @Column
-    private int inviter;
+    private Integer inviter;
 
     @Column
-    @NotNull
     private Timestamp invited;
 
     @Column
@@ -83,17 +81,18 @@ public class Entity implements UserDetails {
     @JsonAlias(COLUMN_PROFILE_IMAGE_FILE)
     private Integer profileImageFile;
 
-    @Transient
-    @Valid
-    private CariFile profileImage;
-
     @Column(COLUMN_FAVORITE_AESTHETIC)
     @JsonAlias(COLUMN_FAVORITE_AESTHETIC)
     private Integer favoriteAesthetic;
 
     @Transient
-    @Valid
+    private CariFile profileImage;
+
+    @Transient
     private List<Role> roles;
+
+    @Transient
+    private Aesthetic favoriteAestheticData;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

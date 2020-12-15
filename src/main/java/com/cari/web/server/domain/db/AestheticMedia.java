@@ -1,13 +1,12 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.MappedCollection;
 import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table("tb_aesthetic_media")
-@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AestheticMedia implements Serializable {
     private static final long serialVersionUID = -4258598762766168605L;
 
@@ -28,13 +27,12 @@ public class AestheticMedia implements Serializable {
     @Id
     @Column(COLUMN_AESTHETIC_MEDIA)
     @JsonAlias(COLUMN_AESTHETIC_MEDIA)
-    private int aestheticMedia;
+    private Integer aestheticMedia;
 
     @Column
-    private int aesthetic;
+    private Integer aesthetic;
 
     @Column
-    @NotNull
     private String url;
 
     @Column(COLUMN_PREVIEW_IMAGE_URL)
@@ -50,10 +48,11 @@ public class AestheticMedia implements Serializable {
 
     @Column(COLUMN_MEDIA_CREATOR)
     @JsonAlias(COLUMN_MEDIA_CREATOR)
-    @MappedCollection
-    @Valid
-    private MediaCreator mediaCreator;
+    private Integer mediaCreator;
 
     @Column
-    private int year;
+    private Integer year;
+
+    @Transient
+    private MediaCreator creator;
 }

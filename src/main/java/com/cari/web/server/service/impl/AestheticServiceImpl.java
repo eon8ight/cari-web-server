@@ -147,7 +147,7 @@ public class AestheticServiceImpl implements AestheticService {
 
         List<Integer> pkWebsites = aesthetic.getWebsites().stream()
                 .map(website -> aestheticWebsiteRepository.createOrUpdate(pkAesthetic,
-                        website.getUrl(), website.getWebsiteType().getWebsiteType()))
+                        website.getUrl(), website.getWebsiteType()))
                 .collect(Collectors.toList());
 
         if (pkWebsites.isEmpty()) {
@@ -170,7 +170,7 @@ public class AestheticServiceImpl implements AestheticService {
         }
 
         List<Integer> pkMedia = aesthetic.getMedia().stream().map(media -> {
-            MediaCreator mediaCreator = media.getMediaCreator();
+            MediaCreator mediaCreator = media.getCreator();
             Integer pkMediaCreator = mediaCreator.getMediaCreator();
 
             if (pkMediaCreator == null) {
