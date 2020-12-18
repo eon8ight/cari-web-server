@@ -3,9 +3,9 @@ package com.cari.web.server.dto.response;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.enums.RequestStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.validation.FieldError;
 import lombok.Builder;
 import lombok.Data;
 
@@ -19,7 +19,7 @@ public class CariResponse implements Serializable {
 
     private String message;
 
-    private List<FieldError> fieldErrors;
+    private List<CariFieldError> fieldErrors;
 
     private Map<String, Object> updatedData;
 
@@ -36,7 +36,7 @@ public class CariResponse implements Serializable {
         // @formatter:on
     }
 
-    public static CariResponse failure(List<FieldError> fieldErrors) {
+    public static CariResponse failure(List<CariFieldError> fieldErrors) {
         // @formatter:off
         return CariResponse.builder()
             .status(RequestStatus.FAILURE)

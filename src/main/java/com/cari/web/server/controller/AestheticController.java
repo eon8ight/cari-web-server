@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.db.Aesthetic;
+import com.cari.web.server.dto.request.AestheticEditRequest;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.cari.web.server.enums.RequestStatus;
@@ -12,11 +13,12 @@ import com.cari.web.server.service.ArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -99,9 +101,11 @@ public class AestheticController {
         return aestheticService.findNames(query);
     }
 
-    @PutMapping("/aesthetic/edit")
-    public ResponseEntity<CariResponse> edit(@RequestBody Aesthetic aesthetic) {
-        CariResponse response = aestheticService.createOrUpdate(aesthetic);
+    @RequestMapping(path = "/aesthetic/edit", method = RequestMethod.POST,
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<CariResponse> edit(
+            AestheticEditRequest aestheticEditRequest) {
+        CariResponse response = aestheticService.createOrUpdate(aestheticEditRequest);
 
         ResponseEntity.BodyBuilder responseBuilder =
                 response.getStatus().equals(RequestStatus.SUCCESS) ? ResponseEntity.ok()

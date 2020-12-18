@@ -1,7 +1,6 @@
 package com.cari.web.server.domain.db;
 
 import java.io.Serializable;
-import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
@@ -21,7 +20,9 @@ public class AestheticMedia implements Serializable {
     private static final long serialVersionUID = -4258598762766168605L;
 
     private static final String COLUMN_AESTHETIC_MEDIA = "aesthetic_media";
-    private static final String COLUMN_PREVIEW_IMAGE_URL = "preview_image_url";
+    private static final String COLUMN_MEDIA_FILE = "media_file";
+    private static final String COLUMN_MEDIA_THUMBNAIL_FILE = "media_thumbnail_file";
+    private static final String COLUMN_MEDIA_PREVIEW_FILE = "media_preview_file";
     private static final String COLUMN_MEDIA_CREATOR = "media_creator";
 
     @Id
@@ -32,13 +33,17 @@ public class AestheticMedia implements Serializable {
     @Column
     private Integer aesthetic;
 
-    @Column
-    private String url;
+    @Column(COLUMN_MEDIA_FILE)
+    @JsonAlias(COLUMN_MEDIA_FILE)
+    private Integer mediaFile;
 
-    @Column(COLUMN_PREVIEW_IMAGE_URL)
-    @JsonAlias(COLUMN_PREVIEW_IMAGE_URL)
-    @NotNull
-    private String previewImageUrl;
+    @Column(COLUMN_MEDIA_THUMBNAIL_FILE)
+    @JsonAlias(COLUMN_MEDIA_THUMBNAIL_FILE)
+    private Integer mediaThumbnailFile;
+
+    @Column(COLUMN_MEDIA_PREVIEW_FILE)
+    @JsonAlias(COLUMN_MEDIA_PREVIEW_FILE)
+    private Integer mediaPreviewFile;
 
     @Column
     private String label;

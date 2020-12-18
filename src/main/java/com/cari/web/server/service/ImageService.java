@@ -10,4 +10,6 @@ public interface ImageService {
 
     BufferedImage resizeImage(BufferedImage image, int maxPixelsSide)
             throws IllegalArgumentException;
+
+    BufferedImage cropToSquare(BufferedImage image);
 }

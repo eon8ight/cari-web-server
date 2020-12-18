@@ -57,23 +57,23 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "  select aw.aesthetic_website, " +
         "         aw.aesthetic, " +
         "         aw.url, " +
-        "         jsonb_build_object('website_type', wt.website_type) as website_type " +
+        "         aw.website_type " +
         "    from tb_aesthetic_website aw " +
-        "    join tb_website_type wt " +
-        "      on aw.website_type = wt.website_type " +
         "), tt_media as ( " +
         "     select am.aesthetic_media, " +
         "            am.aesthetic, " +
-        "            am.url, " +
-        "            am.preview_image_url, " +
         "            am.label, " +
         "            am.description, " +
         "            am.year, " +
-        "            jsonb_build_object( " +
-        "              'media_creator', mc.media_creator, " +
-        "              'name',          mc.name " +
-        "            ) as media_creator " +
+        "            f.file, " +
+        "            f.url as file_url, " +
+        "            pf.url as preview_file_url, " +
+        "            mc.media_creator " +
         "       from tb_aesthetic_media am " +
+        "       join tb_file f " +
+        "         on am.media_file = f.file " +
+        "       join tb_file pf " +
+        "         on am.media_preview_file = pf.file " +
         "  left join tb_media_creator mc " +
         "         on am.media_creator = mc.media_creator " +
         "), tt_relationship as ( " +
@@ -112,6 +112,17 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "       name " +
         "  from tb_aesthetic " +
         " where name ilike '%' || :query || '%'";
+
+    String FIND_BY_NAME_OR_URL_SLUG_QUERY =
+        "select * " +
+        "  from tb_aesthetic " +
+        " where lower(name)     = lower(:name) " +
+        "    or lower(url_slug) = lower(:urlSlug)";
+
+    String FIND_BY_SYMBOL_QUERY =
+        "select * " +
+        " from tb_aesthetic " +
+        "where lower(symbol) = lower(:symbol)";
     // @formatter:on
 
     @Query(value = FIND_FOR_PAGE_QUERY, rowMapperClass = AestheticWithJoinDataMapper.class)
@@ -120,6 +131,13 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
     @Query(value = FIND_FOR_EDIT_QUERY, rowMapperClass = AestheticWithJoinDataMapper.class)
     Optional<Aesthetic> findForEdit(@Param("aesthetic") int aesthetic);
 
-    @Query(value = FIND_AESTHETIC_NAMES_QUERY)
+    @Query(FIND_AESTHETIC_NAMES_QUERY)
     List<Aesthetic> findNames(@Param("query") String query);
+
+    @Query(FIND_BY_NAME_OR_URL_SLUG_QUERY)
+    Optional<Aesthetic> findByNameOrUrlSlug(@Param("name") String name,
+            @Param("urlSlug") String urlSlug);
+
+    @Query(FIND_BY_SYMBOL_QUERY)
+    Optional<Aesthetic> findBySymbol(@Param("symbol") String symbol);
 }

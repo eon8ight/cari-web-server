@@ -1,8 +1,5 @@
 package com.cari.web.server.service.impl;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,22 +9,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.imageio.ImageIO;
 import javax.sql.DataSource;
+import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.Entity;
-import com.cari.web.server.domain.db.FileType;
-import com.cari.web.server.dto.FileUploadResult;
 import com.cari.web.server.dto.request.ClientRequestEntity;
+import com.cari.web.server.dto.request.EntityEditRequest;
 import com.cari.web.server.dto.response.CariPage;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
-import com.cari.web.server.enums.RequestStatus;
+import com.cari.web.server.exception.FileProcessingException;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.ImageService;
 import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
+import com.cari.web.server.util.ImageProcessor;
+import com.cari.web.server.util.ImageValidator;
 import com.cari.web.server.util.db.EntityWithJoinDataMapper;
 import com.cari.web.server.util.db.QueryUtils;
 import com.sendgrid.Response;
@@ -42,7 +40,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.FieldError;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -282,20 +279,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public CariResponse edit(ClientRequestEntity clientRequestEntity) {
+    public CariResponse edit(EntityEditRequest editRequestEntity) {
         Entity principal = getSessionEntity();
 
-        String newUsername = clientRequestEntity.getUsername();
-        String newEmailAddress = clientRequestEntity.getEmailAddress();
-        String newPassword = clientRequestEntity.getPassword();
-        String newFirstName = clientRequestEntity.getFirstName();
-        String newLastName = clientRequestEntity.getLastName();
-        String newBiography = clientRequestEntity.getBiography();
-        String newTitle = clientRequestEntity.getTitle();
-        MultipartFile newProfileImage = clientRequestEntity.getProfileImage();
-        Integer newFavoriteAesthetic = clientRequestEntity.getFavoriteAesthetic();
+        String newUsername = editRequestEntity.getUsername();
+        String newEmailAddress = editRequestEntity.getEmailAddress();
+        String newPassword = editRequestEntity.getPassword();
+        String newFirstName = editRequestEntity.getFirstName();
+        String newLastName = editRequestEntity.getLastName();
+        String newBiography = editRequestEntity.getBiography();
+        String newTitle = editRequestEntity.getTitle();
+        MultipartFile newProfileImage = editRequestEntity.getProfileImage();
+        Integer newFavoriteAesthetic = editRequestEntity.getFavoriteAesthetic();
 
-        List<FieldError> fieldErrors = new ArrayList<>(3);
+        List<CariFieldError> fieldErrors = new ArrayList<>(3);
         Map<String, Object> updatedData = new HashMap<>(1);
 
         if (newUsername != null) {
@@ -303,8 +300,7 @@ public class UserServiceImpl implements UserService {
 
             if (entityWithUsername.isPresent()) {
                 if (entityWithUsername.get().getEntity() != principal.getEntity()) {
-                    fieldErrors.add(
-                            new FieldError("username", "username", "Username is already in use."));
+                    fieldErrors.add(new CariFieldError("username", "Username is already in use."));
                 }
             }
 
@@ -317,8 +313,8 @@ public class UserServiceImpl implements UserService {
 
             if (entityWithEmailAddress.isPresent()) {
                 if (entityWithEmailAddress.get().getEntity() != principal.getEntity()) {
-                    fieldErrors.add(new FieldError("emailAddress", "emailAddress",
-                            "Email address is already in use."));
+                    fieldErrors.add(
+                            new CariFieldError("emailAddress", "Email address is already in use."));
                 }
             } else {
                 principal.setEmailAddress(newEmailAddress);
@@ -327,45 +323,27 @@ public class UserServiceImpl implements UserService {
 
         if (newProfileImage != null) {
             try {
-                File tmpProfileImage = File.createTempFile("cari-", ".tmp");
-                newProfileImage.transferTo(tmpProfileImage);
+                ImageValidator squareValidator =
+                        bf -> imageService.isImageSquare(bf) ? Optional.empty()
+                                : Optional.of("Image must be a square.");
 
-                BufferedImage profileImage = ImageIO.read(tmpProfileImage);
+                ImageValidator minSizeValidator =
+                        bf -> imageService.isImageMinimumSize(bf, PROFILE_PICTURE_SIZE)
+                                ? Optional.empty()
+                                : Optional.of(new StringBuilder("Image must be at least ")
+                                        .append(PROFILE_PICTURE_SIZE).append(" pixels by ")
+                                        .append(PROFILE_PICTURE_SIZE).append(" pixels.")
+                                        .toString());
 
-                if (!imageService.isImageSquare(profileImage)) {
-                    fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
-                            "Image must be a square."));
-                } else if (!imageService.isImageMinimumSize(profileImage, PROFILE_PICTURE_SIZE)) {
-                    String errorMessage = new StringBuilder("Image must be at least ")
-                            .append(PROFILE_PICTURE_SIZE).append(" pixels by ")
-                            .append(PROFILE_PICTURE_SIZE).append(" pixels.").toString();
+                ImageProcessor resizer = bf -> imageService.resizeImage(bf, PROFILE_PICTURE_SIZE);
 
-                    fieldErrors.add(
-                            new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE, errorMessage));
-                } else {
-                    profileImage = imageService.resizeImage(profileImage, PROFILE_PICTURE_SIZE);
-                    boolean wroteImage = ImageIO.write(profileImage, "png", tmpProfileImage);
+                CariFile dbProfileImage = fileService.processAndSaveImage(newProfileImage, resizer,
+                        Arrays.asList(squareValidator, minSizeValidator));
 
-                    if (wroteImage) {
-                        FileUploadResult uploadResult =
-                                fileService.upload(tmpProfileImage, FileType.FILE_TYPE_IMAGE);
-
-                        if (uploadResult.getStatus().equals(RequestStatus.SUCCESS)) {
-                            CariFile dbProfileImage = uploadResult.getFile();
-                            principal.setProfileImageFile(dbProfileImage.getFile());
-                            updatedData.put("profileImageUrl", dbProfileImage.getUrl());
-                        } else {
-                            fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
-                                    uploadResult.getMessage()));
-                        }
-                    } else {
-                        fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
-                                "Failed to resize image."));
-                    }
-                }
-            } catch (IOException ex) {
-                fieldErrors.add(new FieldError(FIELD_PROFILE_IMAGE, FIELD_PROFILE_IMAGE,
-                        ex.getLocalizedMessage()));
+                principal.setProfileImageFile(dbProfileImage.getFile());
+                updatedData.put("profileImageUrl", dbProfileImage.getUrl());
+            } catch (FileProcessingException ex) {
+                fieldErrors.add(new CariFieldError(FIELD_PROFILE_IMAGE, ex.getMessage()));
             }
         }
 

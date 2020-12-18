@@ -15,29 +15,42 @@ public interface AestheticMediaRepository extends CrudRepository<AestheticMedia,
     String CREATE_OR_UPDATE_QUERY =
         "insert into tb_aesthetic_media ( " +
         "    aesthetic, " +
-        "    url, " +
-        "    preview_image_url, " +
+        "    media_file, " +
+        "    media_thumbnail_file, " +
+        "    media_preview_file, " +
         "    label, " +
         "    description, " +
         "    media_creator, " +
         "    year " +
         ") values ( " +
         "    :aesthetic, " +
-        "    :url, " +
-        "    :previewImageUrl, " +
+        "    :mediaFile, " +
+        "    :mediaThumbnailFile, " +
+        "    :mediaPreviewFile, " +
         "    :label, " +
         "    :description, " +
         "    :mediaCreator, " +
         "    :year " +
         ") " +
-        "       on conflict ( aesthetic, url ) " +
+        "       on conflict ( aesthetic, media_file ) " +
         "       do update " +
-        "      set preview_image_url = EXCLUDED.preview_image_url, " +
-        "          label             = EXCLUDED.label, " +
-        "          description       = EXCLUDED.description, " +
-        "          media_creator     = EXCLUDED.media_creator, " +
-        "          year              = EXCLUDED.year " +
+        "      set media_thumbnail_file = EXCLUDED.media_thumbnail_file, " +
+        "          media_preview_file   = EXCLUDED.media_preview_file, " +
+        "          label                = EXCLUDED.label, " +
+        "          description          = EXCLUDED.description, " +
+        "          media_creator        = EXCLUDED.media_creator, " +
+        "          year                 = EXCLUDED.year " +
         "returning aesthetic_media";
+
+    String UPDATE_EXCEPT_FILES_QUERY =
+        "   update tb_aesthetic_media " +
+        "      set label         = :label, " +
+        "          description   = :description, " +
+        "          media_creator = :mediaCreator, " +
+        "          year          = :year " +
+        "    where aesthetic  = :aesthetic " +
+        "      and media_file = :mediaFile " +
+        "returning aesthetic_media ";
 
     String DELETE_BY_AESTHETIC_EXCEPT_QUERY =
         "delete from tb_aesthetic_media " +
@@ -50,10 +63,15 @@ public interface AestheticMediaRepository extends CrudRepository<AestheticMedia,
     // @formatter:on
 
     @Query(CREATE_OR_UPDATE_QUERY)
-    int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("url") String url,
-            @Param("previewImageUrl") String previewImageUrl, @Param("label") String label,
+    int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("mediaFile") int mediaFile,
+            @Param("mediaThumbnailFile") int mediaThumbnailFile,
+            @Param("mediaPreviewFile") int mediaPreviewFile, @Param("label") String label,
             @Param("description") String description, @Param("mediaCreator") Integer mediaCreator,
             @Param("year") int year);
+
+    @Query(UPDATE_EXCEPT_FILES_QUERY)
+    int updateExceptFiles(@Param("label") String label, @Param("description") String description,
+            @Param("mediaCreator") Integer mediaCreator, @Param("year") int year);
 
     @Modifying
     @Query(DELETE_BY_AESTHETIC_EXCEPT_QUERY)

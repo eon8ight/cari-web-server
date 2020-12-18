@@ -43,7 +43,7 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "      on e.entity = er.entity " +
         "    join tb_role r " +
         "      on er.role = r.role " +
-        "   where e.email_address = :emailAddress " +
+        "   where lower(e.email_address) = lower(:emailAddress) " +
         "group by e.entity";
 
     String FIND_BY_PK_QUERY =

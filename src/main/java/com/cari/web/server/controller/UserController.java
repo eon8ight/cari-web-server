@@ -4,6 +4,7 @@ import java.util.Map;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
+import com.cari.web.server.dto.request.EntityEditRequest;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
 import com.cari.web.server.enums.RequestStatus;
@@ -11,6 +12,7 @@ import com.cari.web.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -108,10 +110,9 @@ public class UserController {
     }
 
     @RequestMapping(path = "/user/edit", method = RequestMethod.POST,
-            consumes = {"multipart/form-data"})
-    public ResponseEntity<CariResponse> edit(
-            @ModelAttribute ClientRequestEntity clientRequestEntity) {
-        CariResponse res = userService.edit(clientRequestEntity);
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<CariResponse> edit(@ModelAttribute EntityEditRequest editRequestEntity) {
+        CariResponse res = userService.edit(editRequestEntity);
 
         HttpStatus status = res.getStatus().equals(RequestStatus.FAILURE) ? HttpStatus.BAD_REQUEST
                 : HttpStatus.OK;

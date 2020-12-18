@@ -1,6 +1,7 @@
 package com.cari.web.server.service.impl;
 
 import com.cari.web.server.config.JwtProvider;
+import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.enums.TokenType;
@@ -12,7 +13,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.FieldError;
 import org.springframework.web.client.HttpClientErrorException;
 
 @Service
@@ -58,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
                     break;
             }
 
-            FieldError fieldError = new FieldError(field, field, message);
+            CariFieldError fieldError = new CariFieldError(field, message);
             throw new LoginException(fieldError);
         }
     }

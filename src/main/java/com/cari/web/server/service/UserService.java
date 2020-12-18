@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.dto.request.ClientRequestEntity;
+import com.cari.web.server.dto.request.EntityEditRequest;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
 import org.springframework.data.domain.Page;
@@ -25,5 +26,5 @@ public interface UserService extends UserDetailsService {
 
     Entity findForEdit();
 
-    CariResponse edit(ClientRequestEntity clientRequestEntity);
+    CariResponse edit(EntityEditRequest editRequestEntity);
 }

@@ -21,10 +21,7 @@ public class ImageServiceImpl implements ImageService {
     @Override
     public BufferedImage resizeImage(BufferedImage image, int maxPixelsSide)
             throws IllegalArgumentException {
-        int originalWidth = image.getWidth();
-        int originalHeight = image.getHeight();
-
-        int maxSide = Math.max(originalWidth, originalHeight);
+        int maxSide = Math.max(image.getWidth(), image.getHeight());
 
         if (maxSide < maxPixelsSide) {
             throw new IllegalArgumentException("Image ");
@@ -33,5 +30,11 @@ public class ImageServiceImpl implements ImageService {
         }
 
         return Scalr.resize(image, maxPixelsSide);
+    }
+
+    @Override
+    public BufferedImage cropToSquare(BufferedImage image) {
+        int minSide = Math.min(image.getWidth(), image.getHeight());
+        return image.getSubimage(0, 0, minSide, minSide);
     }
 }
