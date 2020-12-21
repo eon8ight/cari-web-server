@@ -1,5 +1,7 @@
 package com.cari.web.server.service.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,12 +15,13 @@ import javax.sql.DataSource;
 import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.request.EntityEditRequest;
 import com.cari.web.server.dto.response.CariPage;
 import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
-import com.cari.web.server.exception.FileProcessingException;
+import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.repository.EntityRepository;
 import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.ImageService;
@@ -54,6 +57,11 @@ public class UserServiceImpl implements UserService {
     private static final String FILTER_INCLUDE_FAVORITE_AESTHETIC = "includeFavoriteAesthetic";
 
     private static final String FIELD_PROFILE_IMAGE = "profileImage";
+
+    private static final String PROFILE_IMAGE_SIZE_MESSAGE =
+            new StringBuilder("Image must be at least ").append(PROFILE_PICTURE_SIZE)
+                    .append(" pixels by ").append(PROFILE_PICTURE_SIZE).append(" pixels.")
+                    .toString();
 
     // @formatter:off
     private static final Map<String, String> SORT_FIELDS = Map.of(
@@ -322,27 +330,32 @@ public class UserServiceImpl implements UserService {
         }
 
         if (newProfileImage != null) {
+            ImageValidator squareValidator = bf -> imageService.isImageSquare(bf) ? Optional.empty()
+                    : Optional.of("Image must be a square.");
+
+            ImageValidator minSizeValidator =
+                    bf -> imageService.isImageMinimumSize(bf, PROFILE_PICTURE_SIZE)
+                            ? Optional.empty()
+                            : Optional.of(PROFILE_IMAGE_SIZE_MESSAGE);
+
+            ImageProcessor resizer = bf -> imageService.resizeImage(bf, PROFILE_PICTURE_SIZE);
+
             try {
-                ImageValidator squareValidator =
-                        bf -> imageService.isImageSquare(bf) ? Optional.empty()
-                                : Optional.of("Image must be a square.");
+                File profileImageTmp = fileService.copyToTmpFile(newProfileImage);
 
-                ImageValidator minSizeValidator =
-                        bf -> imageService.isImageMinimumSize(bf, PROFILE_PICTURE_SIZE)
-                                ? Optional.empty()
-                                : Optional.of(new StringBuilder("Image must be at least ")
-                                        .append(PROFILE_PICTURE_SIZE).append(" pixels by ")
-                                        .append(PROFILE_PICTURE_SIZE).append(" pixels.")
-                                        .toString());
+                FileOperationResult profileImageRes = fileService.processImageAndUploadAndSave(
+                        profileImageTmp, resizer, Arrays.asList(squareValidator, minSizeValidator));
 
-                ImageProcessor resizer = bf -> imageService.resizeImage(bf, PROFILE_PICTURE_SIZE);
+                if (profileImageRes.getStatus().equals(RequestStatus.FAILURE)) {
+                    fieldErrors.add(
+                            new CariFieldError(FIELD_PROFILE_IMAGE, profileImageRes.getMessage()));
+                }
 
-                CariFile dbProfileImage = fileService.processAndSaveImage(newProfileImage, resizer,
-                        Arrays.asList(squareValidator, minSizeValidator));
+                CariFile dbProfileImage = profileImageRes.getDbFile().get();
 
                 principal.setProfileImageFile(dbProfileImage.getFile());
                 updatedData.put("profileImageUrl", dbProfileImage.getUrl());
-            } catch (FileProcessingException ex) {
+            } catch (IOException ex) {
                 fieldErrors.add(new CariFieldError(FIELD_PROFILE_IMAGE, ex.getMessage()));
             }
         }

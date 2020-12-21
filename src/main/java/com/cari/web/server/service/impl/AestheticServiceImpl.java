@@ -1,5 +1,7 @@
 package com.cari.web.server.service.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,17 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.sql.DataSource;
 import com.cari.web.server.domain.CariFieldError;
-import com.cari.web.server.domain.SimilarAesthetic;
 import com.cari.web.server.domain.db.Aesthetic;
-import com.cari.web.server.domain.db.AestheticWebsite;
-import com.cari.web.server.domain.db.CariFile;
+import com.cari.web.server.domain.db.AestheticMedia;
+import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.request.AestheticEditRequest;
 import com.cari.web.server.dto.request.AestheticMediaEditRequest;
 import com.cari.web.server.dto.response.CariPage;
 import com.cari.web.server.dto.response.CariResponse;
-import com.cari.web.server.exception.FileProcessingException;
+import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.repository.AestheticMediaRepository;
 import com.cari.web.server.repository.AestheticRelationshipRepository;
 import com.cari.web.server.repository.AestheticRepository;
@@ -26,10 +28,8 @@ import com.cari.web.server.repository.MediaCreatorRepository;
 import com.cari.web.server.service.AestheticService;
 import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.ImageService;
-import com.cari.web.server.util.ImageProcessor;
 import com.cari.web.server.util.ImageValidator;
 import com.cari.web.server.util.db.QueryUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -47,6 +47,8 @@ public class AestheticServiceImpl implements AestheticService {
     private static final String FILTER_START_YEAR = "startYear";
     private static final String FILTER_END_YEAR = "endYear";
 
+    private static final String FIELD_MEDIA = "media";
+
     private static final int MEDIA_FILE_SIZE_THUMBNAIL = 200;
 
     // @formatter:off
@@ -56,6 +58,11 @@ public class AestheticServiceImpl implements AestheticService {
         FILTER_END_YEAR, "fn_get_approximate_end_year(aesthetic)"
     );
     // @formatter:on
+
+    private static final String MEDIA_IMAGE_SIZE_MESSAGE =
+            new StringBuilder("Image must be at least ").append(MEDIA_FILE_SIZE_THUMBNAIL)
+                    .append(" pixels by ").append(MEDIA_FILE_SIZE_THUMBNAIL).append(" pixels.")
+                    .toString();
 
     @Autowired
     private AestheticRepository aestheticRepository;
@@ -161,18 +168,16 @@ public class AestheticServiceImpl implements AestheticService {
     @Override
     @Transactional
     public CariResponse createOrUpdate(AestheticEditRequest aestheticEditRequest) {
-        ObjectMapper objectMapper = new ObjectMapper();
-
         int pkAesthetic = aestheticEditRequest.getAesthetic();
 
         String name = aestheticEditRequest.getName();
         String symbol = aestheticEditRequest.getSymbol();
 
-        List<Map<Object, Object>> mediaMap = aestheticEditRequest.getMedia();
-        int mediaEditRequestsSize = mediaMap.size();
-
         String urlSlug = name.toLowerCase().strip().replaceAll("[^a-zA-Z0-9-\\s]", "")
                 .replaceAll("\\s+", "-");
+
+        List<AestheticMediaEditRequest> mediaMap = aestheticEditRequest.getMediaObjects();
+        int mediaEditRequestsSize = mediaMap.size();
 
         List<CariFieldError> fieldErrors = new ArrayList<>(2 + mediaEditRequestsSize);
 
@@ -191,63 +196,91 @@ public class AestheticServiceImpl implements AestheticService {
             fieldErrors.add(new CariFieldError("symbol", "Symbol is already in use."));
         }
 
-        List<Integer> pkMedia = new ArrayList<>(mediaEditRequestsSize);
+        if (!fieldErrors.isEmpty()) {
+            return CariResponse.failure(fieldErrors);
+        }
 
-        for (int i = 0; i < mediaEditRequestsSize; i++) {
-            AestheticMediaEditRequest media = AestheticMediaEditRequest.fromMap(mediaMap.get(i));
+        ImageValidator minSizeValidator =
+                bf -> imageService.isImageMinimumSize(bf, MEDIA_FILE_SIZE_THUMBNAIL)
+                        ? Optional.empty()
+                        : Optional.of(MEDIA_IMAGE_SIZE_MESSAGE);
+
+        List<Integer> pkMedia = IntStream.range(0, mediaEditRequestsSize).mapToObj(idx -> {
+            AestheticMediaEditRequest media = mediaMap.get(idx);
             Integer pkMediaCreator = media.getMediaCreator();
 
             if (pkMediaCreator == null) {
                 pkMediaCreator = mediaCreatorRepository.getOrCreate(media.getMediaCreatorName());
             }
 
-            String label = media.getLabel();
-            String description = media.getDescription();
-            int year = media.getYear();
-
             MultipartFile fileObject = media.getFileObject();
 
-            int pkAestheticMedia = 0;
+            // @formatter:off
+            AestheticMedia.AestheticMediaBuilder mediaBuilder = AestheticMedia.builder()
+                .aesthetic(pkAesthetic)
+                .label(media.getLabel())
+                .description(media.getDescription())
+                .mediaCreator(pkMediaCreator)
+                .year(media.getYear());
+            // @formatter:on
 
             if (fileObject != null) {
                 try {
-                    ImageValidator minSizeValidator =
-                            bf -> imageService.isImageMinimumSize(bf, MEDIA_FILE_SIZE_THUMBNAIL)
-                                    ? Optional.empty()
-                                    : Optional.of(new StringBuilder("Image must be at least ")
-                                            .append(MEDIA_FILE_SIZE_THUMBNAIL).append(" pixels by ")
-                                            .append(MEDIA_FILE_SIZE_THUMBNAIL).append(" pixels.")
-                                            .toString());
+                    File fileObjectTmp = fileService.copyToTmpFile(fileObject);
 
-                    ImageProcessor thumbnailResizer =
-                            bf -> imageService.resizeImage(bf, MEDIA_FILE_SIZE_THUMBNAIL);
+                    FileOperationResult mediaFileRes = fileService.processImageAndUploadAndSave(
+                            fileObjectTmp, bf -> bf, Arrays.asList(minSizeValidator));
 
-                    ImageProcessor previewResizer = bf -> imageService.resizeImage(bf, 500);
+                    if (mediaFileRes.getStatus().equals(RequestStatus.FAILURE)) {
+                        fieldErrors.add(
+                                new CariFieldError(FIELD_MEDIA, mediaFileRes.getMessage(), idx));
 
-                    CariFile mediaFile = fileService.processAndSaveImage(fileObject, bf -> bf,
-                            Arrays.asList(minSizeValidator));
+                        return null;
+                    }
 
-                    CariFile mediaThumbnailFile = fileService.processAndSaveImage(fileObject,
-                            thumbnailResizer, Collections.emptyList());
+                    FileOperationResult mediaThumbnailFileRes =
+                            fileService.processImageAndUploadAndSave(fileObjectTmp,
+                                    bf -> imageService.resizeImage(bf, MEDIA_FILE_SIZE_THUMBNAIL),
+                                    Collections.emptyList());
 
-                    CariFile mediaPreviewFile = fileService.processAndSaveImage(fileObject,
-                            previewResizer, Collections.emptyList());
+                    if (mediaThumbnailFileRes.getStatus().equals(RequestStatus.FAILURE)) {
+                        fieldErrors.add(new CariFieldError(FIELD_MEDIA,
+                                mediaThumbnailFileRes.getMessage(), idx));
 
-                    pkAestheticMedia = aestheticMediaRepository.createOrUpdate(pkAesthetic,
-                            mediaFile.getFile(), mediaThumbnailFile.getFile(),
-                            mediaPreviewFile.getFile(), label, description, pkMediaCreator, year);
+                        fileService.delete(mediaFileRes.getDbFile().get());
+                        return null;
+                    }
 
-                } catch (FileProcessingException ex) {
-                    fieldErrors.add(new CariFieldError("media", ex.getMessage(), i));
-                    break;
+                    FileOperationResult mediaPreviewFileRes =
+                            fileService.processImageAndUploadAndSave(fileObjectTmp,
+                                    bf -> imageService.resizeImage(bf, 500),
+                                    Collections.emptyList());
+
+                    if (mediaPreviewFileRes.getStatus().equals(RequestStatus.FAILURE)) {
+                        fieldErrors.add(new CariFieldError(FIELD_MEDIA,
+                                mediaPreviewFileRes.getMessage(), idx));
+
+                        fileService.delete(mediaFileRes.getDbFile().get());
+                        fileService.delete(mediaThumbnailFileRes.getDbFile().get());
+                        return null;
+                    }
+
+                    // @formatter:off
+                    mediaBuilder
+                        .mediaFile(mediaFileRes.getDbFile().get().getFile())
+                        .mediaThumbnailFile(mediaThumbnailFileRes.getDbFile().get().getFile())
+                        .mediaPreviewFile(mediaPreviewFileRes.getDbFile().get().getFile());
+                    // @formatter:on
+
+                    return aestheticMediaRepository.createOrUpdate(mediaBuilder.build());
+                } catch (IOException ex) {
+                    fieldErrors.add(new CariFieldError(FIELD_MEDIA, ex.getLocalizedMessage(), idx));
+                    return null;
                 }
             } else {
-                pkAestheticMedia = aestheticMediaRepository.updateExceptFiles(label, description,
-                        pkMediaCreator, year);
+                return aestheticMediaRepository.updateExceptFiles(mediaBuilder.build());
             }
-
-            pkMedia.add(pkAestheticMedia);
-        }
+        }).collect(Collectors.toList());
 
         if (!fieldErrors.isEmpty()) {
             return CariResponse.failure(fieldErrors);
@@ -266,12 +299,9 @@ public class AestheticServiceImpl implements AestheticService {
             .build();
         // @formatter:on
 
-        List<Integer> pkWebsites = aestheticEditRequest.getWebsites().stream().map(map -> {
-            AestheticWebsite website = objectMapper.convertValue(map, AestheticWebsite.class);
-
-            return aestheticWebsiteRepository.createOrUpdate(pkAesthetic, website.getUrl(),
-                    website.getWebsiteType());
-        }).collect(Collectors.toList());
+        List<Integer> pkWebsites = aestheticEditRequest.getWebsiteObjects().stream()
+                .map(website -> aestheticWebsiteRepository.createOrUpdate(pkAesthetic, website))
+                .collect(Collectors.toList());
 
         if (pkWebsites.isEmpty()) {
             aestheticWebsiteRepository.deleteByAesthetic(pkAesthetic);
@@ -279,15 +309,10 @@ public class AestheticServiceImpl implements AestheticService {
             aestheticWebsiteRepository.deleteByAestheticExcept(pkAesthetic, pkWebsites);
         }
 
-        List<Integer> pkAestheticRelationships =
-                aestheticEditRequest.getSimilarAesthetics().stream().map(map -> {
-                    SimilarAesthetic similarAesthetic =
-                            objectMapper.convertValue(map, SimilarAesthetic.class);
-
-                    return aestheticRelationshipRepository.createOrUpdate(pkAesthetic,
-                            similarAesthetic.getAesthetic(), similarAesthetic.getDescription(),
-                            similarAesthetic.getReverseDescription());
-                }).flatMap(List::stream).collect(Collectors.toList());
+        List<Integer> pkAestheticRelationships = aestheticEditRequest.getSimilarAestheticObjects()
+                .stream().map(similarAesthetic -> aestheticRelationshipRepository
+                        .createOrUpdate(pkAesthetic, similarAesthetic))
+                .flatMap(List::stream).collect(Collectors.toList());
 
         if (pkAestheticRelationships.isEmpty()) {
             aestheticRelationshipRepository.deleteByAesthetic(pkAesthetic);

@@ -22,8 +22,17 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "      on w.website_type = wt.website_type " +
         "), tt_media as ( " +
         "     select m.*, " +
+        "            to_jsonb(f.*)  as original_file, " +
+        "            to_jsonb(tf.*) as thumbnail_file, " +
+        "            to_jsonb(pf.*) as preview_file, " +
         "            to_jsonb(mc.*) as creator " +
         "       from tb_aesthetic_media m " +
+        "       join tb_file f " +
+        "         on m.media_file = f.file " +
+        "       join tb_file tf " +
+        "         on m.media_thumbnail_file = tf.file " +
+        "       join tb_file pf " +
+        "         on m.media_preview_file = pf.file " +
         "  left join tb_media_creator mc " +
         "         on m.media_creator = mc.media_creator" +
         ")" +

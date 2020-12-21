@@ -3,11 +3,9 @@ package com.cari.web.server.dto.response.arena;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class ArenaContent implements Serializable {
     private static final long serialVersionUID = -1100385390369922189L;
 

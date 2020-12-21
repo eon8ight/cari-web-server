@@ -1,6 +1,7 @@
 package com.cari.web.server.repository;
 
 import java.util.List;
+import com.cari.web.server.domain.SimilarAesthetic;
 import com.cari.web.server.domain.db.AestheticRelationship;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
@@ -59,4 +60,9 @@ public interface AestheticRelationshipRepository
     @Modifying
     @Query(DELETE_BY_AESTHETIC_QUERY)
     void deleteByAesthetic(@Param("aesthetic") int aesthetic);
+
+    default List<Integer> createOrUpdate(int pkAesthetic, SimilarAesthetic relationship) {
+        return createOrUpdate(pkAesthetic, relationship.getAesthetic(),
+                relationship.getDescription(), relationship.getReverseDescription());
+    }
 }

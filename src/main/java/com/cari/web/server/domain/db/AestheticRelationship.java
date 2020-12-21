@@ -13,9 +13,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table("tb_aesthetic_relationship")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AestheticRelationship implements Serializable {

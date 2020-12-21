@@ -50,4 +50,8 @@ public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebs
     @Modifying
     @Query(DELETE_BY_AESTHETIC_QUERY)
     void deleteByAesthetic(@Param("aesthetic") int aesthetic);
+
+    default int createOrUpdate(int pkAesthetic, AestheticWebsite website) {
+        return createOrUpdate(pkAesthetic, website.getUrl(), website.getWebsiteType());
+    }
 }

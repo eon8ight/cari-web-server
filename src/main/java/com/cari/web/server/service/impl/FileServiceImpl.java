@@ -9,10 +9,9 @@ import java.util.function.Function;
 import javax.imageio.ImageIO;
 import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.FileType;
-import com.cari.web.server.dto.FileUploadResult;
+import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.response.S3PutResponse;
 import com.cari.web.server.enums.RequestStatus;
-import com.cari.web.server.exception.FileProcessingException;
 import com.cari.web.server.repository.FileRepository;
 import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.S3Service;
@@ -20,15 +19,11 @@ import com.cari.web.server.util.FileUtils;
 import com.cari.web.server.util.ImageProcessor;
 import com.cari.web.server.util.ImageValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FileServiceImpl implements FileService {
-
-    @Value("${aws.s3.bucket.name}")
-    private String s3BucketName;
 
     @Autowired
     private S3Service s3Service;
@@ -37,21 +32,19 @@ public class FileServiceImpl implements FileService {
     private FileRepository fileRepository;
 
     @Override
-    public FileUploadResult upload(File file, int pkFileType) {
+    public FileOperationResult upload(File file) {
         S3PutResponse s3Res = s3Service.upload(file);
-        String key = s3Res.getKey();
 
         if (s3Res.getStatus().equals(RequestStatus.FAILURE)) {
-            // @formatter:off
-            return FileUploadResult.builder()
-                .status(RequestStatus.FAILURE)
-                .message(s3Res.getMessage())
-                .build();
-            // @formatter:on
+            return FileOperationResult.failure(s3Res.getMessage());
         }
 
-        String url = new StringBuilder("https://").append(s3BucketName).append(".s3.amazonaws.com/")
-                .append(key).toString();
+        return FileOperationResult.success(s3Res.getKey());
+    }
+
+    @Override
+    public CariFile save(String key, int pkFileType) {
+        String url = s3Service.getUrlPrefix() + key;
 
         // @formatter:off
         CariFile dbFile = CariFile.builder()
@@ -61,48 +54,64 @@ public class FileServiceImpl implements FileService {
         // @formatter:on
 
         dbFile = fileRepository.save(dbFile);
-
-        // @formatter:off
-        return FileUploadResult.builder()
-            .status(RequestStatus.SUCCESS)
-            .file(dbFile)
-            .build();
-        // @formatter:on
+        return dbFile;
     }
 
     @Override
-    public final CariFile processAndSaveImage(MultipartFile multipartFile, ImageProcessor processor,
-            List<ImageValidator> validators)
-            throws FileProcessingException {
+    public File copyToTmpFile(MultipartFile multipartFile) throws IOException {
+        return FileUtils.transferToTmp(multipartFile);
+    }
+
+    @Override
+    public FileOperationResult processImage(File file, ImageProcessor processor,
+            List<ImageValidator> validators) {
         try {
-            File tmpImageFile = FileUtils.transferToTmp(multipartFile);
-            BufferedImage bufferedImage = ImageIO.read(tmpImageFile);
+            File tmpFile = FileUtils.cloneFile(file);
+            BufferedImage bufferedImage = ImageIO.read(tmpFile);
 
             for (Function<BufferedImage, Optional<String>> validator : validators) {
                 Optional<String> errorMessage = validator.apply(bufferedImage);
 
                 if (errorMessage.isPresent()) {
-                    throw new FileProcessingException(errorMessage.get());
+                    return FileOperationResult.failure(errorMessage.get());
                 }
             }
 
             BufferedImage processedImage = processor.apply(bufferedImage);
-            boolean wroteImage = ImageIO.write(processedImage, "png", tmpImageFile);
+            boolean wroteImage = ImageIO.write(processedImage, "png", tmpFile);
 
             if (wroteImage) {
-                FileUploadResult uploadResult = upload(tmpImageFile, FileType.FILE_TYPE_IMAGE);
-
-                if (uploadResult.getStatus().equals(RequestStatus.SUCCESS)) {
-                    CariFile dbProfileImage = uploadResult.getFile();
-                    return dbProfileImage;
-                }
-
-                throw new FileProcessingException(uploadResult.getMessage());
+                return FileOperationResult.success(tmpFile);
             }
 
-            throw new FileProcessingException("Failed to write processed image.");
+            return FileOperationResult.failure("Failed to write processed image.");
         } catch (IOException ex) {
-            throw new FileProcessingException(ex.getLocalizedMessage());
+            return FileOperationResult.failure(ex.getLocalizedMessage());
         }
+    }
+
+    @Override
+    public void delete(CariFile file) {
+        String key = file.getUrl().replace(s3Service.getUrlPrefix(), "");
+        s3Service.delete(key);
+    }
+
+    @Override
+    public FileOperationResult processImageAndUploadAndSave(File file, ImageProcessor processor,
+            List<ImageValidator> validators) {
+        FileOperationResult processRes = processImage(file, processor, validators);
+
+        if (processRes.getStatus().equals(RequestStatus.FAILURE)) {
+            return processRes;
+        }
+
+        FileOperationResult uploadRes = upload(file);
+
+        if (uploadRes.getStatus().equals(RequestStatus.FAILURE)) {
+            return uploadRes;
+        }
+
+        CariFile dbFile = save(uploadRes.getS3Key().get(), FileType.FILE_TYPE_IMAGE);
+        return FileOperationResult.success(dbFile);
     }
 }

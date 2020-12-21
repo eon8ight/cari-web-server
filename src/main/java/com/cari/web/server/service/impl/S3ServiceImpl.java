@@ -26,6 +26,11 @@ public class S3ServiceImpl implements S3Service {
     @Autowired
     private AmazonS3 s3;
 
+    @Override
+    public String getUrlPrefix() {
+        return "https://" + s3BucketName + ".s3.amazonaws.com/";
+    }
+
     public S3PutResponse upload(File file) {
         Tika tika = new Tika();
         String contentType;
@@ -56,5 +61,10 @@ public class S3ServiceImpl implements S3Service {
 
         PutObjectResult s3Res = s3.putObject(s3Req);
         return S3PutResponse.success(s3Res, s3Key);
+    }
+
+    @Override
+    public void delete(String key) {
+        s3.deleteObject(s3BucketName, key);
     }
 }
