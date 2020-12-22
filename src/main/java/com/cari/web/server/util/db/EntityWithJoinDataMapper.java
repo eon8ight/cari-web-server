@@ -48,6 +48,7 @@ public class EntityWithJoinDataMapper implements RowMapper<Entity> {
                 if (favoriteAestheticString != null) {
                     Aesthetic favoriteAesthetic =
                             mapper.readValue(favoriteAestheticString, Aesthetic.class);
+
                     entity.setFavoriteAestheticData(favoriteAesthetic);
                 }
             } catch (SQLException ex) {

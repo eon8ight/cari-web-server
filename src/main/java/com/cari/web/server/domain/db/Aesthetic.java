@@ -28,9 +28,11 @@ public class Aesthetic implements Serializable {
     private static final long serialVersionUID = -3086472542529813307L;
 
     private static final String COLUMN_URL_SLUG = "url_slug";
+    private static final String COLUMN_START_ERA = "start_era";
+    private static final String COLUMN_END_ERA = "end_era";
+    private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
     private static final String COLUMN_START_YEAR = "start_year";
     private static final String COLUMN_END_YEAR = "end_year";
-    private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
 
     @Id
     @Column
@@ -46,13 +48,13 @@ public class Aesthetic implements Serializable {
     @Column
     private String symbol;
 
-    @Column(COLUMN_START_YEAR)
-    @JsonAlias(COLUMN_START_YEAR)
-    private String startYear;
+    @Column(COLUMN_START_ERA)
+    @JsonAlias(COLUMN_START_ERA)
+    private Integer startEra;
 
-    @Column(COLUMN_END_YEAR)
-    @JsonAlias(COLUMN_END_YEAR)
-    private String endYear;
+    @Column(COLUMN_END_ERA)
+    @JsonAlias(COLUMN_END_ERA)
+    private Integer endEra;
 
     @Column
     private String description;
@@ -73,18 +75,52 @@ public class Aesthetic implements Serializable {
     @Transient
     private ArenaApiResponse galleryContent;
 
+    @Transient
+    @JsonAlias(COLUMN_START_YEAR)
+    private String startYear;
+
+    @Transient
+    @JsonAlias(COLUMN_END_YEAR)
+    private String endYear;
+
     public static Aesthetic fromResultSet(ResultSet rs, int rowNum) throws SQLException {
+        String startEraString = rs.getString(COLUMN_START_ERA);
+        Integer startEra = null;
+
+        if (startEraString != null) {
+            startEra = Integer.parseInt(startEraString);
+        }
+
+        String endEraString = rs.getString(COLUMN_END_ERA);
+        Integer endEra = null;
+
+        if (endEraString != null) {
+            endEra = Integer.parseInt(endEraString);
+        }
+
         // @formatter:off
-        return Aesthetic.builder()
+        AestheticBuilder builder = Aesthetic.builder()
             .aesthetic(rs.getInt("aesthetic"))
             .name(rs.getString("name"))
             .urlSlug(rs.getString(COLUMN_URL_SLUG))
             .symbol(rs.getString("symbol"))
-            .startYear(rs.getString(COLUMN_START_YEAR))
-            .endYear(rs.getString(COLUMN_END_YEAR))
+            .startEra(startEra)
+            .endEra(endEra)
             .description(rs.getString("description"))
-            .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL))
-            .build();
+            .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL));
         // @formatter:on
+
+        try {
+            builder.startYear(rs.getString(COLUMN_START_YEAR));
+        } catch(SQLException ex) {
+        }
+
+        try {
+            builder.endYear(rs.getString(COLUMN_END_YEAR));
+        } catch(SQLException ex) {
+
+        }
+
+        return builder.build();
     }
 }

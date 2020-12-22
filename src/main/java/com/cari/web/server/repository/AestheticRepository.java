@@ -37,6 +37,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "         on m.media_creator = mc.media_creator" +
         ")" +
         "   select a.*, " +
+        "          ess.label || ' ' || es.year || 's' as start_year, " +
+        "          ees.label || ' ' || ee.year || 's' as end_year, " +
         "          jsonb_agg(distinct w.*) as websites, " +
         "          jsonb_agg(distinct m.*) as media, " +
         "          jsonb_agg(distinct case " +
@@ -50,6 +52,14 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "              null " +
         "          end) as similar_aesthetics " +
         "     from tb_aesthetic a " +
+        "left join tb_era es " +
+        "       on a.start_era = es.era " +
+        "left join tb_era_specifier ess  " +
+        "       on es.era_specifier = ess.era_specifier " +
+        "left join tb_era ee " +
+        "       on a.end_era = ee.era " +
+        "left join tb_era_specifier ees  " +
+        "       on ee.era_specifier = ees.era_specifier " +
         "left join tt_website w " +
         "       on a.aesthetic = w.aesthetic " +
         "left join tt_media m " +
@@ -59,7 +69,11 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "left join tb_aesthetic to_a " +
         "       on ar.to_aesthetic = to_a.aesthetic " +
         "    where a.url_slug = :urlSlug " +
-        " group by a.aesthetic";
+        " group by a.aesthetic, " +
+        "          ess.label, " +
+        "          es.year, " +
+        "          ees.label, " +
+        "          ee.year";
 
     String FIND_FOR_EDIT_QUERY =
         "with tt_website as ( " +
@@ -74,7 +88,7 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "            am.label, " +
         "            am.description, " +
         "            am.year, " +
-        "            f.file, " +
+        "            am.media_file, " +
         "            f.url as file_url, " +
         "            pf.url as preview_file_url, " +
         "            mc.media_creator " +
@@ -99,8 +113,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "          a.name, " +
         "          a.url_slug, " +
         "          a.symbol, " +
-        "          a.start_year, " +
-        "          a.end_year, " +
+        "          a.start_era, " +
+        "          a.end_era, " +
         "          a.description, " +
         "          a.media_source_url, " +
         "          jsonb_pretty(jsonb_agg(distinct to_jsonb(w.*) - 'aesthetic'))      as websites, " +

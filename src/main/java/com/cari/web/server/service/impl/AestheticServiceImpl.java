@@ -53,9 +53,9 @@ public class AestheticServiceImpl implements AestheticService {
 
     // @formatter:off
     private static final Map<String, String> SORT_FIELDS = Map.of(
-        "name", "name",
-        FILTER_START_YEAR, "fn_get_approximate_start_year(aesthetic)",
-        FILTER_END_YEAR, "fn_get_approximate_end_year(aesthetic)"
+        "name", "a.name",
+        FILTER_START_YEAR, "fn_get_approximate_start_year(a.aesthetic)",
+        FILTER_END_YEAR, "fn_get_approximate_end_year(a.aesthetic)"
     );
     // @formatter:on
 
@@ -90,8 +90,17 @@ public class AestheticServiceImpl implements AestheticService {
 
     @Override
     public Page<Aesthetic> findForList(Map<String, String> filters) {
-        StringBuilder queryBuilder =
-                new StringBuilder("select count(*) over (), * from tb_aesthetic ");
+        String[] columns = new String[] {"count(a.*) over ()", "a.*",
+                "ess.label || ' ' || es.year || 's' as start_year",
+                "ees.label || ' ' || ee.year || 's' as end_year"};
+
+        StringBuilder queryBuilder = new StringBuilder("select ")
+                .append(Arrays.stream(columns).collect(Collectors.joining(", ")))
+                .append(" from tb_aesthetic a ")
+                .append("left join tb_era es on a.start_era = es.era ")
+                .append("left join tb_era_specifier ess on es.era_specifier = ess.era_specifier ")
+                .append("left join tb_era ee on a.end_era = ee.era ")
+                .append("left join tb_era_specifier ees on ee.era_specifier = ees.era_specifier");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
 
@@ -105,18 +114,18 @@ public class AestheticServiceImpl implements AestheticService {
 
         if (keyword != null) {
             filterClauses.add(
-                    "name ilike '%' || :keyword || '%' or description ilike '%' || :keyword || '%'");
+                    "a.name ilike '%' || :keyword || '%' or a.description ilike '%' || :keyword || '%'");
 
             params.addValue("keyword", keyword);
         }
 
         if (startYear.isPresent()) {
-            filterClauses.add("abs(fn_get_approximate_start_year(aesthetic) - :startYear) <= 3");
+            filterClauses.add("abs(fn_get_approximate_start_year(a.aesthetic) - :startYear) <= 3");
             params.addValue("startYear", startYear.get().intValue());
         }
 
         if (endYear.isPresent()) {
-            filterClauses.add("abs(fn_get_approximate_end_year(aesthetic) - :endYear) <= 3");
+            filterClauses.add("abs(fn_get_approximate_end_year(a.aesthetic) - :endYear) <= 3");
             params.addValue("endYear", endYear.get().intValue());
         }
 
@@ -125,8 +134,7 @@ public class AestheticServiceImpl implements AestheticService {
         /* ORDER BY */
 
         Sort sort = QueryUtils.validateAndGetSort(filters, SORT_FIELDS,
-                () -> Sort.by(Sort.Order.asc("startYear").nullsLast(),
-                        Sort.Order.asc("endYear").nullsLast()));
+                () -> Sort.by(Sort.Order.asc("name")));
 
         queryBuilder.append(QueryUtils.toOrderByClause(sort, SORT_FIELDS));
 
@@ -292,8 +300,8 @@ public class AestheticServiceImpl implements AestheticService {
             .name(name)
             .urlSlug(urlSlug)
             .symbol(symbol)
-            .startYear(aestheticEditRequest.getStartYear())
-            .endYear(aestheticEditRequest.getEndYear())
+            .startEra(aestheticEditRequest.getStartEra())
+            .endEra(aestheticEditRequest.getEndEra())
             .description(aestheticEditRequest.getDescription())
             .mediaSourceUrl(aestheticEditRequest.getMediaSourceUrl())
             .build();

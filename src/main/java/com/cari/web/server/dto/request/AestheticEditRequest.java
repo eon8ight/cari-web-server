@@ -21,13 +21,13 @@ public class AestheticEditRequest implements Serializable {
 
     private String description;
 
-    private String endYear;
+    private Integer endEra;
 
     private String mediaSourceUrl;
 
     private String name;
 
-    private String startYear;
+    private Integer startEra;
 
     private String symbol;
 

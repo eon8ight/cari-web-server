@@ -75,4 +75,12 @@ public class AestheticMedia implements Serializable {
     @Transient
     @JsonAlias("preview_file")
     private CariFile previewFile;
+
+    @Transient
+    @JsonAlias("file_url")
+    private String fileUrl;
+
+    @Transient
+    @JsonAlias("preview_file_url")
+    private String previewFileUrl;
 }
