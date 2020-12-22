@@ -248,7 +248,7 @@ public class UserServiceImpl implements UserService {
     public UserInviteResponse invite(ClientRequestEntity clientRequestEntity) {
         Entity principal = getSessionEntity();
 
-        int pkInviter = Integer.parseInt(principal.getUsername());
+        int pkInviter = principal.getEntity();
         Optional<Entity> inviterOptional = entityRepository.findById(pkInviter);
 
         if (inviterOptional.isEmpty()) {
