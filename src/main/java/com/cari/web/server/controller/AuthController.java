@@ -1,6 +1,7 @@
 package com.cari.web.server.controller;
 
 import java.time.Duration;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.db.Entity;
@@ -69,8 +70,11 @@ public class AuthController {
         ResponseCookie tokenCookie = buildTokenCookie(jwt,
                 clientRequestEntity.isRememberMe() ? Duration.ofDays(14).toSeconds() : -1);
 
+        CariResponse successResponse = CariResponse.success();
+        successResponse.setUpdatedData(Map.of("token", jwtProvider.extractClaims(jwt)));
+
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
-                .body(CariResponse.success());
+                .body(successResponse);
     }
 
     @GetMapping("/auth/checkSession")

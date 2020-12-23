@@ -3,6 +3,7 @@ package com.cari.web.server.config;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import com.cari.web.server.domain.db.Role;
 import com.cari.web.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
             .authorizeRequests()
-                .antMatchers(HttpMethod.PUT, "/aesthetic/edit")
+                .antMatchers(HttpMethod.POST, "/aesthetic/edit")
+                    .hasAuthority(Integer.toString(Role.ADMIN))
+                .antMatchers(HttpMethod.POST, "/user/edit", "/user/invite")
                     .authenticated()
                 .anyRequest()
                     .permitAll()

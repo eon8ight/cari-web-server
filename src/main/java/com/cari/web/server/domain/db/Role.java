@@ -17,6 +17,7 @@ public class Role implements GrantedAuthority {
     private static final long serialVersionUID = -7049685159055159803L;
 
     public static final int ADMIN = 1;
+    public static final int USER = 2;
 
     @Id
     @Column

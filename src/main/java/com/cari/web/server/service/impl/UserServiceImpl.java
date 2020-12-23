@@ -15,6 +15,8 @@ import javax.sql.DataSource;
 import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.Entity;
+import com.cari.web.server.domain.db.EntityRole;
+import com.cari.web.server.domain.db.Role;
 import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.request.ClientRequestEntity;
 import com.cari.web.server.dto.request.EntityEditRequest;
@@ -23,6 +25,7 @@ import com.cari.web.server.dto.response.CariResponse;
 import com.cari.web.server.dto.response.UserInviteResponse;
 import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.repository.EntityRepository;
+import com.cari.web.server.repository.EntityRoleRepository;
 import com.cari.web.server.service.FileService;
 import com.cari.web.server.service.ImageService;
 import com.cari.web.server.service.SendgridService;
@@ -43,6 +46,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -89,6 +93,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private EntityRepository entityRepository;
+
+    @Autowired
+    private EntityRoleRepository entityRoleRepository;
 
     @Autowired
     private DataSource dbHandle;
@@ -146,6 +153,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public CariResponse confirm(int pkEntity) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
@@ -156,6 +164,9 @@ public class UserServiceImpl implements UserService {
         Entity entity = entityOptional.get();
         entity.setConfirmed(Timestamp.from(Instant.now()));
         entityRepository.save(entity);
+
+        EntityRole entityRole = new EntityRole(entity.getEntity(), Role.USER);
+        entityRoleRepository.create(entityRole);
 
         return CariResponse.success();
     }
