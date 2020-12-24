@@ -215,7 +215,7 @@ public class UserServiceImpl implements UserService {
         /* WHERE */
 
         String inviter = filters.get(FILTER_INVITER);
-        List<String> filterClauses = new ArrayList<String>();
+        List<String> filterClauses = new ArrayList<>(Arrays.asList("e.entity <> 0"));
 
         if (inviter != null) {
             filterClauses.add("e.inviter = :inviter\\:\\:integer");

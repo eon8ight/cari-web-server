@@ -26,7 +26,7 @@ public class AestheticMediaEditRequest implements Serializable {
 
     private int year;
 
-    private Integer file;
+    private Integer mediaFile;
 
     private MultipartFile fileObject;
 
@@ -34,8 +34,8 @@ public class AestheticMediaEditRequest implements Serializable {
         String mediaCreatorStr = (String) map.get("mediaCreator");
         Integer mediaCreator = mediaCreatorStr == null ? null : Integer.parseInt(mediaCreatorStr);
 
-        String fileStr = (String) map.get("file");
-        Integer file = fileStr == null ? null : Integer.parseInt(fileStr);
+        String mediaFileStr = (String) map.get("mediaFile");
+        Integer mediaFile = mediaFileStr == null ? null : Integer.parseInt(mediaFileStr);
 
         // @formatter:off
         return AestheticMediaEditRequest.builder()
@@ -44,7 +44,7 @@ public class AestheticMediaEditRequest implements Serializable {
             .description((String) map.get("description"))
             .label((String) map.get("label"))
             .year(Integer.parseInt((String) map.get("year")))
-            .file(file)
+            .mediaFile(mediaFile)
             .fileObject((MultipartFile) map.get("fileObject"))
             .build();
         // @formatter:on

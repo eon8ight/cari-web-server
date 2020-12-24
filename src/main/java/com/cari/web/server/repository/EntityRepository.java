@@ -22,6 +22,7 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "      on er.role = r.role " +
         "   where e.username      = :usernameOrEmailAddress " +
         "      or e.email_address = :usernameOrEmailAddress " +
+        "     and e.entity <> 0 " +
         "group by e.entity";
 
     String FIND_BY_USERNAME_QUERY =
@@ -33,6 +34,7 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "    join tb_role r " +
         "      on er.role = r.role " +
         "   where e.username = :username " +
+        "     and e.entity <> 0 " +
         "group by e.entity";
 
     String FIND_BY_EMAIL_ADDRESS_QUERY =
@@ -44,6 +46,7 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "    join tb_role r " +
         "      on er.role = r.role " +
         "   where lower(e.email_address) = lower(:emailAddress) " +
+        "     and e.entity <> 0 " +
         "group by e.entity";
 
     String FIND_BY_PK_QUERY =
@@ -71,6 +74,7 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "     join tb_role r " +
         "       on er.role = r.role " +
         "    where e.entity = :entity " +
+        "      and e.entity <> 0 " +
         " group by e.entity, " +
         "          f.file";
     // @formatter:on

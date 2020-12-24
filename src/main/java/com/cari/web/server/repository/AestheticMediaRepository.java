@@ -70,9 +70,9 @@ public interface AestheticMediaRepository extends CrudRepository<AestheticMedia,
             @Param("year") int year);
 
     @Query(UPDATE_EXCEPT_FILES_QUERY)
-    int updateExceptFiles(@Param("aesthetic") int aesthetic, @Param("label") String label,
-            @Param("description") String description, @Param("mediaCreator") Integer mediaCreator,
-            @Param("year") int year);
+    int updateExceptFiles(@Param("aesthetic") int aesthetic, @Param("mediaFile") int mediaFile,
+            @Param("label") String label, @Param("description") String description,
+            @Param("mediaCreator") Integer mediaCreator, @Param("year") int year);
 
     @Modifying
     @Query(DELETE_BY_AESTHETIC_EXCEPT_QUERY)
@@ -90,7 +90,7 @@ public interface AestheticMediaRepository extends CrudRepository<AestheticMedia,
     }
 
     default int updateExceptFiles(AestheticMedia media) {
-        return updateExceptFiles(media.getAesthetic(), media.getLabel(), media.getDescription(),
-                media.getMediaCreator(), media.getYear());
+        return updateExceptFiles(media.getAesthetic(), media.getMediaFile(), media.getLabel(),
+                media.getDescription(), media.getMediaCreator(), media.getYear());
     }
 }

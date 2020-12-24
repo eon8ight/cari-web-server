@@ -286,6 +286,7 @@ public class AestheticServiceImpl implements AestheticService {
                     return null;
                 }
             } else {
+                mediaBuilder.mediaFile(media.getMediaFile());
                 return aestheticMediaRepository.updateExceptFiles(mediaBuilder.build());
             }
         }).collect(Collectors.toList());
