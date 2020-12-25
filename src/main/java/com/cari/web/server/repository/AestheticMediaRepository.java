@@ -12,6 +12,17 @@ import org.springframework.stereotype.Repository;
 public interface AestheticMediaRepository extends CrudRepository<AestheticMedia, Integer> {
 
     // @formatter:off
+    String FIND_BY_AESTHETIC_QUERY =
+        "select * " +
+        "  from tb_aesthetic_media " +
+        " where aesthetic = :aesthetic";
+
+    String FIND_BY_AESTHETIC_EXCEPT_QUERY =
+        "select * " +
+        "  from tb_aesthetic_media " +
+        " where aesthetic = :aesthetic " +
+        "   and aesthetic_media not in ( :excludedAestheticMedia )";
+
     String CREATE_OR_UPDATE_QUERY =
         "insert into tb_aesthetic_media ( " +
         "    aesthetic, " +
@@ -61,6 +72,13 @@ public interface AestheticMediaRepository extends CrudRepository<AestheticMedia,
         "delete from tb_aesthetic_media " +
         "      where aesthetic = :aesthetic";
     // @formatter:on
+
+    @Query(FIND_BY_AESTHETIC_QUERY)
+    List<AestheticMedia> findByAesthetic(@Param("aesthetic") int aesthetic);
+
+    @Query(FIND_BY_AESTHETIC_EXCEPT_QUERY)
+    List<AestheticMedia> findByAestheticExcept(@Param("aesthetic") int aesthetic,
+            @Param("excludedAestheticMedia") List<Integer> excludedAestheticMedia);
 
     @Query(CREATE_OR_UPDATE_QUERY)
     int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("mediaFile") int mediaFile,

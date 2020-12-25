@@ -1,5 +1,6 @@
 package com.cari.web.server.dto.request;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.Map;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,12 +31,15 @@ public class AestheticMediaEditRequest implements Serializable {
 
     private MultipartFile fileObject;
 
+    private File copiedFileObject;
+
     public static AestheticMediaEditRequest fromMap(Map<Object, Object> map) {
         String mediaCreatorStr = (String) map.get("mediaCreator");
         Integer mediaCreator = mediaCreatorStr == null ? null : Integer.parseInt(mediaCreatorStr);
 
         String mediaFileStr = (String) map.get("mediaFile");
-        Integer mediaFile = mediaFileStr == null ? null : Integer.parseInt(mediaFileStr);
+        Integer mediaFile = mediaFileStr == null || mediaFileStr.isEmpty() ? null
+                : Integer.parseInt(mediaFileStr);
 
         // @formatter:off
         return AestheticMediaEditRequest.builder()

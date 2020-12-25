@@ -9,9 +9,13 @@ import com.cari.web.server.domain.db.AestheticMedia;
 import com.cari.web.server.domain.db.AestheticWebsite;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.RowMapper;
 
 public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
+
+    private Logger logger = LoggerFactory.getLogger(AestheticWithJoinDataMapper.class);
 
     private static final AestheticWebsite[] EMPTY_WEBSITES = new AestheticWebsite[] {null};
     private static final AestheticMedia[] EMPTY_MEDIA = new AestheticMedia[] {null};
@@ -54,7 +58,8 @@ public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
             } catch (SQLException ex) {
             }
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("Error occurred while trying to unmarshall an aesthetic with join data!",
+                    e);
         }
 
         return aesthetic;

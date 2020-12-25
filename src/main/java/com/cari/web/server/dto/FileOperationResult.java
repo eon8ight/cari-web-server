@@ -28,6 +28,10 @@ public class FileOperationResult {
     @Builder.Default
     private Optional<CariFile> dbFile = Optional.empty();
 
+    public static FileOperationResult success() {
+        return FileOperationResult.builder().status(RequestStatus.SUCCESS).build();
+    }
+
     public static FileOperationResult success(File file) {
         // @formatter:off
         return FileOperationResult.builder()

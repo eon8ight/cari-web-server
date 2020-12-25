@@ -354,8 +354,9 @@ public class UserServiceImpl implements UserService {
             try {
                 File profileImageTmp = fileService.copyToTmpFile(newProfileImage);
 
-                FileOperationResult profileImageRes = fileService.processImageAndUploadAndSave(
-                        profileImageTmp, resizer, Arrays.asList(squareValidator, minSizeValidator));
+                FileOperationResult profileImageRes =
+                        fileService.validateAndProcessImageAndUploadAndSave(profileImageTmp,
+                                resizer, Arrays.asList(squareValidator, minSizeValidator));
 
                 if (profileImageRes.getStatus().equals(RequestStatus.FAILURE)) {
                     fieldErrors.add(

@@ -32,6 +32,11 @@ public class FileServiceImpl implements FileService {
     private FileRepository fileRepository;
 
     @Override
+    public File copyToTmpFile(MultipartFile multipartFile) throws IOException {
+        return FileUtils.transferToTmp(multipartFile);
+    }
+
+    @Override
     public FileOperationResult upload(File file) {
         S3PutResponse s3Res = s3Service.upload(file);
 
@@ -58,16 +63,28 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public File copyToTmpFile(MultipartFile multipartFile) throws IOException {
-        return FileUtils.transferToTmp(multipartFile);
+    public void delete(CariFile file) {
+        String key = file.getUrl().replace(s3Service.getUrlPrefix(), "");
+        s3Service.delete(key);
+        fileRepository.delete(file);
     }
 
     @Override
-    public FileOperationResult processImage(File file, ImageProcessor processor,
-            List<ImageValidator> validators) {
+    public void delete(List<Integer> pkFiles) {
+        Iterable<CariFile> files = fileRepository.findAllById(pkFiles);
+
+        files.forEach(file -> {
+            String key = file.getUrl().replace(s3Service.getUrlPrefix(), "");
+            s3Service.delete(key);
+        });
+
+        fileRepository.deleteAll(files);
+    }
+
+    @Override
+    public FileOperationResult validateImage(File file, List<ImageValidator> validators) {
         try {
-            File tmpFile = FileUtils.cloneFile(file);
-            BufferedImage bufferedImage = ImageIO.read(tmpFile);
+            BufferedImage bufferedImage = ImageIO.read(file);
 
             for (Function<BufferedImage, Optional<String>> validator : validators) {
                 Optional<String> errorMessage = validator.apply(bufferedImage);
@@ -76,8 +93,20 @@ public class FileServiceImpl implements FileService {
                     return FileOperationResult.failure(errorMessage.get());
                 }
             }
+        } catch (IOException ex) {
+            return FileOperationResult.failure(ex.getLocalizedMessage());
+        }
 
+        return FileOperationResult.success();
+    }
+
+    @Override
+    public FileOperationResult processImage(File file, ImageProcessor processor) {
+        try {
+            BufferedImage bufferedImage = ImageIO.read(file);
             BufferedImage processedImage = processor.apply(bufferedImage);
+
+            File tmpFile = FileUtils.cloneFile(file);
             boolean wroteImage = ImageIO.write(processedImage, "png", tmpFile);
 
             if (wroteImage) {
@@ -91,27 +120,42 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void delete(CariFile file) {
-        String key = file.getUrl().replace(s3Service.getUrlPrefix(), "");
-        s3Service.delete(key);
-    }
-
-    @Override
-    public FileOperationResult processImageAndUploadAndSave(File file, ImageProcessor processor,
-            List<ImageValidator> validators) {
-        FileOperationResult processRes = processImage(file, processor, validators);
-
-        if (processRes.getStatus().equals(RequestStatus.FAILURE)) {
-            return processRes;
-        }
-
+    public FileOperationResult uploadAndSave(File file, int pkFileType) {
         FileOperationResult uploadRes = upload(file);
 
         if (uploadRes.getStatus().equals(RequestStatus.FAILURE)) {
             return uploadRes;
         }
 
-        CariFile dbFile = save(uploadRes.getS3Key().get(), FileType.FILE_TYPE_IMAGE);
+        CariFile dbFile = save(uploadRes.getS3Key().get(), pkFileType);
         return FileOperationResult.success(dbFile);
+    }
+
+    @Override
+    public FileOperationResult processImageAndUploadAndSave(File file, ImageProcessor processor) {
+        FileOperationResult processRes = processImage(file, processor);
+
+        if (processRes.getStatus().equals(RequestStatus.FAILURE)) {
+            return processRes;
+        }
+
+        return uploadAndSave(processRes.getFile().get(), FileType.FILE_TYPE_IMAGE);
+    }
+
+    @Override
+    public FileOperationResult validateAndProcessImageAndUploadAndSave(File file,
+            ImageProcessor processor, List<ImageValidator> validators) {
+        FileOperationResult validationRes = validateImage(file, validators);
+
+        if (validationRes.getStatus().equals(RequestStatus.FAILURE)) {
+            return validationRes;
+        }
+        FileOperationResult processRes = processImage(file, processor);
+
+        if (processRes.getStatus().equals(RequestStatus.FAILURE)) {
+            return processRes;
+        }
+
+        return uploadAndSave(processRes.getFile().get(), FileType.FILE_TYPE_IMAGE);
     }
 }

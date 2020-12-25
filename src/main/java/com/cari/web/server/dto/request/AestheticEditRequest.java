@@ -17,7 +17,7 @@ public class AestheticEditRequest implements Serializable {
 
     private static final long serialVersionUID = -7739431384984288058L;
 
-    private int aesthetic;
+    private Integer aesthetic;
 
     private String description;
 

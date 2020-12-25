@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import com.cari.web.server.domain.db.Role;
 import com.cari.web.server.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +28,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private static Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
 
     @Value("${management.endpoints.web.cors.allowed-origins}")
     private List<String> corsAllowedOrigins;
@@ -65,7 +69,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("CORS allowed origins: " + corsAllowedOrigins);
+        logger.debug("CORS allowed origins: " + corsAllowedOrigins);
 
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsAllowedOrigins);

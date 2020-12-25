@@ -9,9 +9,13 @@ import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.domain.db.Role;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.RowMapper;
 
 public class EntityWithJoinDataMapper implements RowMapper<Entity> {
+
+    private static Logger logger = LoggerFactory.getLogger(EntityWithJoinDataMapper.class);
 
     private static final Role[] EMPTY_ROLES = new Role[] {null};
 
@@ -54,7 +58,8 @@ public class EntityWithJoinDataMapper implements RowMapper<Entity> {
             } catch (SQLException ex) {
             }
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("Error occurred while trying to unmarshall an entity with join data!",
+                    e);
         }
 
         return entity;
