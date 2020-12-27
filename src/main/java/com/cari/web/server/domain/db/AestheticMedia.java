@@ -1,6 +1,6 @@
 package com.cari.web.server.domain.db;
 
-import java.io.Serializable;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
@@ -10,16 +10,18 @@ import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table("tb_aesthetic_media")
 @JsonInclude(JsonInclude.Include.NON_NULL)
+public class AestheticMedia extends ModifiableTable implements EditableAestheticAttachment {
 
-public class AestheticMedia implements Serializable {
     private static final long serialVersionUID = -4258598762766168605L;
 
     private static final String COLUMN_AESTHETIC_MEDIA = "aesthetic_media";
@@ -31,6 +33,7 @@ public class AestheticMedia implements Serializable {
     @Id
     @Column(COLUMN_AESTHETIC_MEDIA)
     @JsonAlias(COLUMN_AESTHETIC_MEDIA)
+    @EqualsAndHashCode.Exclude
     private Integer aestheticMedia;
 
     @Column
@@ -62,25 +65,37 @@ public class AestheticMedia implements Serializable {
     private Integer year;
 
     @Transient
-    private MediaCreator creator;
+    @JsonAlias("creator_object")
+    @EqualsAndHashCode.Exclude
+    private MediaCreator creatorObject;
 
     @Transient
     @JsonAlias("original_file")
+    @EqualsAndHashCode.Exclude
     private CariFile originalFile;
 
     @Transient
     @JsonAlias("thumbnail_file")
+    @EqualsAndHashCode.Exclude
     private CariFile thumbnailFile;
 
     @Transient
     @JsonAlias("preview_file")
+    @EqualsAndHashCode.Exclude
     private CariFile previewFile;
 
     @Transient
     @JsonAlias("file_url")
+    @EqualsAndHashCode.Exclude
     private String fileUrl;
 
     @Transient
     @JsonAlias("preview_file_url")
+    @EqualsAndHashCode.Exclude
     private String previewFileUrl;
+
+    @Override
+    public int alternateKeyHash() {
+        return Objects.hash(aesthetic, mediaFile);
+    }
 }

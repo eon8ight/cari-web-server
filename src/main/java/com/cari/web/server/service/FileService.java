@@ -19,7 +19,7 @@ public interface FileService {
 
     void delete(CariFile file);
 
-    void delete(List<Integer> pkFiles);
+    void delete(List<CariFile> files);
 
     FileOperationResult validateImage(File file, List<ImageValidator> validators);
 

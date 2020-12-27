@@ -1,6 +1,5 @@
 package com.cari.web.server.domain.db;
 
-import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -15,15 +14,17 @@ import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper=false)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table("tb_aesthetic")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Aesthetic implements Serializable {
+public class Aesthetic extends ModifiableTable {
 
     private static final long serialVersionUID = -3086472542529813307L;
 
@@ -36,6 +37,7 @@ public class Aesthetic implements Serializable {
 
     @Id
     @Column
+    @EqualsAndHashCode.Exclude
     private Integer aesthetic;
 
     @Column
@@ -64,22 +66,28 @@ public class Aesthetic implements Serializable {
     private String mediaSourceUrl;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     private List<SimilarAesthetic> similarAesthetics;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     private List<AestheticMedia> media;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     private List<AestheticWebsite> websites;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     private ArenaApiResponse galleryContent;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     @JsonAlias(COLUMN_START_YEAR)
     private String startYear;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     @JsonAlias(COLUMN_END_YEAR)
     private String endYear;
 
@@ -112,12 +120,12 @@ public class Aesthetic implements Serializable {
 
         try {
             builder.startYear(rs.getString(COLUMN_START_YEAR));
-        } catch(SQLException ex) {
+        } catch (SQLException ex) {
         }
 
         try {
             builder.endYear(rs.getString(COLUMN_END_YEAR));
-        } catch(SQLException ex) {
+        } catch (SQLException ex) {
 
         }
 

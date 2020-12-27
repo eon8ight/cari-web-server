@@ -5,6 +5,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import io.jsonwebtoken.Claims;
@@ -87,7 +89,8 @@ public class JwtProvider {
 
     public String createSessionToken(Entity entity) {
         return createToken(entity, TokenType.SESSION, Optional.empty(), Optional.empty(),
-                Optional.empty());
+                Optional.of(Map.of("roles", entity.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority).collect(Collectors.joining(",")))));
     }
 
     public String createConfirmToken(Entity entity) {

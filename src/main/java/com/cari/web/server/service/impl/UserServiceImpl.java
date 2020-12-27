@@ -32,6 +32,7 @@ import com.cari.web.server.service.SendgridService;
 import com.cari.web.server.service.UserService;
 import com.cari.web.server.util.ImageProcessor;
 import com.cari.web.server.util.ImageValidator;
+import com.cari.web.server.util.SessionUtils;
 import com.cari.web.server.util.db.EntityWithJoinDataMapper;
 import com.cari.web.server.util.db.QueryUtils;
 import com.sendgrid.Response;
@@ -39,9 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -99,12 +97,6 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private DataSource dbHandle;
-
-    private Entity getSessionEntity() {
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Authentication authentication = securityContext.getAuthentication();
-        return (Entity) authentication.getPrincipal();
-    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -257,7 +249,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInviteResponse invite(ClientRequestEntity clientRequestEntity) {
-        Entity principal = getSessionEntity();
+        Entity principal = SessionUtils.getSessionEntity();
 
         int pkInviter = principal.getEntity();
         Optional<Entity> inviterOptional = entityRepository.findById(pkInviter);
@@ -294,12 +286,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Entity findForEdit() {
-        return getSessionEntity();
+        return SessionUtils.getSessionEntity();
     }
 
     @Override
     public CariResponse edit(EntityEditRequest editRequestEntity) {
-        Entity principal = getSessionEntity();
+        Entity principal = SessionUtils.getSessionEntity();
 
         String newUsername = editRequestEntity.getUsername();
         String newEmailAddress = editRequestEntity.getEmailAddress();

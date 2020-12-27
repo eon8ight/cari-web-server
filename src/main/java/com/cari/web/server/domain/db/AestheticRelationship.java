@@ -1,6 +1,6 @@
 package com.cari.web.server.domain.db;
 
-import java.io.Serializable;
+import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
@@ -10,15 +10,18 @@ import org.springframework.data.relational.core.mapping.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table("tb_aesthetic_relationship")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AestheticRelationship implements Serializable {
+public class AestheticRelationship extends ModifiableTable implements EditableAestheticAttachment {
+
     private static final long serialVersionUID = -3625374001558766927L;
 
     private static final String COLUMN_FROM_AESTHETIC = "from_aesthetic";
@@ -26,6 +29,7 @@ public class AestheticRelationship implements Serializable {
 
     @Id
     @Column("aesthetic_relationship")
+    @EqualsAndHashCode.Exclude
     private Integer aestheticRelationship;
 
     @Column(COLUMN_FROM_AESTHETIC)
@@ -40,8 +44,15 @@ public class AestheticRelationship implements Serializable {
     private String description;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     private Aesthetic from;
 
     @Transient
+    @EqualsAndHashCode.Exclude
     private Aesthetic to;
+
+    @Override
+    public int alternateKeyHash() {
+        return Objects.hash(fromAesthetic, toAesthetic);
+    }
 }

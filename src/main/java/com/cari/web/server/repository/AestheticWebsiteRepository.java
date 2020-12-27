@@ -4,30 +4,14 @@ import java.util.List;
 import com.cari.web.server.domain.db.AestheticWebsite;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebsite, Integer> {
+public interface AestheticWebsiteRepository
+        extends EditableAestheticAttachmentRepository<AestheticWebsite> {
 
     // @formatter:off
-    String CREATE_OR_UPDATE_QUERY =
-        "insert into tb_aesthetic_website ( " +
-        "    aesthetic, " +
-        "    url, " +
-        "    website_type " +
-        ") values ( " +
-        "    :aesthetic, " +
-        "    :url, " +
-        "    :websiteType " +
-        ") " +
-        "       on conflict ( aesthetic, url ) " +
-        "       do update " +
-        "      set url = EXCLUDED.url, " +
-        "          website_type = EXCLUDED.website_type " +
-        "returning aesthetic_website";
-
     String DELETE_BY_AESTHETIC_EXCEPT_QUERY =
         "delete from tb_aesthetic_website " +
         "      where aesthetic = :aesthetic " +
@@ -36,11 +20,12 @@ public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebs
     String DELETE_BY_AESTHETIC_QUERY =
         "delete from tb_aesthetic_website " +
         "      where aesthetic = :aesthetic";
-    // @formatter:on
 
-    @Query(CREATE_OR_UPDATE_QUERY)
-    int createOrUpdate(@Param("aesthetic") int aesthetic, @Param("url") String url,
-            @Param("websiteType") int websiteType);
+    String FIND_BY_AESTHETIC_QUERY =
+        "select * " +
+        "  from tb_aesthetic_website " +
+        " where aesthetic = :aesthetic";
+    // @formatter:on
 
     @Modifying
     @Query(DELETE_BY_AESTHETIC_EXCEPT_QUERY)
@@ -51,7 +36,13 @@ public interface AestheticWebsiteRepository extends CrudRepository<AestheticWebs
     @Query(DELETE_BY_AESTHETIC_QUERY)
     void deleteByAesthetic(@Param("aesthetic") int aesthetic);
 
-    default int createOrUpdate(int pkAesthetic, AestheticWebsite website) {
-        return createOrUpdate(pkAesthetic, website.getUrl(), website.getWebsiteType());
+    @Query(FIND_BY_AESTHETIC_QUERY)
+    List<AestheticWebsite> findByAesthetic(@Param("aesthetic") int aesthetic);
+
+    default List<AestheticWebsite> createOrUpdateForAesthetic(int pkAesthetic,
+            List<AestheticWebsite> aestheticWebsites) {
+        return createOrUpdateForAesthetic(pkAesthetic, aestheticWebsites, this::findByAesthetic,
+                (pk, w) -> w.setAesthetic(pk),
+                (from, to) -> to.setAestheticWebsite(from.getAestheticWebsite()));
     }
 }

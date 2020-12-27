@@ -25,7 +25,7 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "            to_jsonb(f.*)  as original_file, " +
         "            to_jsonb(tf.*) as thumbnail_file, " +
         "            to_jsonb(pf.*) as preview_file, " +
-        "            to_jsonb(mc.*) as creator " +
+        "            to_jsonb(mc.*) as creator_object " +
         "       from tb_aesthetic_media m " +
         "       join tb_file f " +
         "         on m.media_file = f.file " +
@@ -89,6 +89,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "            am.description, " +
         "            am.year, " +
         "            am.media_file, " +
+        "            am.media_thumbnail_file, " +
+        "            am.media_preview_file, " +
         "            f.url as file_url, " +
         "            pf.url as preview_file_url, " +
         "            mc.media_creator " +
@@ -163,4 +165,25 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
 
     @Query(FIND_BY_SYMBOL_QUERY)
     Optional<Aesthetic> findBySymbol(@Param("symbol") String symbol);
+
+    default Aesthetic createOrUpdate(Aesthetic aesthetic) {
+        if (aesthetic.getAesthetic() == null) {
+            return save(aesthetic);
+        }
+
+        Optional<Aesthetic> existingAestheticOptional = findById(aesthetic.getAesthetic());
+
+        if (existingAestheticOptional.isPresent()) {
+            Aesthetic existingAesthetic = existingAestheticOptional.get();
+
+            if (aesthetic.equals(existingAesthetic)) {
+                return existingAesthetic;
+            }
+
+            aesthetic.setCreator(existingAesthetic.getCreator());
+            aesthetic.setCreated(existingAesthetic.getCreated());
+        }
+
+        return save(aesthetic);
+    }
 }

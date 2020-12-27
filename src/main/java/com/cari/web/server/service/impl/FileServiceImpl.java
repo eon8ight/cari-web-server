@@ -18,6 +18,7 @@ import com.cari.web.server.service.S3Service;
 import com.cari.web.server.util.FileUtils;
 import com.cari.web.server.util.ImageProcessor;
 import com.cari.web.server.util.ImageValidator;
+import com.cari.web.server.util.SessionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,6 +59,8 @@ public class FileServiceImpl implements FileService {
             .build();
         // @formatter:on
 
+        dbFile.setCreator(SessionUtils.getSessionEntity().getEntity());
+
         dbFile = fileRepository.save(dbFile);
         return dbFile;
     }
@@ -70,9 +73,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void delete(List<Integer> pkFiles) {
-        Iterable<CariFile> files = fileRepository.findAllById(pkFiles);
-
+    public void delete(List<CariFile> files) {
         files.forEach(file -> {
             String key = file.getUrl().replace(s3Service.getUrlPrefix(), "");
             s3Service.delete(key);

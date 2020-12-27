@@ -1,6 +1,9 @@
 package com.cari.web.server.domain;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+import com.cari.web.server.domain.db.AestheticRelationship;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -23,4 +26,20 @@ public class SimilarAesthetic implements Serializable {
 
     @JsonAlias("reverse_description")
     private String reverseDescription;
+
+    public List<AestheticRelationship> toAestheticRelationships() {
+        // @formatter:off
+        AestheticRelationship relationship = AestheticRelationship.builder()
+            .toAesthetic(aesthetic)
+            .description(description)
+            .build();
+
+        AestheticRelationship reverseRelationship = AestheticRelationship.builder()
+            .fromAesthetic(aesthetic)
+            .description(reverseDescription)
+            .build();
+        // @formatter:on
+
+        return Arrays.asList(relationship, reverseRelationship);
+    }
 }

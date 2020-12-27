@@ -44,8 +44,11 @@ public class AestheticEditRequest implements Serializable {
 
         ObjectMapper objectMapper = new ObjectMapper();
 
-        return websites.stream().map(map -> objectMapper.convertValue(map, AestheticWebsite.class))
-                .collect(Collectors.toList());
+        return websites.stream().map(map -> {
+            AestheticWebsite website = objectMapper.convertValue(map, AestheticWebsite.class);
+            website.setAesthetic(aesthetic);
+            return website;
+        }).collect(Collectors.toList());
     }
 
     public List<SimilarAesthetic> getSimilarAestheticObjects() {

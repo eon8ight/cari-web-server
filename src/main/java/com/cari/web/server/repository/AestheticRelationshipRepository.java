@@ -1,38 +1,18 @@
 package com.cari.web.server.repository;
 
 import java.util.List;
-import com.cari.web.server.domain.SimilarAesthetic;
+import java.util.function.BiConsumer;
 import com.cari.web.server.domain.db.AestheticRelationship;
 import org.springframework.data.jdbc.repository.query.Modifying;
 import org.springframework.data.jdbc.repository.query.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AestheticRelationshipRepository
-        extends CrudRepository<AestheticRelationship, Integer> {
+        extends EditableAestheticAttachmentRepository<AestheticRelationship> {
 
     // @formatter:off
-    String CREATE_OR_UPDATE_QUERY =
-        "insert into tb_aesthetic_relationship ( " +
-        "    from_aesthetic, " +
-        "    to_aesthetic, " +
-        "    description " +
-        ") values ( " +
-        "    :fromAesthetic, " +
-        "    :toAesthetic, " +
-        "    :description " +
-        "), ( " +
-        "    :toAesthetic, " +
-        "    :fromAesthetic, " +
-        "    :reverseDescription " +
-        ") " +
-        "       on conflict ( from_aesthetic, to_aesthetic ) " +
-        "       do update " +
-        "      set description = EXCLUDED.description " +
-        "returning aesthetic_relationship";
-
     String DELETE_BY_AESTHETIC_EXCEPT_QUERY =
         "delete from tb_aesthetic_relationship " +
         "      where ( " +
@@ -45,12 +25,13 @@ public interface AestheticRelationshipRepository
         "delete from tb_aesthetic_relationship " +
         "      where from_aesthetic = :aesthetic " +
         "         or to_aesthetic   = :aesthetic";
-    // @formatter:on
 
-    @Query(CREATE_OR_UPDATE_QUERY)
-    List<Integer> createOrUpdate(@Param("fromAesthetic") int fromAesthetic,
-            @Param("toAesthetic") int toAesthetic, @Param("description") String description,
-            @Param("reverseDescription") String reverseDescription);
+    String FIND_BY_AESTHETIC_QUERY =
+        "select * " +
+        "  from tb_aesthetic_relationship " +
+        " where from_aesthetic = :aesthetic " +
+        "    or to_aesthetic   = :aesthetic";
+    // @formatter:on
 
     @Modifying
     @Query(DELETE_BY_AESTHETIC_EXCEPT_QUERY)
@@ -61,8 +42,21 @@ public interface AestheticRelationshipRepository
     @Query(DELETE_BY_AESTHETIC_QUERY)
     void deleteByAesthetic(@Param("aesthetic") int aesthetic);
 
-    default List<Integer> createOrUpdate(int pkAesthetic, SimilarAesthetic relationship) {
-        return createOrUpdate(pkAesthetic, relationship.getAesthetic(),
-                relationship.getDescription(), relationship.getReverseDescription());
+    @Query(FIND_BY_AESTHETIC_QUERY)
+    List<AestheticRelationship> findByAesthetic(@Param("aesthetic") int aesthetic);
+
+    default List<AestheticRelationship> createOrUpdateForAesthetic(int pkAesthetic,
+            List<AestheticRelationship> aestheticRelationships) {
+        BiConsumer<Integer, AestheticRelationship> relationshipAestheticAssigner = (pk, r) -> {
+            if (r.getFromAesthetic() == null) {
+                r.setFromAesthetic(pk);
+            } else {
+                r.setToAesthetic(pk);
+            }
+        };
+
+        return createOrUpdateForAesthetic(pkAesthetic, aestheticRelationships,
+                this::findByAesthetic, relationshipAestheticAssigner,
+                (from, to) -> to.setAestheticRelationship(from.getAestheticRelationship()));
     }
 }
