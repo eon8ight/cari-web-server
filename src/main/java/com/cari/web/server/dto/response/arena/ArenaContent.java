@@ -47,8 +47,6 @@ public class ArenaContent implements Serializable {
 
     private ArenaAttachment attachment;
 
-    private String metadata;
-
     @JsonProperty("base_class")
     private String baseClass;
 
