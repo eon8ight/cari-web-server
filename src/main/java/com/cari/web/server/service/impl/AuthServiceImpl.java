@@ -1,5 +1,6 @@
 package com.cari.web.server.service.impl;
 
+import java.util.Optional;
 import com.cari.web.server.config.JwtProvider;
 import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.domain.db.Entity;
@@ -33,16 +34,23 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String login(ClientRequestEntity clientRequestEntity) throws LoginException {
         String username = clientRequestEntity.getUsername();
+        CariFieldError fieldError;
 
         try {
-            // If we got this far, an entity with the given username or email address is guaranteed
-            // to exist
-            Entity entity = entityRepository.findByUsernameOrEmailAddress(username).get();
+            Optional<Entity> entityOptional =
+                    entityRepository.findByUsernameOrEmailAddress(username);
 
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,
-                    clientRequestEntity.getPassword(), entity.getAuthorities()));
+            if (entityOptional.isPresent()) {
+                Entity entity = entityOptional.get();
 
-            return jwtProvider.createSessionToken(entity);
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username,
+                        clientRequestEntity.getPassword(), entity.getAuthorities()));
+
+                return jwtProvider.createSessionToken(entity);
+            }
+
+            fieldError = new CariFieldError(FIELD_USERNAME,
+                    "Entity with username " + username + " could not be found.");
         } catch (AuthenticationException ex) {
             String message = ex.getLocalizedMessage();
             String field = FIELD_USERNAME;
@@ -58,9 +66,10 @@ public class AuthServiceImpl implements AuthService {
                     break;
             }
 
-            CariFieldError fieldError = new CariFieldError(field, message);
-            throw new LoginException(fieldError);
+            fieldError = new CariFieldError(field, message);
         }
+
+        throw new LoginException(fieldError);
     }
 
     @Override

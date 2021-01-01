@@ -36,12 +36,6 @@ public class CariFile extends CreatableTable {
     @Column
     private String url;
 
-    @Column
-    private Integer width;
-
-    @Column
-    private Integer height;
-
     @Transient
     private FileType type;
 }
