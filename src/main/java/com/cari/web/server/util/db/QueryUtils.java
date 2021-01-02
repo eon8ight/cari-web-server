@@ -20,6 +20,8 @@ public final class QueryUtils {
     public static final String WHERE = " where ";
     public static final String AND = " and ";
 
+    public static final String GROUP_BY = " group by ";
+
     public static final String ORDER_BY = " order by ";
     public static final String ORDER_BY_ASC = " asc ";
     public static final String ORDER_BY_DESC = " desc ";
@@ -119,6 +121,12 @@ public final class QueryUtils {
                         : new StringBuffer(WHERE).append(filterClauses.stream()
                                 .map(f -> " ( " + f + " ) ").collect(Collectors.joining(AND)))
                                 .toString();
+    }
+
+    public static String toGroupByClause(List<String> groupBys) {
+        return groupBys.isEmpty() ? ""
+                : new StringBuffer(GROUP_BY)
+                        .append(groupBys.stream().collect(Collectors.joining(" , "))).toString();
     }
 
     public static String toOrderByClause(Sort sort, Map<String, String> sortFields) {

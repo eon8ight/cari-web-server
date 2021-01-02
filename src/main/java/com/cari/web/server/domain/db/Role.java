@@ -26,6 +26,9 @@ public class Role implements GrantedAuthority {
     @Column
     private String label;
 
+    @Column
+    private Integer rank;
+
     @Override
     public String getAuthority() {
         return Integer.toString(role);

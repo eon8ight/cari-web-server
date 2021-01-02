@@ -94,6 +94,9 @@ public class Entity implements UserDetails {
     @Transient
     private Aesthetic favoriteAestheticData;
 
+    @Transient
+    private String rolesForDisplay;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles;
