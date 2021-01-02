@@ -57,6 +57,7 @@ public class UserServiceImpl implements UserService {
     private static final String FILTER_ROLE = "role";
     private static final String FILTER_INCLUDE_PROFILE_IMAGE = "includeProfileImage";
     private static final String FILTER_INCLUDE_FAVORITE_AESTHETIC = "includeFavoriteAesthetic";
+    private static final String FILTER_INCLUDE_ROLES = "includeRoles";
 
     private static final String FIELD_PROFILE_IMAGE = "profileImage";
 
@@ -73,7 +74,8 @@ public class UserServiceImpl implements UserService {
         "confirmed", "e.confirmed",
         "username", "e.username",
         "lastName", "e.last_name",
-        "firstName", "e.first_name"
+        "firstName", "e.first_name",
+        "rank", "( array_agg( r_disp.rank order by r_disp.rank ) )[1]"
     );
     // @formatter:on
 
@@ -188,15 +190,35 @@ public class UserServiceImpl implements UserService {
                 "e.title", "e.profile_image_file", "e.favorite_aesthetic"));
 
         List<String> joins = new ArrayList<>(2);
+        List<String> groupBys = new ArrayList<>(3);
+        List<String> filterClauses = new ArrayList<>(Arrays.asList("e.entity <> 0"));
 
-        if (filters.get(FILTER_INCLUDE_PROFILE_IMAGE) != null) {
+        boolean includeProfileImage = filters.get(FILTER_INCLUDE_PROFILE_IMAGE) != null;
+        boolean includeFavoriteAesthetic = filters.get(FILTER_INCLUDE_FAVORITE_AESTHETIC) != null;
+
+        if (includeProfileImage) {
             columns.add("to_jsonb(f.*) as profile_image");
             joins.add("left join tb_file f on e.profile_image_file = f.file");
         }
 
-        if (filters.get(FILTER_INCLUDE_FAVORITE_AESTHETIC) != null) {
+        if (includeFavoriteAesthetic) {
             columns.add("to_jsonb(a.*) as favorite_aesthetic_data");
             joins.add("left join tb_aesthetic a on e.favorite_aesthetic = a.aesthetic");
+        }
+
+        if(filters.get(FILTER_INCLUDE_ROLES) != null) {
+            columns.add("string_agg( r_disp.label, ', ' order by r_disp.rank ) as roles_for_display");
+            joins.add("left join tb_entity_role er_disp on e.entity = er_disp.entity left join tb_role r_disp on er_disp.role = r_disp.role");
+            filterClauses.add("er_disp.role <> 1");
+            groupBys.add("e.entity");
+
+            if(includeProfileImage) {
+                groupBys.add("f.*");
+            }
+
+            if(includeFavoriteAesthetic) {
+                groupBys.add("a.*");
+            }
         }
 
         queryBuilder.append(columns.stream().collect(Collectors.joining(", ")))
@@ -207,7 +229,6 @@ public class UserServiceImpl implements UserService {
         /* WHERE */
 
         String inviter = filters.get(FILTER_INVITER);
-        List<String> filterClauses = new ArrayList<>(Arrays.asList("e.entity <> 0"));
 
         if (inviter != null) {
             filterClauses.add("e.inviter = :inviter\\:\\:integer");
@@ -224,6 +245,10 @@ public class UserServiceImpl implements UserService {
 
         queryBuilder.append(joins.stream().collect(Collectors.joining(" ")));
         queryBuilder.append(QueryUtils.toWhereClause(filterClauses));
+
+        /* GROUP BY */
+
+        queryBuilder.append(QueryUtils.toGroupByClause(groupBys));
 
         /* ORDER BY */
 

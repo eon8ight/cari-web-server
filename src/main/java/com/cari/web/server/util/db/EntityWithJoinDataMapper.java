@@ -57,6 +57,15 @@ public class EntityWithJoinDataMapper implements RowMapper<Entity> {
                 }
             } catch (SQLException ex) {
             }
+
+            try {
+                String rolesForDisplay = rs.getString("roles_for_display");
+
+                if(rolesForDisplay != null) {
+                    entity.setRolesForDisplay(rolesForDisplay);
+                }
+            } catch (SQLException ex) {
+            }
         } catch (JsonProcessingException e) {
             logger.error("Error occurred while trying to unmarshall an entity with join data!",
                     e);
