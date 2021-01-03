@@ -27,6 +27,8 @@ public class AestheticRelationship extends ModifiableTable implements EditableAe
     private static final String COLUMN_FROM_AESTHETIC = "from_aesthetic";
     private static final String COLUMN_TO_AESTHETIC = "to_aesthetic";
 
+    private static final int ALTERNATE_KEY_HASH_PRIME = 1009;
+
     @Id
     @Column("aesthetic_relationship")
     @EqualsAndHashCode.Exclude
@@ -53,6 +55,10 @@ public class AestheticRelationship extends ModifiableTable implements EditableAe
 
     @Override
     public int alternateKeyHash() {
-        return Objects.hash(fromAesthetic, toAesthetic);
+        // Taken from OpenJDK's implementation of Arrays.hashCode(int[]), unrolled, and with a
+        // different prime
+        int result = ALTERNATE_KEY_HASH_PRIME + fromAesthetic;
+        result = ALTERNATE_KEY_HASH_PRIME * result + toAesthetic;
+        return result;
     }
 }
