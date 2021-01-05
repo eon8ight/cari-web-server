@@ -27,6 +27,18 @@ public class SimilarAesthetic implements Serializable {
     @JsonAlias("reverse_description")
     private String reverseDescription;
 
+    @JsonAlias("start_year")
+    private String startYear;
+
+    @JsonAlias("end_year")
+    private String endYear;
+
+    @JsonAlias("approximate_start_year")
+    private Integer approximateStartYear;
+
+    @JsonAlias("approximate_end_year")
+    private Integer approximateEndYear;
+
     public List<AestheticRelationship> toAestheticRelationships() {
         // @formatter:off
         AestheticRelationship relationship = AestheticRelationship.builder()

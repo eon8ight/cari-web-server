@@ -1,6 +1,5 @@
 package com.cari.web.server.domain.db;
 
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;

@@ -44,9 +44,14 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "          jsonb_agg(distinct case " +
         "            when to_a.aesthetic is not null then " +
         "              jsonb_build_object( " +
-        "                'name', to_a.name, " +
-        "                'url_slug', to_a.url_slug, " +
-        "                'description', ar.description " +
+        "                'aesthetic',            to_a.aesthetic, " +
+        "                'name',                 to_a.name, " +
+        "                'url_slug',             to_a.url_slug, " +
+        "                'description',          ar.description, " +
+        "                'startYear',            to_a_ess.label || ' ' || to_a_es.year || 's', " +
+        "                'endYear',              to_a_ees.label || ' ' || to_a_ee.year || 's', " +
+        "                'approximateStartYear', fn_get_approximate_start_year(to_a.aesthetic), " +
+        "                'approximateEndYear',   fn_get_approximate_end_year(to_a.aesthetic) " +
         "              ) " +
         "            else " +
         "              null " +
@@ -68,6 +73,14 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "       on a.aesthetic = ar.from_aesthetic " +
         "left join tb_aesthetic to_a " +
         "       on ar.to_aesthetic = to_a.aesthetic " +
+        "left join tb_era to_a_es " +
+        "       on to_a.start_era = to_a_es.era " +
+        "left join tb_era_specifier to_a_ess " +
+        "       on to_a_es.era_specifier = to_a_ess.era_specifier " +
+        "left join tb_era to_a_ee " +
+        "       on to_a.end_era = to_a_ee.era " +
+        "left join tb_era_specifier to_a_ees " +
+        "       on to_a_ee.era_specifier = to_a_ees.era_specifier " +
         "    where a.url_slug = :urlSlug " +
         " group by a.aesthetic, " +
         "          ess.label, " +
