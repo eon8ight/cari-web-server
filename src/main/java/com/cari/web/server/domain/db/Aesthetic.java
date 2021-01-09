@@ -126,7 +126,6 @@ public class Aesthetic extends ModifiableTable {
         try {
             builder.endYear(rs.getString(COLUMN_END_YEAR));
         } catch (SQLException ex) {
-
         }
 
         return builder.build();

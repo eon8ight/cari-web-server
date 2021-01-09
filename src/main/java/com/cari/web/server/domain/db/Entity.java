@@ -37,6 +37,7 @@ public class Entity implements UserDetails {
     private static final String COLUMN_LAST_NAME = "last_name";
     private static final String COLUMN_PROFILE_IMAGE_FILE = "profile_image_file";
     private static final String COLUMN_FAVORITE_AESTHETIC = "favorite_aesthetic";
+    private static final String COLUMN_DISPLAY_ON_TEAM_PAGE = "display_on_team_page";
 
     @Id
     @Column
@@ -84,6 +85,10 @@ public class Entity implements UserDetails {
     @Column(COLUMN_FAVORITE_AESTHETIC)
     @JsonAlias(COLUMN_FAVORITE_AESTHETIC)
     private Integer favoriteAesthetic;
+
+    @Column(COLUMN_DISPLAY_ON_TEAM_PAGE)
+    @JsonAlias(COLUMN_DISPLAY_ON_TEAM_PAGE)
+    private boolean displayOnTeamPage;
 
     @Transient
     private CariFile profileImage;

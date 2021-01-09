@@ -55,6 +55,7 @@ public class UserServiceImpl implements UserService {
 
     private static final String FILTER_INVITER = "inviter";
     private static final String FILTER_ROLE = "role";
+    private static final String FILTER_DISPLAY_ON_TEAM_PAGE = "displayOnTeamPage";
     private static final String FILTER_INCLUDE_PROFILE_IMAGE = "includeProfileImage";
     private static final String FILTER_INCLUDE_FAVORITE_AESTHETIC = "includeFavoriteAesthetic";
     private static final String FILTER_INCLUDE_ROLES = "includeRoles";
@@ -187,11 +188,13 @@ public class UserServiceImpl implements UserService {
         List<String> columns = new ArrayList<>(Arrays.asList("count(*) over ()", "e.entity",
                 "e.email_address", "e.username", "e.password_hash", "e.invited", "e.confirmed",
                 "e.registered", "e.inviter", "e.first_name", "e.last_name", "e.biography",
-                "e.title", "e.profile_image_file", "e.favorite_aesthetic"));
+                "e.title", "e.profile_image_file", "e.favorite_aesthetic", "e.display_on_team_page"));
 
         List<String> joins = new ArrayList<>(2);
         List<String> groupBys = new ArrayList<>(3);
         List<String> filterClauses = new ArrayList<>(Arrays.asList("e.entity <> 0"));
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
 
         boolean includeProfileImage = filters.get(FILTER_INCLUDE_PROFILE_IMAGE) != null;
         boolean includeFavoriteAesthetic = filters.get(FILTER_INCLUDE_FAVORITE_AESTHETIC) != null;
@@ -209,7 +212,10 @@ public class UserServiceImpl implements UserService {
         if(filters.get(FILTER_INCLUDE_ROLES) != null) {
             columns.add("string_agg( r_disp.label, ', ' order by r_disp.rank ) as roles_for_display");
             joins.add("left join tb_entity_role er_disp on e.entity = er_disp.entity left join tb_role r_disp on er_disp.role = r_disp.role");
-            filterClauses.add("er_disp.role <> 1");
+
+            filterClauses.add("r_disp.role not in ( :excludedRoles )");
+            params.addValue("excludedRoles", Arrays.asList(Role.ADMIN, Role.USER));
+
             groupBys.add("e.entity");
 
             if(includeProfileImage) {
@@ -223,8 +229,6 @@ public class UserServiceImpl implements UserService {
 
         queryBuilder.append(columns.stream().collect(Collectors.joining(", ")))
                 .append(" from tb_entity e ");
-
-        MapSqlParameterSource params = new MapSqlParameterSource();
 
         /* WHERE */
 
@@ -241,6 +245,12 @@ public class UserServiceImpl implements UserService {
             filterClauses.add("er.role = :role\\:\\:integer");
             params.addValue("role", role);
             joins.add("join tb_entity_role er on e.entity = er.entity");
+        }
+
+        String displayOnTeamPage = filters.get(FILTER_DISPLAY_ON_TEAM_PAGE);
+
+        if(displayOnTeamPage != null && Boolean.parseBoolean(displayOnTeamPage)) {
+            filterClauses.add("e.display_on_team_page is true");
         }
 
         queryBuilder.append(joins.stream().collect(Collectors.joining(" ")));

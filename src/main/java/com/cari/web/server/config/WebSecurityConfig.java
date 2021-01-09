@@ -2,8 +2,12 @@ package com.cari.web.server.config;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import com.cari.web.server.domain.db.Role;
+import com.cari.web.server.domain.db.Route;
+import com.cari.web.server.repository.RouteRepository;
 import com.cari.web.server.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,9 +19,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,8 +46,31 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserService userDetailsService;
 
+    @Autowired
+    private RouteRepository routeRepository;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        List<Route> routePermissions = routeRepository.findAll();
+
+        Customizer<ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry> authorizeRequestsCustomizer =
+                authorizeRequests -> {
+                    routePermissions.forEach(route -> {
+                        List<Integer> roles = new LinkedList<>(route.getRoles());
+                        roles.add(Role.ADMIN);
+
+                        List<String> rolesStr = roles.stream().map(r -> Integer.toString(r))
+                                .collect(Collectors.toList());
+
+                        HttpMethod method = HttpMethod.valueOf(route.getHttpMethodLabel());
+
+                        authorizeRequests.antMatchers(method, route.getUrl())
+                                .hasAnyAuthority(rolesStr.toArray(new String[rolesStr.size()]));
+                    });
+
+                    authorizeRequests.anyRequest().permitAll();
+                };
+
         // @formatter:off
         http
             .cors()
@@ -51,14 +80,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-            .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/aesthetic/edit")
-                    .hasAuthority(Integer.toString(Role.ADMIN))
-                .antMatchers(HttpMethod.POST, "/user/edit", "/user/invite")
-                    .authenticated()
-                .anyRequest()
-                    .permitAll()
-                .and()
+            .authorizeRequests(authorizeRequestsCustomizer)
             .exceptionHandling()
                 .accessDeniedHandler((request, response, accessDeniedException) -> response
                     .sendError(401, accessDeniedException.getLocalizedMessage()))
