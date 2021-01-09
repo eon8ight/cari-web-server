@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Table("tb_entity")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties({"accountNonExpired", "accountNonLocked", "authorities",
-        "credentialsNonExpired", "enabled", "password", "passwordHash", "roles"})
+        "credentialsNonExpired", "enabled", "password", "passwordHash"})
 public class Entity implements UserDetails {
 
     private static final long serialVersionUID = -1485850596199572023L;

@@ -210,7 +210,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if(filters.get(FILTER_INCLUDE_ROLES) != null) {
-            columns.add("string_agg( r_disp.label, ', ' order by r_disp.rank ) as roles_for_display");
+            columns.add("string_agg( r_disp.label, ' / ' order by r_disp.rank ) as roles_for_display");
             joins.add("left join tb_entity_role er_disp on e.entity = er_disp.entity left join tb_role r_disp on er_disp.role = r_disp.role");
 
             filterClauses.add("r_disp.role not in ( :excludedRoles )");
