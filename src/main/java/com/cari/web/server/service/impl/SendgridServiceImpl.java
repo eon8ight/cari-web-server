@@ -33,6 +33,12 @@ public class SendgridServiceImpl implements SendgridService {
     @Value("${sendgrid.api.key}")
     private String sendgridApiKey;
 
+    @Value("${email.no-reply.address}")
+    private String noReplyEmail;
+
+    @Value("${email.no-reply.name}")
+    private String noReplyFrom;
+
     @Autowired
     private JwtProvider jwtProvider;
 
@@ -64,7 +70,7 @@ public class SendgridServiceImpl implements SendgridService {
         MessageTemplate messageTemplate = messageTemplateOptional.get();
         String username = toEntity.getUsername();
 
-        Email from = new Email("no-reply@c-a-r-i.org", "CARIbot 2.0");
+        Email from = new Email(noReplyEmail, noReplyFrom);
         Email to = new Email(toEntity.getEmailAddress(), username);
 
         Personalization personalization = new Personalization();
