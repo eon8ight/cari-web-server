@@ -378,12 +378,12 @@ public class UserServiceImpl implements UserService {
                 if (profileImageRes.getStatus().equals(RequestStatus.FAILURE)) {
                     fieldErrors.add(
                             new CariFieldError(FIELD_PROFILE_IMAGE, profileImageRes.getMessage()));
+                } else {
+                    CariFile dbProfileImage = profileImageRes.getDbFile().get();
+
+                    principal.setProfileImageFile(dbProfileImage.getFile());
+                    updatedData.put("profileImageUrl", dbProfileImage.getUrl());
                 }
-
-                CariFile dbProfileImage = profileImageRes.getDbFile().get();
-
-                principal.setProfileImageFile(dbProfileImage.getFile());
-                updatedData.put("profileImageUrl", dbProfileImage.getUrl());
             } catch (IOException ex) {
                 fieldErrors.add(new CariFieldError(FIELD_PROFILE_IMAGE, ex.getMessage()));
             }
