@@ -163,6 +163,7 @@ public class Entity implements UserDetails {
             .title(rs.getString("title"))
             .profileImageFile(profileImageFile)
             .favoriteAesthetic(favoriteAesthetic)
+            .displayOnTeamPage(rs.getBoolean(COLUMN_DISPLAY_ON_TEAM_PAGE))
             .build();
         // @formatter:on
     }
