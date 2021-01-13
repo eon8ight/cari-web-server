@@ -1,9 +1,11 @@
 package com.cari.web.server.dto.request;
 
-import java.io.File;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import org.springframework.web.multipart.MultipartFile;
+import java.util.stream.Collectors;
+import org.springframework.data.annotation.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,57 +17,22 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AestheticMediaEditRequest implements Serializable {
 
-    private static final long serialVersionUID = 2611482984847835691L;
+    private static final long serialVersionUID = 5991842477325584211L;
 
-    private Integer mediaCreator;
+    private int aesthetic;
 
-    private String mediaCreatorName;
+    private List<Map<Object, Object>> media;
 
-    private String description;
+    @Transient
+    private List<AestheticMediaEditData> mediaObjects;
 
-    private String label;
+    public List<AestheticMediaEditData> getMediaObjects() {
+        if (mediaObjects == null) {
+            mediaObjects = media == null ? Collections.emptyList()
+                    : media.stream().map(map -> AestheticMediaEditData.fromMap(map))
+                            .collect(Collectors.toList());
+        }
 
-    private int year;
-
-    private Integer mediaFile;
-
-    private Integer mediaThumbnailFile;
-
-    private Integer mediaPreviewFile;
-
-    private MultipartFile fileObject;
-
-    private File copiedFileObject;
-
-    public static AestheticMediaEditRequest fromMap(Map<Object, Object> map) {
-        String mediaCreatorStr = (String) map.get("mediaCreator");
-        Integer mediaCreator = mediaCreatorStr == null ? null : Integer.parseInt(mediaCreatorStr);
-
-        String mediaFileStr = (String) map.get("mediaFile");
-        Integer file = mediaFileStr == null || mediaFileStr.isEmpty() ? null
-                : Integer.parseInt(mediaFileStr);
-
-        String mediaThumbnailFileStr = (String) map.get("mediaThumbnailFile");
-        Integer thumbnailFile =
-                mediaThumbnailFileStr == null || mediaThumbnailFileStr.isEmpty() ? null
-                        : Integer.parseInt(mediaThumbnailFileStr);
-
-        String mediaPreviewFileStr = (String) map.get("mediaPreviewFile");
-        Integer previewFile = mediaPreviewFileStr == null || mediaPreviewFileStr.isEmpty() ? null
-                : Integer.parseInt(mediaPreviewFileStr);
-
-        // @formatter:off
-        return AestheticMediaEditRequest.builder()
-            .mediaCreator(mediaCreator)
-            .mediaCreatorName((String) map.get("mediaCreatorName"))
-            .description((String) map.get("description"))
-            .label((String) map.get("label"))
-            .year(Integer.parseInt((String) map.get("year")))
-            .mediaFile(file)
-            .mediaThumbnailFile(thumbnailFile)
-            .mediaPreviewFile(previewFile)
-            .fileObject((MultipartFile) map.get("fileObject"))
-            .build();
-        // @formatter:on
+        return mediaObjects;
     }
 }
