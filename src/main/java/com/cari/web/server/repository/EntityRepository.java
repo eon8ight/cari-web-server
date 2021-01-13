@@ -50,20 +50,7 @@ public interface EntityRepository extends CrudRepository<Entity, Integer> {
         "group by e.entity";
 
     String FIND_BY_PK_QUERY =
-        "   select e.entity, " +
-        "          e.email_address, " +
-        "          e.username, " +
-        "          e.password_hash, " +
-        "          e.invited, " +
-        "          e.confirmed, " +
-        "          e.registered, " +
-        "          e.inviter, " +
-        "          e.first_name, " +
-        "          e.last_name, " +
-        "          e.biography, " +
-        "          e.title, " +
-        "          e.profile_image_file, " +
-        "          e.favorite_aesthetic, " +
+        "   select e.*, " +
         "          to_jsonb(f.*)           as profile_image, " +
         "          jsonb_agg(distinct r.*) as roles " +
         "     from tb_entity e " +
