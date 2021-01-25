@@ -39,7 +39,8 @@ public class AestheticMediaEditData implements Serializable {
 
     public static AestheticMediaEditData fromMap(Map<Object, Object> map) {
         String mediaCreatorStr = (String) map.get("mediaCreator");
-        Integer mediaCreator = mediaCreatorStr == null ? null : Integer.parseInt(mediaCreatorStr);
+        Integer mediaCreator = mediaCreatorStr == null || mediaCreatorStr.isEmpty() ? null
+                : Integer.parseInt(mediaCreatorStr);
 
         String mediaFileStr = (String) map.get("mediaFile");
         Integer file = mediaFileStr == null || mediaFileStr.isEmpty() ? null
