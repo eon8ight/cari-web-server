@@ -63,9 +63,12 @@ public class AestheticEditRequest implements Serializable {
                 .collect(Collectors.toList());
     }
 
-    public List<AestheticMediaEditRequest> getMediaObjects() {
-        return media == null ? Collections.emptyList()
-                : media.stream().map(map -> AestheticMediaEditRequest.fromMap(map))
-                        .collect(Collectors.toList());
+    public AestheticMediaEditRequest getMediaObjects() {
+        // @formatter:off
+        return AestheticMediaEditRequest.builder()
+            .aesthetic(aesthetic)
+            .media(media)
+            .build();
+        // @formatter:on
     }
 }
