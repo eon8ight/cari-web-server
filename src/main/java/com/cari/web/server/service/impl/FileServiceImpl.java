@@ -151,6 +151,7 @@ public class FileServiceImpl implements FileService {
         if (validationRes.getStatus().equals(RequestStatus.FAILURE)) {
             return validationRes;
         }
+
         FileOperationResult processRes = processImage(file, processor);
 
         if (processRes.getStatus().equals(RequestStatus.FAILURE)) {

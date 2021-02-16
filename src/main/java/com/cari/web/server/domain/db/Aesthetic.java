@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -34,6 +34,9 @@ public class Aesthetic extends ModifiableTable {
     private static final String COLUMN_MEDIA_SOURCE_URL = "media_source_url";
     private static final String COLUMN_START_YEAR = "start_year";
     private static final String COLUMN_END_YEAR = "end_year";
+    private static final String COLUMN_DISPLAY_IMAGE_FILE = "display_image_file";
+
+    private static final String FIELD_DISPLAY_IMAGE_URL = "display_image_url";
 
     @Id
     @Column
@@ -65,6 +68,10 @@ public class Aesthetic extends ModifiableTable {
     @JsonAlias(COLUMN_MEDIA_SOURCE_URL)
     private String mediaSourceUrl;
 
+    @Column(COLUMN_DISPLAY_IMAGE_FILE)
+    @JsonAlias(COLUMN_DISPLAY_IMAGE_FILE)
+    private Integer displayImageFile;
+
     @Transient
     @EqualsAndHashCode.Exclude
     private List<SimilarAesthetic> similarAesthetics;
@@ -91,6 +98,16 @@ public class Aesthetic extends ModifiableTable {
     @JsonAlias(COLUMN_END_YEAR)
     private String endYear;
 
+    @Transient
+    @EqualsAndHashCode.Exclude
+    @JsonAlias(FIELD_DISPLAY_IMAGE_URL)
+    private String displayImageUrl;
+
+    @Transient
+    @EqualsAndHashCode.Exclude
+    @JsonAlias("display_image")
+    private CariFile displayImage;
+
     public static Aesthetic fromResultSet(ResultSet rs, int rowNum) throws SQLException {
         String startEraString = rs.getString(COLUMN_START_ERA);
         Integer startEra = null;
@@ -106,6 +123,20 @@ public class Aesthetic extends ModifiableTable {
             endEra = Integer.parseInt(endEraString);
         }
 
+        String displayImageFileString = rs.getString(COLUMN_DISPLAY_IMAGE_FILE);
+        Integer displayImageFile = null;
+
+        if (displayImageFileString != null) {
+            displayImageFile = Integer.parseInt(displayImageFileString);
+        }
+
+        String displayImageUrl = null;
+
+        try {
+            displayImageUrl = rs.getString(FIELD_DISPLAY_IMAGE_URL);
+        } catch (SQLException e) {
+        }
+
         // @formatter:off
         AestheticBuilder builder = Aesthetic.builder()
             .aesthetic(rs.getInt("aesthetic"))
@@ -115,7 +146,9 @@ public class Aesthetic extends ModifiableTable {
             .startEra(startEra)
             .endEra(endEra)
             .description(rs.getString("description"))
-            .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL));
+            .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL))
+            .displayImageFile(displayImageFile)
+            .displayImageUrl(displayImageUrl);
         // @formatter:on
 
         try {

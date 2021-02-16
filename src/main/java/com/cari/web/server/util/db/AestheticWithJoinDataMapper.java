@@ -7,6 +7,7 @@ import com.cari.web.server.domain.SimilarAesthetic;
 import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.domain.db.AestheticMedia;
 import com.cari.web.server.domain.db.AestheticWebsite;
+import com.cari.web.server.domain.db.CariFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -54,6 +55,18 @@ public class AestheticWithJoinDataMapper implements RowMapper<Aesthetic> {
 
                 if (!Arrays.equals(EMPTY_SIMILAR_AESTHETICS, similarAesthetics)) {
                     aesthetic.setSimilarAesthetics(Arrays.asList(similarAesthetics));
+                }
+            } catch (SQLException ex) {
+            }
+
+            try {
+                String displayImageString = rs.getString("display_image");
+
+                if (displayImageString != null) {
+                    CariFile displayImage =
+                            mapper.readValue(displayImageString, CariFile.class);
+
+                    aesthetic.setDisplayImage(displayImage);
                 }
             } catch (SQLException ex) {
             }

@@ -39,8 +39,9 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "   select a.*, " +
         "          ess.label || ' ' || es.year || 's' as start_year, " +
         "          ees.label || ' ' || ee.year || 's' as end_year, " +
-        "          jsonb_agg(distinct w.*) as websites, " +
-        "          jsonb_agg(distinct m.*) as media, " +
+        "          to_jsonb(f.*)                      as display_image, " +
+        "          jsonb_agg(distinct w.*)            as websites, " +
+        "          jsonb_agg(distinct m.*)            as media, " +
         "          jsonb_agg(distinct case " +
         "            when to_a.aesthetic is not null then " +
         "              jsonb_build_object( " +
@@ -57,6 +58,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "              null " +
         "          end) as similar_aesthetics " +
         "     from tb_aesthetic a " +
+        "left join tb_file f " +
+        "       on a.display_image_file = f.file " +
         "left join tb_era es " +
         "       on a.start_era = es.era " +
         "left join tb_era_specifier ess  " +
@@ -83,6 +86,7 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "       on to_a_ee.era_specifier = to_a_ees.era_specifier " +
         "    where a.url_slug = :urlSlug " +
         " group by a.aesthetic, " +
+        "          f.file, " +
         "          ess.label, " +
         "          es.year, " +
         "          ees.label, " +
@@ -124,18 +128,14 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "      on ar.from_aesthetic = rar.to_aesthetic " +
         "     and ar.to_aesthetic = rar.from_aesthetic " +
         ") " +
-        "   select a.aesthetic, " +
-        "          a.name, " +
-        "          a.url_slug, " +
-        "          a.symbol, " +
-        "          a.start_era, " +
-        "          a.end_era, " +
-        "          a.description, " +
-        "          a.media_source_url, " +
+        "   select a.*, " +
+        "          to_jsonb(f.*) as display_image, " +
         "          jsonb_pretty(jsonb_agg(distinct to_jsonb(w.*) - 'aesthetic'))      as websites, " +
         "          jsonb_pretty(jsonb_agg(distinct to_jsonb(m.*) - 'aesthetic'))      as media, " +
         "          jsonb_pretty(jsonb_agg(distinct to_jsonb(r.*) - 'this_aesthetic')) as similar_aesthetics " +
         "     from tb_aesthetic a " +
+        "left join tb_file f " +
+        "       on a.display_image_file = f.file " +
         "left join tt_website w " +
         "       on a.aesthetic = w.aesthetic " +
         "left join tt_media m " +
@@ -143,7 +143,8 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "left join tt_relationship r " +
         "       on a.aesthetic = r.this_aesthetic " +
         "    where a.aesthetic = :aesthetic " +
-        " group by a.aesthetic ";
+        " group by a.aesthetic, " +
+        "          f.file";
 
     String FIND_AESTHETIC_NAMES_QUERY =
         "select aesthetic, " +

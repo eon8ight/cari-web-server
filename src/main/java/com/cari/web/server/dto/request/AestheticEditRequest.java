@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.cari.web.server.domain.SimilarAesthetic;
 import com.cari.web.server.domain.db.AestheticWebsite;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -30,6 +31,10 @@ public class AestheticEditRequest implements Serializable {
     private Integer startEra;
 
     private String symbol;
+
+    private Integer displayImageFile;
+
+    private MultipartFile displayImage;
 
     private List<Map<Object, Object>> websites;
 
