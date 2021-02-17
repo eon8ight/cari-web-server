@@ -1,5 +1,8 @@
 package com.cari.web.server.service.impl;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +15,8 @@ import com.cari.web.server.domain.SimilarAesthetic;
 import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.domain.db.AestheticRelationship;
 import com.cari.web.server.domain.db.AestheticWebsite;
+import com.cari.web.server.domain.db.CariFile;
+import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.request.AestheticEditRequest;
 import com.cari.web.server.dto.request.AestheticMediaEditRequest;
 import com.cari.web.server.dto.response.CariPage;
@@ -22,6 +27,10 @@ import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.repository.AestheticWebsiteRepository;
 import com.cari.web.server.service.AestheticMediaService;
 import com.cari.web.server.service.AestheticService;
+import com.cari.web.server.service.FileService;
+import com.cari.web.server.service.ImageService;
+import com.cari.web.server.util.ImageProcessor;
+import com.cari.web.server.util.ImageValidator;
 import com.cari.web.server.util.db.QueryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -29,15 +38,21 @@ import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class AestheticServiceImpl implements AestheticService {
 
     private static final int MAX_PER_PAGE = 20;
+    private static final int DISPLAY_IMAGE_SIZE = 200;
 
     private static final String FILTER_KEYWORD = "keyword";
     private static final String FILTER_START_YEAR = "startYear";
     private static final String FILTER_END_YEAR = "endYear";
+
+    private static final String DISPLAY_IMAGE_SIZE_MESSAGE =
+            new StringBuilder("Image must be at least ").append(DISPLAY_IMAGE_SIZE)
+                    .append(" pixels by ").append(DISPLAY_IMAGE_SIZE).append(" pixels.").toString();
 
     // @formatter:off
     private static final Map<String, String> SORT_FIELDS = Map.of(
@@ -60,17 +75,24 @@ public class AestheticServiceImpl implements AestheticService {
     private AestheticMediaService aestheticMediaService;
 
     @Autowired
+    private FileService fileService;
+
+    @Autowired
+    private ImageService imageService;
+
+    @Autowired
     private DataSource dbHandle;
 
     @Override
     public Page<Aesthetic> findForList(Map<String, String> filters) {
-        String[] columns = new String[] {"count(a.*) over ()", "a.*",
+        String[] columns = new String[] {"count(a.*) over ()", "a.*", "f.url as display_image_url",
                 "ess.label || ' ' || es.year || 's' as start_year",
                 "ees.label || ' ' || ee.year || 's' as end_year"};
 
         StringBuilder queryBuilder = new StringBuilder("select ")
                 .append(Arrays.stream(columns).collect(Collectors.joining(", ")))
                 .append(" from tb_aesthetic a ")
+                .append("left join tb_file f on a.display_image_file = f.file ")
                 .append("left join tb_era es on a.start_era = es.era ")
                 .append("left join tb_era_specifier ess on es.era_specifier = ess.era_specifier ")
                 .append("left join tb_era ee on a.end_era = ee.era ")
@@ -181,6 +203,38 @@ public class AestheticServiceImpl implements AestheticService {
             }
         }
 
+        /* Validate display image */
+
+        MultipartFile displayImage = aestheticEditRequest.getDisplayImage();
+        Optional<CariFile> displayImageFile = Optional.empty();
+
+        if (displayImage != null) {
+            ImageProcessor cropAndResize = bf -> {
+                BufferedImage cropped = imageService.cropToSquare(bf);
+                return imageService.resizeImage(cropped, DISPLAY_IMAGE_SIZE);
+            };
+
+            ImageValidator minSizeValidator =
+                    bf -> imageService.isImageMinimumSize(bf, DISPLAY_IMAGE_SIZE) ? Optional.empty()
+                            : Optional.of(DISPLAY_IMAGE_SIZE_MESSAGE);
+
+            try {
+                File fileObjectTmp = fileService.copyToTmpFile(displayImage);
+
+                FileOperationResult uploadResult =
+                        fileService.validateAndProcessImageAndUploadAndSave(fileObjectTmp,
+                                cropAndResize, Arrays.asList(minSizeValidator));
+
+                if (uploadResult.getStatus().equals(RequestStatus.FAILURE)) {
+                    fieldErrors.add(new CariFieldError("displayImage", uploadResult.getMessage()));
+                } else {
+                    displayImageFile = uploadResult.getDbFile();
+                }
+            } catch (IOException ex) {
+                return CariResponse.failure(ex.getLocalizedMessage());
+            }
+        }
+
         /* Validate media */
         AestheticMediaEditRequest aestheticMediaEditRequest =
                 aestheticEditRequest.getMediaObjects();
@@ -210,7 +264,8 @@ public class AestheticServiceImpl implements AestheticService {
             .startEra(aestheticEditRequest.getStartEra())
             .endEra(aestheticEditRequest.getEndEra())
             .description(aestheticEditRequest.getDescription())
-            .mediaSourceUrl(aestheticEditRequest.getMediaSourceUrl());
+            .mediaSourceUrl(aestheticEditRequest.getMediaSourceUrl())
+            .displayImageFile(displayImageFile.isPresent() ? displayImageFile.get().getFile() : aestheticEditRequest.getDisplayImageFile());
         // @formatter:on
 
         if (pkAestheticOptional.isPresent()) {
