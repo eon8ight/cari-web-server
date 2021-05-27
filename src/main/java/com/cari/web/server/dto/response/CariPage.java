@@ -73,7 +73,7 @@ public class CariPage<T> implements Page<T> {
 
     @Override
     public boolean isLast() {
-        return offset + data.size() <= totalCount;
+        return offset + data.size() == totalCount;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class CariPage<T> implements Page<T> {
 
     @Override
     public int getTotalPages() {
-        return (int) Math.ceil(totalCount / maxPerPage);
+        return (int) Math.ceil((double) totalCount / maxPerPage);
     }
 
     @Override
