@@ -19,7 +19,7 @@ public class AestheticMediaEditRequest implements Serializable {
 
     private static final long serialVersionUID = 5991842477325584211L;
 
-    private int aesthetic;
+    private Integer aesthetic;
 
     private List<Map<Object, Object>> media;
 

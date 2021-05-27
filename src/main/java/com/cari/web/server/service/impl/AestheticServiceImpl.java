@@ -240,7 +240,7 @@ public class AestheticServiceImpl implements AestheticService {
                 aestheticEditRequest.getMediaObjects();
 
         CariResponse mediaValidateResponse =
-                aestheticMediaService.validateAndCreateOrUpdate(aestheticMediaEditRequest);
+                aestheticMediaService.validateCreateOrUpdateMedia(aestheticMediaEditRequest);
 
         if (mediaValidateResponse.getStatus().equals(RequestStatus.FAILURE)) {
             fieldErrors.addAll(mediaValidateResponse.getFieldErrors());
@@ -277,6 +277,7 @@ public class AestheticServiceImpl implements AestheticService {
 
         /* Create or update tb_aesthetic_media */
 
+        aestheticMediaEditRequest.setAesthetic(pkAesthetic);
         aestheticMediaService.createOrUpdate(aestheticMediaEditRequest);
 
         /* Create or update tb_aesthetic_website */
