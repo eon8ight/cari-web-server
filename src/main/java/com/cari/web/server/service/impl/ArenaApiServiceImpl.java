@@ -26,11 +26,33 @@ public class ArenaApiServiceImpl implements ArenaApiService {
             response = Optional
                     .of(restTemplate.getForObject(urlBuilder.toString(), ArenaApiResponse.class));
         } catch (HttpClientErrorException ex) {
-            if (ex.getStatusCode().equals(HttpStatus.NOT_FOUND)) {
-                response = Optional.empty();
-            } else {
-                throw ex;
+            HttpStatus statusCode = ex.getStatusCode();
+            String errorMessage;
+
+            switch (statusCode) {
+                case NOT_FOUND:
+                    errorMessage =
+                            "Please either remove the Are.na link from the aesthetic or update it to an existing Are.na.";
+
+                    break;
+                case UNAUTHORIZED:
+                    errorMessage =
+                            "This usually means the Are.na is private. Please make it public or remove it from the aesthetic.";
+
+                    break;
+                default:
+                    errorMessage = "This is an unhandled exception.";
+                    break;
             }
+
+            // @formatter:off
+            ArenaApiResponse responseObject =  ArenaApiResponse.builder()
+                    .errorStatusCode(statusCode.value())
+                    .errorMessage(errorMessage)
+                    .build();
+            // @formatter:on
+
+            response = Optional.of(responseObject);
         }
 
         return response;
