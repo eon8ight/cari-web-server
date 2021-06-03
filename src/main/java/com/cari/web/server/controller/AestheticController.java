@@ -6,10 +6,8 @@ import java.util.Optional;
 import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.dto.request.AestheticEditRequest;
 import com.cari.web.server.dto.response.CariResponse;
-import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.service.AestheticService;
-import com.cari.web.server.service.ArenaApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -29,9 +27,6 @@ public class AestheticController {
     @Autowired
     private AestheticService aestheticService;
 
-    @Autowired
-    private ArenaApiService arenaApiService;
-
     @GetMapping("/aesthetic/findForList")
     public Page<Aesthetic> findForList(@RequestParam Map<String, String> filters) {
         return aestheticService.findForList(filters);
@@ -45,19 +40,7 @@ public class AestheticController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        Aesthetic aesthetic = aestheticOptional.get();
-        String mediaSourceUrl = aesthetic.getMediaSourceUrl();
-
-        if (mediaSourceUrl != null) {
-            Optional<ArenaApiResponse> galleryContent =
-                    arenaApiService.findBlocksForPagination(mediaSourceUrl, 1);
-
-            if (galleryContent.isPresent()) {
-                aesthetic.setGalleryContent(galleryContent.get());
-            }
-        }
-
-        return ResponseEntity.ok().body(aesthetic);
+        return ResponseEntity.ok().body(aestheticOptional.get());
     }
 
     @GetMapping("/aesthetic/findForEdit/{aesthetic}")
@@ -69,32 +52,6 @@ public class AestheticController {
         }
 
         return ResponseEntity.ok().body(rval.get());
-    }
-
-    @GetMapping("/aesthetic/findGalleryContent/{aesthetic}")
-    public ResponseEntity<ArenaApiResponse> findGalleryContent(@PathVariable int aesthetic,
-            @RequestParam int page) {
-        Optional<Aesthetic> aestheticOptional = aestheticService.find(aesthetic);
-
-        if (aestheticOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        Aesthetic aestheticObj = aestheticOptional.get();
-        String mediaSourceUrlOptional = aestheticObj.getMediaSourceUrl();
-
-        if (mediaSourceUrlOptional == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        Optional<ArenaApiResponse> arenaApiResponse =
-                arenaApiService.findBlocksForPagination(mediaSourceUrlOptional, page);
-
-        if (arenaApiResponse.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        return ResponseEntity.ok().body(arenaApiResponse.get());
     }
 
     @GetMapping("/aesthetic/names")

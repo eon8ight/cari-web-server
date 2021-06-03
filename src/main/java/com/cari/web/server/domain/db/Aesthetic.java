@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import com.cari.web.server.domain.SimilarAesthetic;
-import com.cari.web.server.dto.response.arena.ArenaApiResponse;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.data.annotation.Id;
@@ -83,10 +82,6 @@ public class Aesthetic extends ModifiableTable {
     @Transient
     @EqualsAndHashCode.Exclude
     private List<AestheticWebsite> websites;
-
-    @Transient
-    @EqualsAndHashCode.Exclude
-    private ArenaApiResponse galleryContent;
 
     @Transient
     @EqualsAndHashCode.Exclude
