@@ -39,6 +39,9 @@ public class SimilarAesthetic implements Serializable {
     @JsonAlias("approximate_end_year")
     private Integer approximateEndYear;
 
+    @JsonAlias("display_image_url")
+    private String displayImageUrl;
+
     public List<AestheticRelationship> toAestheticRelationships() {
         // @formatter:off
         AestheticRelationship relationship = AestheticRelationship.builder()
