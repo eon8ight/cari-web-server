@@ -59,6 +59,11 @@ public class AestheticController {
         return aestheticService.findNames(query);
     }
 
+    @GetMapping("/aesthetic/findDraft")
+    public List<Aesthetic> findDraft() {
+        return aestheticService.findDraft();
+    }
+
     @RequestMapping(path = "/aesthetic/edit", method = RequestMethod.POST,
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<CariResponse> edit(

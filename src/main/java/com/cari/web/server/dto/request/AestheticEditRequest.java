@@ -34,6 +34,8 @@ public class AestheticEditRequest implements Serializable {
 
     private Integer displayImageFile;
 
+    private Boolean isDraft;
+
     private MultipartFile displayImage;
 
     private List<Map<Object, Object>> websites;

@@ -34,6 +34,7 @@ public class Aesthetic extends ModifiableTable {
     private static final String COLUMN_START_YEAR = "start_year";
     private static final String COLUMN_END_YEAR = "end_year";
     private static final String COLUMN_DISPLAY_IMAGE_FILE = "display_image_file";
+    private static final String COLUMN_IS_DRAFT = "is_draft";
 
     private static final String FIELD_DISPLAY_IMAGE_URL = "display_image_url";
 
@@ -70,6 +71,10 @@ public class Aesthetic extends ModifiableTable {
     @Column(COLUMN_DISPLAY_IMAGE_FILE)
     @JsonAlias(COLUMN_DISPLAY_IMAGE_FILE)
     private Integer displayImageFile;
+
+    @Column(COLUMN_IS_DRAFT)
+    @JsonAlias(COLUMN_IS_DRAFT)
+    private Boolean isDraft;
 
     @Transient
     @EqualsAndHashCode.Exclude
@@ -125,11 +130,11 @@ public class Aesthetic extends ModifiableTable {
             displayImageFile = Integer.parseInt(displayImageFileString);
         }
 
-        String displayImageUrl = null;
+        String isDraftString = rs.getString(COLUMN_IS_DRAFT);
+        Boolean isDraft = null;
 
-        try {
-            displayImageUrl = rs.getString(FIELD_DISPLAY_IMAGE_URL);
-        } catch (SQLException e) {
+        if (isDraftString != null) {
+            isDraft = isDraftString.startsWith("t");
         }
 
         // @formatter:off
@@ -143,8 +148,13 @@ public class Aesthetic extends ModifiableTable {
             .description(rs.getString("description"))
             .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL))
             .displayImageFile(displayImageFile)
-            .displayImageUrl(displayImageUrl);
+            .isDraft(isDraft);
         // @formatter:on
+
+        try {
+            builder.displayImageUrl(rs.getString(FIELD_DISPLAY_IMAGE_URL));
+        } catch (SQLException e) {
+        }
 
         try {
             builder.startYear(rs.getString(COLUMN_START_YEAR));

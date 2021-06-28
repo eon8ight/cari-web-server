@@ -107,6 +107,7 @@ public class AestheticServiceImpl implements AestheticService {
         Optional<Integer> endYear = QueryUtils.validateAndGetInt(filters, FILTER_END_YEAR);
 
         List<String> filterClauses = new ArrayList<String>();
+        filterClauses.add("(a.is_draft is null or a.is_draft is false)");
 
         if (keyword != null) {
             filterClauses.add(
@@ -167,6 +168,11 @@ public class AestheticServiceImpl implements AestheticService {
     @Override
     public List<Aesthetic> findNames(Optional<String> query) {
         return aestheticRepository.findNames(query.orElse(""));
+    }
+
+    @Override
+    public List<Aesthetic> findDraft() {
+        return aestheticRepository.findDraft();
     }
 
     @Override
@@ -265,7 +271,8 @@ public class AestheticServiceImpl implements AestheticService {
             .endEra(aestheticEditRequest.getEndEra())
             .description(aestheticEditRequest.getDescription())
             .mediaSourceUrl(aestheticEditRequest.getMediaSourceUrl())
-            .displayImageFile(displayImageFile.isPresent() ? displayImageFile.get().getFile() : aestheticEditRequest.getDisplayImageFile());
+            .displayImageFile(displayImageFile.isPresent() ? displayImageFile.get().getFile() : aestheticEditRequest.getDisplayImageFile())
+            .isDraft(aestheticEditRequest.getIsDraft());
         // @formatter:on
 
         if (pkAestheticOptional.isPresent()) {

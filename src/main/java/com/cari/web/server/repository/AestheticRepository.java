@@ -165,6 +165,12 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
         "select * " +
         " from tb_aesthetic " +
         "where lower(symbol) = lower(:symbol)";
+
+    String FIND_DRAFT_AESTHETICS_QUERY =
+        "  select * " +
+        "    from tb_aesthetic " +
+        "   where is_draft " +
+        "order by created";
     // @formatter:on
 
     @Query(value = FIND_FOR_PAGE_QUERY, rowMapperClass = AestheticWithJoinDataMapper.class)
@@ -182,6 +188,9 @@ public interface AestheticRepository extends PagingAndSortingRepository<Aestheti
 
     @Query(FIND_BY_SYMBOL_QUERY)
     Optional<Aesthetic> findBySymbol(@Param("symbol") String symbol);
+
+    @Query(FIND_DRAFT_AESTHETICS_QUERY)
+    List<Aesthetic> findDraft();
 
     default Aesthetic createOrUpdate(Aesthetic aesthetic) {
         if (aesthetic.getAesthetic() == null) {

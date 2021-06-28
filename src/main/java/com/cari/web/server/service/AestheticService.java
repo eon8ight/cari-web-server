@@ -19,5 +19,7 @@ public interface AestheticService {
 
     List<Aesthetic> findNames(Optional<String> query);
 
+    List<Aesthetic> findDraft();
+
     CariResponse createOrUpdate(AestheticEditRequest aesthetic);
 }
