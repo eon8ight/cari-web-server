@@ -17,7 +17,7 @@ public class UpdateLogController {
 
     @GetMapping("/updates")
     public Page<UpdateLogRollup> findForList(@RequestParam Optional<Integer> limit,
-            @RequestParam Optional<Integer> offset) {
-        return updateLogService.findForList(limit, offset);
+            @RequestParam Optional<Integer> page) {
+        return updateLogService.findForList(limit, page);
     }
 }
