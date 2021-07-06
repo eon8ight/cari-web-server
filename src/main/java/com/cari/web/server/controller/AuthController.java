@@ -40,13 +40,8 @@ public class AuthController {
     private JwtProvider jwtProvider;
 
     private ResponseCookie buildTokenCookie(String token, long maxAge) {
-        // @formatter:off
-        ResponseCookieBuilder tokenCookieBuilder = ResponseCookie
-            .from("sessionToken", token)
-            .maxAge(maxAge)
-            .path("/")
-            .httpOnly(true);
-        // @formatter:on
+        ResponseCookieBuilder tokenCookieBuilder =
+                ResponseCookie.from("sessionToken", token).maxAge(maxAge).path("/").httpOnly(true);
 
         if (!springEnvironment.equals("local")) {
             tokenCookieBuilder.sameSite("None").secure(true);

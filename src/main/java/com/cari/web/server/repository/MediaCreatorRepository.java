@@ -9,18 +9,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MediaCreatorRepository extends PagingAndSortingRepository<MediaCreator, Integer> {
 
-    // @formatter:off
-    String CREATE_OR_UPDATE_QUERY =
-        "insert into tb_media_creator ( " +
-        "    name " +
-        ") values ( " +
-        "    :name " +
-        ") " +
-        "       on conflict ( name ) " +
-        "       do update " +
-        "      set name = EXCLUDED.name " +
-        "returning media_creator";
-    // @formatter:on
+    String CREATE_OR_UPDATE_QUERY = """
+            insert into tb_media_creator (
+                name
+            ) values (
+                :name
+            )
+                   on conflict ( name )
+                   do update
+                  set name = EXCLUDED.name
+            returning media_creator""";
 
     @Query(CREATE_OR_UPDATE_QUERY)
     int getOrCreate(@Param("name") String name);

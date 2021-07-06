@@ -19,12 +19,8 @@ public class CheckedTokenResponse implements Serializable {
     private Map<String, Object> tokenClaims;
 
     public static CheckedTokenResponse valid(Map<String, Object> tokenClaims) {
-        // @formatter:off
-        return CheckedTokenResponse.builder()
-            .status(TokenValidity.VALID)
-            .tokenClaims(tokenClaims)
-            .build();
-        // @formatter:on
+        return CheckedTokenResponse.builder().status(TokenValidity.VALID).tokenClaims(tokenClaims)
+                .build();
     }
 
     public static CheckedTokenResponse invalid() {

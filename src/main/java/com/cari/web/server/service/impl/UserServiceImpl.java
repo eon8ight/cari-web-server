@@ -119,6 +119,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public CariResponse register(int pkEntity, ClientRequestEntity clientRequestEntity) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
@@ -167,6 +168,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public CariResponse resetPassword(int pkEntity, String password) {
         Optional<Entity> entityOptional = entityRepository.findById(pkEntity);
 
@@ -185,10 +187,11 @@ public class UserServiceImpl implements UserService {
     public Page<Entity> findForList(Map<String, String> filters) {
         StringBuilder queryBuilder = new StringBuilder("select ");
 
-        List<String> columns = new ArrayList<>(Arrays.asList("count(*) over ()", "e.entity",
-                "e.email_address", "e.username", "e.password_hash", "e.invited", "e.confirmed",
-                "e.registered", "e.inviter", "e.first_name", "e.last_name", "e.biography",
-                "e.title", "e.profile_image_file", "e.favorite_aesthetic", "e.display_on_team_page"));
+        List<String> columns =
+                new ArrayList<>(Arrays.asList("count(*) over ()", "e.entity", "e.email_address",
+                        "e.username", "e.password_hash", "e.invited", "e.confirmed", "e.registered",
+                        "e.inviter", "e.first_name", "e.last_name", "e.biography", "e.title",
+                        "e.profile_image_file", "e.favorite_aesthetic", "e.display_on_team_page"));
 
         List<String> joins = new ArrayList<>(2);
         List<String> groupBys = new ArrayList<>(3);
@@ -209,20 +212,22 @@ public class UserServiceImpl implements UserService {
             joins.add("left join tb_aesthetic a on e.favorite_aesthetic = a.aesthetic");
         }
 
-        if(filters.get(FILTER_INCLUDE_ROLES) != null) {
-            columns.add("string_agg( r_disp.label, ' / ' order by r_disp.rank ) as roles_for_display");
-            joins.add("left join tb_entity_role er_disp on e.entity = er_disp.entity left join tb_role r_disp on er_disp.role = r_disp.role");
+        if (filters.get(FILTER_INCLUDE_ROLES) != null) {
+            columns.add(
+                    "string_agg( r_disp.label, ' / ' order by r_disp.rank ) as roles_for_display");
+            joins.add(
+                    "left join tb_entity_role er_disp on e.entity = er_disp.entity left join tb_role r_disp on er_disp.role = r_disp.role");
 
             filterClauses.add("r_disp.role not in ( :excludedRoles )");
             params.addValue("excludedRoles", Arrays.asList(Role.ADMIN, Role.USER));
 
             groupBys.add("e.entity");
 
-            if(includeProfileImage) {
+            if (includeProfileImage) {
                 groupBys.add("f.*");
             }
 
-            if(includeFavoriteAesthetic) {
+            if (includeFavoriteAesthetic) {
                 groupBys.add("a.*");
             }
         }
@@ -249,7 +254,7 @@ public class UserServiceImpl implements UserService {
 
         String displayOnTeamPage = filters.get(FILTER_DISPLAY_ON_TEAM_PAGE);
 
-        if(displayOnTeamPage != null && Boolean.parseBoolean(displayOnTeamPage)) {
+        if (displayOnTeamPage != null && Boolean.parseBoolean(displayOnTeamPage)) {
             filterClauses.add("e.display_on_team_page is true");
         }
 
@@ -283,6 +288,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public UserInviteResponse invite(ClientRequestEntity clientRequestEntity) {
         Entity principal = SessionUtils.getSessionEntity();
 
@@ -303,13 +309,8 @@ public class UserServiceImpl implements UserService {
                     .failure("An invitation has already been sent to this email address.");
         }
 
-        // @formatter:off
-        Entity entity = Entity.builder()
-            .emailAddress(emailAddress)
-            .inviter(pkInviter)
-            .invited(Timestamp.from(Instant.now()))
-            .build();
-        // @formatter:on
+        Entity entity = Entity.builder().emailAddress(emailAddress).inviter(pkInviter)
+                .invited(Timestamp.from(Instant.now())).build();
 
         entityRepository.save(entity);
 
@@ -325,6 +326,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public CariResponse edit(EntityEditRequest editRequestEntity) {
         Entity principal = SessionUtils.getSessionEntity();
 

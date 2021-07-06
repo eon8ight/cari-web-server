@@ -6,12 +6,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import com.cari.web.server.domain.CariFieldError;
 import com.cari.web.server.domain.db.AestheticMedia;
 import com.cari.web.server.domain.db.CariFile;
 import com.cari.web.server.domain.db.FileType;
+import com.cari.web.server.dto.DatabaseUpsertResult;
 import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.request.AestheticMediaEditData;
 import com.cari.web.server.dto.request.AestheticMediaEditRequest;
@@ -103,10 +105,12 @@ public class AestheticMediaServiceImpl implements AestheticMediaService {
         int mediaEditRequestsSize = mediaObjects.size();
 
         List<CariFile> filesToDelete;
+        boolean didChange;
 
         if (mediaObjects.isEmpty()) {
             filesToDelete = aestheticMediaRepository.findFilesByAesthetic(pkAesthetic);
-            aestheticMediaRepository.deleteByAesthetic(pkAesthetic);
+            int deletedCount = aestheticMediaRepository.deleteByAesthetic(pkAesthetic);
+            didChange = deletedCount > 0;
         } else {
             ImageProcessor cropAndResizeThumbnail = bf -> {
                 BufferedImage cropped = imageService.cropToSquare(bf);
@@ -161,31 +165,28 @@ public class AestheticMediaServiceImpl implements AestheticMediaService {
                     mediaPreviewFile = media.getMediaPreviewFile();
                 }
 
-                // @formatter:off
-                AestheticMedia aestheticMedia = AestheticMedia.builder()
-                    .label(media.getLabel())
-                    .description(media.getDescription())
-                    .mediaCreator(pkMediaCreator)
-                    .year(media.getYear())
-                    .mediaFile(mediaFile)
-                    .mediaThumbnailFile(mediaThumbnailFile)
-                    .mediaPreviewFile(mediaPreviewFile)
-                    .build();
-                // @formatter:on
+                AestheticMedia aestheticMedia = AestheticMedia.builder().label(media.getLabel())
+                        .description(media.getDescription()).mediaCreator(pkMediaCreator)
+                        .year(media.getYear()).mediaFile(mediaFile)
+                        .mediaThumbnailFile(mediaThumbnailFile).mediaPreviewFile(mediaPreviewFile)
+                        .build();
 
                 payloadMediaObjects.add(aestheticMedia);
             }
 
-            List<AestheticMedia> aestheticMedia = aestheticMediaRepository
+            DatabaseUpsertResult<AestheticMedia> aestheticMedia = aestheticMediaRepository
                     .createOrUpdateForAesthetic(pkAesthetic, payloadMediaObjects);
 
-            List<Integer> pkAestheticMedia = aestheticMedia.stream()
+            List<Integer> pkAestheticMedia = aestheticMedia.getUpsertResultSet().stream()
                     .map(AestheticMedia::getAestheticMedia).collect(Collectors.toList());
 
             filesToDelete = aestheticMediaRepository.findUnusedAestheticMediaFiles(pkAesthetic,
                     pkAestheticMedia);
 
-            aestheticMediaRepository.deleteByAestheticExcept(pkAesthetic, pkAestheticMedia);
+            int deletedCount =
+                    aestheticMediaRepository.deleteByAestheticExcept(pkAesthetic, pkAestheticMedia);
+
+            didChange = aestheticMedia.isChanged() || deletedCount > 0;
         }
 
         if (!filesToDelete.isEmpty()) {
@@ -193,6 +194,7 @@ public class AestheticMediaServiceImpl implements AestheticMediaService {
         }
 
         CariResponse res = CariResponse.success();
+        res.setUpdatedData(Map.<String, Object>of("didChange", didChange));
         return res;
     }
 

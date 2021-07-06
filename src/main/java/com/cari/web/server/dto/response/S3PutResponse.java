@@ -21,21 +21,11 @@ public class S3PutResponse implements Serializable {
     private String key;
 
     public static S3PutResponse success(PutObjectResult putObjectResult, String key) {
-        // @formatter:off
-        return S3PutResponse.builder()
-            .status(RequestStatus.SUCCESS)
-            .putObjectResult(putObjectResult)
-            .key(key)
-            .build();
-        // @formatter:on
+        return S3PutResponse.builder().status(RequestStatus.SUCCESS)
+                .putObjectResult(putObjectResult).key(key).build();
     }
 
     public static S3PutResponse failure(String message) {
-        // @formatter:off
-        return S3PutResponse.builder()
-            .status(RequestStatus.FAILURE)
-            .message(message)
-            .build();
-        // @formatter:on
+        return S3PutResponse.builder().status(RequestStatus.FAILURE).message(message).build();
     }
 }

@@ -47,23 +47,19 @@ public class Route implements Serializable {
     private List<Integer> roles;
 
     public static Route fromResultSet(ResultSet rs, int rowNum) throws SQLException {
-        // @formatter:off
-        RouteBuilder builder = Route.builder()
-            .route(rs.getInt("route"))
-            .httpMethod(rs.getInt(COLUMN_HTTP_METHOD))
-            .url(rs.getString("url"));
-        // @formatter:on
+        RouteBuilder builder = Route.builder().route(rs.getInt("route"))
+                .httpMethod(rs.getInt(COLUMN_HTTP_METHOD)).url(rs.getString("url"));
 
         try {
             builder.httpMethodLabel(rs.getString(COLUMN_HTTP_METHOD_LABEL));
-        } catch(SQLException ex) {
+        } catch (SQLException ex) {
         }
 
         try {
             Array rolesArray = rs.getArray("roles");
             Integer[] roles = (Integer[]) rolesArray.getArray();
             builder.roles(Arrays.asList(roles));
-        } catch(SQLException ex) {
+        } catch (SQLException ex) {
         }
 
         return builder.build();

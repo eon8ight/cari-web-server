@@ -12,8 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.cari.web.server.domain.db.Entity;
 import com.cari.web.server.enums.TokenType;
 import com.cari.web.server.service.UserService;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -27,9 +26,9 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.gson.io.GsonDeserializer;
-import io.jsonwebtoken.gson.io.GsonSerializer;
 import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.jackson.io.JacksonDeserializer;
+import io.jsonwebtoken.jackson.io.JacksonSerializer;
 import io.jsonwebtoken.security.Keys;
 
 @Component
@@ -49,19 +48,15 @@ public class JwtProvider {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
-    private Gson createGson() {
-        return new GsonBuilder().disableHtmlEscaping().create();
+    private ObjectMapper createObjectMapper() {
+        return new ObjectMapper();
     }
 
     private JwtParser createJwtParser() {
-        Gson gson = createGson();
+        ObjectMapper objectMapper = createObjectMapper();
 
-        // @formatter:off
-        return Jwts.parserBuilder()
-            .setSigningKey(secretKey)
-            .deserializeJsonWith(new GsonDeserializer<>(gson))
-            .build();
-        // @formatter:on
+        return Jwts.parserBuilder().setSigningKey(secretKey)
+                .deserializeJsonWith(new JacksonDeserializer<>(objectMapper)).build();
     }
 
     public int getEntityFromToken(String token) {
@@ -114,14 +109,9 @@ public class JwtProvider {
         Date iat = new Date();
         Date exp = new Date(iat.getTime() + expLength.orElse(expireLength));
 
-        // @formatter:off
-        Claims claims = Jwts.claims()
-            .setSubject(Integer.toString(entity.getEntity()))
-            .setIssuer(Integer.toString(issuerEntity.orElse(0)))
-            .setIssuedAt(iat)
-            .setExpiration(exp)
-            .setNotBefore(iat);
-        // @formatter:on
+        Claims claims = Jwts.claims().setSubject(Integer.toString(entity.getEntity()))
+                .setIssuer(Integer.toString(issuerEntity.orElse(0))).setIssuedAt(iat)
+                .setExpiration(exp).setNotBefore(iat);
 
         if (payload.isPresent()) {
             claims.putAll(payload.get());
@@ -129,15 +119,11 @@ public class JwtProvider {
 
         claims.put("type", tokenType.toString());
 
-        Gson gson = createGson();
+        ObjectMapper objectMapper = createObjectMapper();
 
-        // @formatter:off
-        return Jwts.builder()
-            .setClaims(claims)
-            .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)))
-            .serializeToJsonWith(new GsonSerializer<>(gson))
-            .compact();
-        // @formatter:on
+        return Jwts.builder().setClaims(claims)
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)))
+                .serializeToJsonWith(new JacksonSerializer<>(objectMapper)).compact();
     }
 
     public Optional<String> resolveToken(HttpServletRequest request) {

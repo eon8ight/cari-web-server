@@ -38,12 +38,7 @@ public class Era implements Serializable {
     private EraSpecifier specifier;
 
     public static Era fromResultSet(ResultSet rs, int rowNum) throws SQLException {
-        // @formatter:off
-        return Era.builder()
-            .era(rs.getInt("era"))
-            .eraSpecifier(rs.getInt(COLUMN_ERA_SPECIFIER))
-            .year(rs.getInt("year"))
-            .build();
-        // @formatter:on
+        return Era.builder().era(rs.getInt("era")).eraSpecifier(rs.getInt(COLUMN_ERA_SPECIFIER))
+                .year(rs.getInt("year")).build();
     }
 }

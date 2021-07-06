@@ -10,16 +10,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EntityRoleRepository extends CrudRepository<EntityRole, Integer> {
 
-    // @formatter:off
-    String CREATE_QUERY =
-        "insert into tb_entity_role ( " +
-        "  entity, " +
-        "  role " +
-        ") values ( " +
-        "  :entity, " +
-        "  :role " +
-        ")";
-    // @formatter:on
+    String CREATE_QUERY = """
+            insert into tb_entity_role (
+              entity,
+              role
+            ) values (
+              :entity,
+              :role
+            )""";
 
     @Modifying
     @Query(value = CREATE_QUERY)

@@ -147,24 +147,14 @@ public class Entity implements UserDetails {
             favoriteAesthetic = Integer.parseInt(favoriteAestheticString);
         }
 
-        // @formatter:off
-        return Entity.builder()
-            .entity(rs.getInt("entity"))
-            .emailAddress(rs.getString(COLUMN_EMAIL_ADDRESS))
-            .username(rs.getString("username"))
-            .passwordHash(rs.getString(COLUMN_PASSWORD_HASH))
-            .inviter(rs.getInt("inviter"))
-            .invited(rs.getTimestamp("invited"))
-            .confirmed(rs.getTimestamp("confirmed"))
-            .registered(rs.getTimestamp("registered"))
-            .firstName(rs.getString(COLUMN_FIRST_NAME))
-            .lastName(rs.getString(COLUMN_LAST_NAME))
-            .biography(rs.getString("biography"))
-            .title(rs.getString("title"))
-            .profileImageFile(profileImageFile)
-            .favoriteAesthetic(favoriteAesthetic)
-            .displayOnTeamPage(rs.getBoolean(COLUMN_DISPLAY_ON_TEAM_PAGE))
-            .build();
-        // @formatter:on
+        return Entity.builder().entity(rs.getInt("entity"))
+                .emailAddress(rs.getString(COLUMN_EMAIL_ADDRESS)).username(rs.getString("username"))
+                .passwordHash(rs.getString(COLUMN_PASSWORD_HASH)).inviter(rs.getInt("inviter"))
+                .invited(rs.getTimestamp("invited")).confirmed(rs.getTimestamp("confirmed"))
+                .registered(rs.getTimestamp("registered"))
+                .firstName(rs.getString(COLUMN_FIRST_NAME)).lastName(rs.getString(COLUMN_LAST_NAME))
+                .biography(rs.getString("biography")).title(rs.getString("title"))
+                .profileImageFile(profileImageFile).favoriteAesthetic(favoriteAesthetic)
+                .displayOnTeamPage(rs.getBoolean(COLUMN_DISPLAY_ON_TEAM_PAGE)).build();
     }
 }

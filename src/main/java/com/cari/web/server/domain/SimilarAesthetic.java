@@ -43,17 +43,11 @@ public class SimilarAesthetic implements Serializable {
     private String displayImageUrl;
 
     public List<AestheticRelationship> toAestheticRelationships() {
-        // @formatter:off
-        AestheticRelationship relationship = AestheticRelationship.builder()
-            .toAesthetic(aesthetic)
-            .description(description)
-            .build();
+        AestheticRelationship relationship = AestheticRelationship.builder().toAesthetic(aesthetic)
+                .description(description).build();
 
         AestheticRelationship reverseRelationship = AestheticRelationship.builder()
-            .fromAesthetic(aesthetic)
-            .description(reverseDescription)
-            .build();
-        // @formatter:on
+                .fromAesthetic(aesthetic).description(reverseDescription).build();
 
         return Arrays.asList(relationship, reverseRelationship);
     }

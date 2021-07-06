@@ -55,18 +55,11 @@ public class AestheticMediaEditData implements Serializable {
         Integer previewFile = mediaPreviewFileStr == null || mediaPreviewFileStr.isEmpty() ? null
                 : Integer.parseInt(mediaPreviewFileStr);
 
-        // @formatter:off
-        return AestheticMediaEditData.builder()
-            .mediaCreator(mediaCreator)
-            .mediaCreatorName((String) map.get("mediaCreatorName"))
-            .description((String) map.get("description"))
-            .label((String) map.get("label"))
-            .year(Integer.parseInt((String) map.get("year")))
-            .mediaFile(file)
-            .mediaThumbnailFile(thumbnailFile)
-            .mediaPreviewFile(previewFile)
-            .fileObject((MultipartFile) map.get("fileObject"))
-            .build();
-        // @formatter:on
+        return AestheticMediaEditData.builder().mediaCreator(mediaCreator)
+                .mediaCreatorName((String) map.get("mediaCreatorName"))
+                .description((String) map.get("description")).label((String) map.get("label"))
+                .year(Integer.parseInt((String) map.get("year"))).mediaFile(file)
+                .mediaThumbnailFile(thumbnailFile).mediaPreviewFile(previewFile)
+                .fileObject((MultipartFile) map.get("fileObject")).build();
     }
 }

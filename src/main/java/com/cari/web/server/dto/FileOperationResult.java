@@ -33,38 +33,21 @@ public class FileOperationResult {
     }
 
     public static FileOperationResult success(File file) {
-        // @formatter:off
-        return FileOperationResult.builder()
-            .status(RequestStatus.SUCCESS)
-            .file(Optional.of(file))
-            .build();
-        // @formatter:on
+        return FileOperationResult.builder().status(RequestStatus.SUCCESS).file(Optional.of(file))
+                .build();
     }
 
     public static FileOperationResult success(CariFile dbFile) {
-        // @formatter:off
-        return FileOperationResult.builder()
-            .status(RequestStatus.SUCCESS)
-            .dbFile(Optional.of(dbFile))
-            .build();
-        // @formatter:on
+        return FileOperationResult.builder().status(RequestStatus.SUCCESS)
+                .dbFile(Optional.of(dbFile)).build();
     }
 
     public static FileOperationResult success(String s3Key) {
-        // @formatter:off
-        return FileOperationResult.builder()
-            .status(RequestStatus.SUCCESS)
-            .s3Key(Optional.of(s3Key))
-            .build();
-        // @formatter:on
+        return FileOperationResult.builder().status(RequestStatus.SUCCESS).s3Key(Optional.of(s3Key))
+                .build();
     }
 
     public static FileOperationResult failure(String message) {
-        // @formatter:off
-        return FileOperationResult.builder()
-            .status(RequestStatus.FAILURE)
-            .message(message)
-            .build();
-        // @formatter:on
+        return FileOperationResult.builder().status(RequestStatus.FAILURE).message(message).build();
     }
 }

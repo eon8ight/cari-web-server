@@ -10,12 +10,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MessageTemplateRepository extends CrudRepository<MessageTemplate, Integer> {
 
-    // @formatter:off
-    String FIND_BY_LABEL_QUERY =
-        "select * " +
-        "  from tb_message_template " +
-        " where label = :label";
-    // @formatter:on
+    String FIND_BY_LABEL_QUERY = """
+            select *
+              from tb_message_template
+             where label = :label""";
 
     @Query(FIND_BY_LABEL_QUERY)
     Optional<MessageTemplate> findByLabel(@Param("label") String label);

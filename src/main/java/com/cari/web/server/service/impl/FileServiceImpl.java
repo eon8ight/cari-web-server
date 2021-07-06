@@ -52,16 +52,10 @@ public class FileServiceImpl implements FileService {
     public CariFile save(String key, int pkFileType) {
         String url = s3Service.getUrlPrefix() + key;
 
-        // @formatter:off
-        CariFile dbFile = CariFile.builder()
-            .fileType(pkFileType)
-            .url(url)
-            .build();
-        // @formatter:on
-
+        CariFile dbFile = CariFile.builder().fileType(pkFileType).url(url).build();
         dbFile.setCreator(SessionUtils.getSessionEntity().getEntity());
-
         dbFile = fileRepository.save(dbFile);
+
         return dbFile;
     }
 

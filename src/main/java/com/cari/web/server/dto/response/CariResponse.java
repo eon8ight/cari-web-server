@@ -28,20 +28,11 @@ public class CariResponse implements Serializable {
     }
 
     public static CariResponse failure(String message) {
-        // @formatter:off
-        return CariResponse.builder()
-            .status(RequestStatus.FAILURE)
-            .message(message)
-            .build();
-        // @formatter:on
+        return CariResponse.builder().status(RequestStatus.FAILURE).message(message).build();
     }
 
     public static CariResponse failure(List<CariFieldError> fieldErrors) {
-        // @formatter:off
-        return CariResponse.builder()
-            .status(RequestStatus.FAILURE)
-            .fieldErrors(fieldErrors)
-            .build();
-        // @formatter:on
+        return CariResponse.builder().status(RequestStatus.FAILURE).fieldErrors(fieldErrors)
+                .build();
     }
 }

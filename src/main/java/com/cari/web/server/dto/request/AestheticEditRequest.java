@@ -71,11 +71,6 @@ public class AestheticEditRequest implements Serializable {
     }
 
     public AestheticMediaEditRequest getMediaObjects() {
-        // @formatter:off
-        return AestheticMediaEditRequest.builder()
-            .aesthetic(aesthetic)
-            .media(media)
-            .build();
-        // @formatter:on
+        return AestheticMediaEditRequest.builder().aesthetic(aesthetic).media(media).build();
     }
 }

@@ -8,19 +8,17 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface RouteRepository extends CrudRepository<Route, Integer> {
 
-    // @formatter:off
-    String FIND_ALL_QUERY =
-        "  select ru.*, " +
-        "         hm.label as http_method_label, " +
-        "         array_agg( rr.role ) as roles " +
-        "    from tb_role_route rr " +
-        "    join tb_route ru " +
-        "      on rr.route = ru.route " +
-        "join tb_http_method hm " +
-        "      on ru.http_method = hm.http_method " +
-        "group by ru.route, " +
-        "         hm.label";
-    // @formatter:on
+    String FIND_ALL_QUERY = """
+              select ru.*,
+                     hm.label as http_method_label,
+                     array_agg( rr.role ) as roles
+                from tb_role_route rr
+                join tb_route ru
+                  on rr.route = ru.route
+            join tb_http_method hm
+                  on ru.http_method = hm.http_method
+            group by ru.route,
+                     hm.label""";
 
     @Query(value = FIND_ALL_QUERY, rowMapperClass = RouteWithJoinDataMapper.class)
     List<Route> findAll();

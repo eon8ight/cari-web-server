@@ -74,7 +74,7 @@ public final class QueryUtils {
     public static Optional<Integer> validateAndGetInt(Map<String, String> filters, String key) {
         String value = filters.get(key);
 
-        if (!StringUtils.isEmpty(value)) {
+        if (StringUtils.hasLength(value)) {
             int intValue;
 
             try {
@@ -94,7 +94,7 @@ public final class QueryUtils {
             String key) {
         String value = filters.get(key);
 
-        if (!StringUtils.isEmpty(value)) {
+        if (StringUtils.hasLength(value)) {
             int intValue;
 
             try {

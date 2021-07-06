@@ -19,20 +19,10 @@ public class UserInviteResponse implements Serializable {
     private Entity entity;
 
     public static UserInviteResponse success(Entity entity) {
-        // @formatter:off
-        return UserInviteResponse.builder()
-            .status(RequestStatus.SUCCESS)
-            .entity(entity)
-            .build();
-        // @formatter:on
+        return UserInviteResponse.builder().status(RequestStatus.SUCCESS).entity(entity).build();
     }
 
     public static UserInviteResponse failure(String message) {
-        // @formatter:off
-        return UserInviteResponse.builder()
-            .status(RequestStatus.FAILURE)
-            .message(message)
-            .build();
-        // @formatter:on
+        return UserInviteResponse.builder().status(RequestStatus.FAILURE).message(message).build();
     }
 }

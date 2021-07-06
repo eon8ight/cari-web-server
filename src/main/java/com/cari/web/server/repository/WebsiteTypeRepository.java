@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface WebsiteTypeRepository extends PagingAndSortingRepository<WebsiteType, Integer> {
-    // This interface purposely left blank
 }

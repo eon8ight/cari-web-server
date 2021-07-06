@@ -8,16 +8,14 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface EraRepository extends PagingAndSortingRepository<Era, Integer> {
 
-    // @formatter:off
-    String FIND_ALL_WITH_ERA_SPECIFIER_QUERY =
-        "  select e.*, " +
-        "         to_jsonb(es.*) as specifier " +
-        "    from tb_era e " +
-        "    join tb_era_specifier es " +
-        "      on e.era_specifier = es.era_specifier " +
-        "order by e.year, " +
-        "      e.era_specifier";
-    // @formatter:on
+    String FIND_ALL_WITH_ERA_SPECIFIER_QUERY = """
+              select e.*,
+                     to_jsonb(es.*) as specifier
+                from tb_era e
+                join tb_era_specifier es
+                  on e.era_specifier = es.era_specifier
+            order by e.year,
+                  e.era_specifier""";
 
     @Query(value = FIND_ALL_WITH_ERA_SPECIFIER_QUERY, rowMapperClass = EraWithJoinDataMapper.class)
     List<Era> findAllWithEraSpecifier();

@@ -137,19 +137,12 @@ public class Aesthetic extends ModifiableTable {
             isDraft = isDraftString.startsWith("t");
         }
 
-        // @formatter:off
-        AestheticBuilder builder = Aesthetic.builder()
-            .aesthetic(rs.getInt("aesthetic"))
-            .name(rs.getString("name"))
-            .urlSlug(rs.getString(COLUMN_URL_SLUG))
-            .symbol(rs.getString("symbol"))
-            .startEra(startEra)
-            .endEra(endEra)
-            .description(rs.getString("description"))
-            .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL))
-            .displayImageFile(displayImageFile)
-            .isDraft(isDraft);
-        // @formatter:on
+        AestheticBuilder builder =
+                Aesthetic.builder().aesthetic(rs.getInt("aesthetic")).name(rs.getString("name"))
+                        .urlSlug(rs.getString(COLUMN_URL_SLUG)).symbol(rs.getString("symbol"))
+                        .startEra(startEra).endEra(endEra).description(rs.getString("description"))
+                        .mediaSourceUrl(rs.getString(COLUMN_MEDIA_SOURCE_URL))
+                        .displayImageFile(displayImageFile).isDraft(isDraft);
 
         try {
             builder.displayImageUrl(rs.getString(FIELD_DISPLAY_IMAGE_URL));

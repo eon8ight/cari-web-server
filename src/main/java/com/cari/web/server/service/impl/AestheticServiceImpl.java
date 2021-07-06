@@ -5,8 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
@@ -16,6 +18,12 @@ import com.cari.web.server.domain.db.Aesthetic;
 import com.cari.web.server.domain.db.AestheticRelationship;
 import com.cari.web.server.domain.db.AestheticWebsite;
 import com.cari.web.server.domain.db.CariFile;
+import com.cari.web.server.domain.db.EventType;
+import com.cari.web.server.domain.db.TableName;
+import com.cari.web.server.domain.db.UpdatableField;
+import com.cari.web.server.domain.db.UpdateLog;
+import com.cari.web.server.domain.db.UpdateLogEntry;
+import com.cari.web.server.dto.DatabaseUpsertResult;
 import com.cari.web.server.dto.FileOperationResult;
 import com.cari.web.server.dto.request.AestheticEditRequest;
 import com.cari.web.server.dto.request.AestheticMediaEditRequest;
@@ -25,6 +33,8 @@ import com.cari.web.server.enums.RequestStatus;
 import com.cari.web.server.repository.AestheticRelationshipRepository;
 import com.cari.web.server.repository.AestheticRepository;
 import com.cari.web.server.repository.AestheticWebsiteRepository;
+import com.cari.web.server.repository.UpdateLogEntryRepository;
+import com.cari.web.server.repository.UpdateLogRepository;
 import com.cari.web.server.service.AestheticMediaService;
 import com.cari.web.server.service.AestheticService;
 import com.cari.web.server.service.FileService;
@@ -70,6 +80,12 @@ public class AestheticServiceImpl implements AestheticService {
 
     @Autowired
     private AestheticRelationshipRepository aestheticRelationshipRepository;
+
+    @Autowired
+    private UpdateLogRepository updateLogRepository;
+
+    @Autowired
+    private UpdateLogEntryRepository updateLogEntryRepository;
 
     @Autowired
     private AestheticMediaService aestheticMediaService;
@@ -262,21 +278,75 @@ public class AestheticServiceImpl implements AestheticService {
 
         /* Create or update tb_aesthetic */
 
-        // @formatter:off
-        Aesthetic.AestheticBuilder aestheticBuilder = Aesthetic.builder()
-            .name(name)
-            .urlSlug(urlSlug)
-            .symbol(symbol)
-            .startEra(aestheticEditRequest.getStartEra())
-            .endEra(aestheticEditRequest.getEndEra())
-            .description(aestheticEditRequest.getDescription())
-            .mediaSourceUrl(aestheticEditRequest.getMediaSourceUrl())
-            .displayImageFile(displayImageFile.isPresent() ? displayImageFile.get().getFile() : aestheticEditRequest.getDisplayImageFile())
-            .isDraft(aestheticEditRequest.getIsDraft());
-        // @formatter:on
+        Integer startEra = aestheticEditRequest.getStartEra();
+        Integer endEra = aestheticEditRequest.getEndEra();
+        String description = aestheticEditRequest.getDescription();
+        String mediaSourceUrl = aestheticEditRequest.getMediaSourceUrl();
+
+        Integer pkDisplayImageFile = displayImageFile.isPresent() ? displayImageFile.get().getFile()
+                : aestheticEditRequest.getDisplayImageFile();
+
+        Aesthetic.AestheticBuilder aestheticBuilder = Aesthetic.builder().name(name)
+                .urlSlug(urlSlug).symbol(symbol).startEra(startEra).endEra(endEra)
+                .description(description).mediaSourceUrl(mediaSourceUrl)
+                .displayImageFile(pkDisplayImageFile).isDraft(aestheticEditRequest.getIsDraft());
+
+        UpdateLog updateLog = UpdateLog.builder().tableName(TableName.TB_AESTHETIC).build();
+        List<UpdateLogEntry> updateLogEntries = new LinkedList<>();
 
         if (pkAestheticOptional.isPresent()) {
+            updateLog.setEventType(EventType.UPDATED);
             aestheticBuilder.aesthetic(pkAestheticOptional.get());
+
+            Aesthetic existingAestheticObj =
+                    aestheticRepository.findById(pkAestheticOptional.get()).get();
+
+            String oldName = existingAestheticObj.getName();
+            Integer oldStartEra = existingAestheticObj.getStartEra();
+            Integer oldEndEra = existingAestheticObj.getEndEra();
+            String oldDescription = existingAestheticObj.getDescription();
+            String oldMediaSourceUrl = existingAestheticObj.getMediaSourceUrl();
+            Integer oldDisplayImageFile = existingAestheticObj.getDisplayImageFile();
+
+            if (!oldName.equals(name)) {
+                UpdateLogEntry nameUpdateLogEntry =
+                        UpdateLogEntry.builder().updatableField(UpdatableField.AESTHETIC_NAME)
+                                .oldValue(oldName).newValue(name).build();
+
+                updateLogEntries.add(nameUpdateLogEntry);
+            }
+
+            if (!Objects.equals(oldStartEra, startEra)) {
+                updateLogEntries.add(UpdateLogEntry.builder()
+                        .updatableField(UpdatableField.AESTHETIC_START_ERA).build());
+            }
+
+            if (!Objects.equals(oldEndEra, endEra)) {
+                updateLogEntries.add(UpdateLogEntry.builder()
+                        .updatableField(UpdatableField.AESTHETIC_END_ERA).build());
+            }
+
+            if (!oldDescription.equals(description)) {
+                updateLogEntries.add(UpdateLogEntry.builder()
+                        .updatableField(UpdatableField.AESTHETIC_DESCRIPTION).build());
+            }
+
+            if (!Objects.equals(oldMediaSourceUrl, mediaSourceUrl)) {
+                updateLogEntries.add(UpdateLogEntry.builder()
+                        .updatableField(UpdatableField.AESTHETIC_ARENA_GALLERY_URL).build());
+            }
+
+            if (!Objects.equals(oldDisplayImageFile, pkDisplayImageFile)) {
+                updateLogEntries.add(UpdateLogEntry.builder()
+                        .updatableField(UpdatableField.AESTHETIC_THUMBNAIL).build());
+            }
+        } else {
+            updateLog.setEventType(EventType.CREATED);
+
+            UpdateLogEntry aestheticCreatedEntry = UpdateLogEntry.builder()
+                    .updatableField(UpdatableField.AESTHETIC_AESTHETIC).build();
+
+            updateLogEntries.add(aestheticCreatedEntry);
         }
 
         Aesthetic aesthetic = aestheticRepository.createOrUpdate(aestheticBuilder.build());
@@ -285,20 +355,43 @@ public class AestheticServiceImpl implements AestheticService {
         /* Create or update tb_aesthetic_media */
 
         aestheticMediaEditRequest.setAesthetic(pkAesthetic);
-        aestheticMediaService.createOrUpdate(aestheticMediaEditRequest);
+
+        CariResponse mediaCreateOrUpdateResponse =
+                aestheticMediaService.createOrUpdate(aestheticMediaEditRequest);
+
+        if (mediaCreateOrUpdateResponse.getStatus().equals(RequestStatus.FAILURE)) {
+            return mediaCreateOrUpdateResponse;
+        }
+
+        if ((boolean) mediaCreateOrUpdateResponse.getUpdatedData().get("didChange")
+                && updateLog.getEventType() != EventType.CREATED) {
+            updateLogEntries.add(UpdateLogEntry.builder()
+                    .updatableField(UpdatableField.AESTHETIC_MEDIA).build());
+        }
 
         /* Create or update tb_aesthetic_website */
 
         List<AestheticWebsite> websiteObjects = aestheticEditRequest.getWebsiteObjects();
+        boolean websitesChanged;
 
         if (websiteObjects.isEmpty()) {
-            aestheticWebsiteRepository.deleteByAesthetic(pkAesthetic);
+            int deleted = aestheticWebsiteRepository.deleteByAesthetic(pkAesthetic);
+            websitesChanged = deleted > 0;
         } else {
-            List<AestheticWebsite> websites = aestheticWebsiteRepository
+            DatabaseUpsertResult<AestheticWebsite> websites = aestheticWebsiteRepository
                     .createOrUpdateForAesthetic(pkAesthetic, websiteObjects);
 
-            aestheticWebsiteRepository.deleteByAestheticExcept(pkAesthetic, websites.stream()
-                    .map(AestheticWebsite::getAestheticWebsite).collect(Collectors.toList()));
+            int deleted = aestheticWebsiteRepository.deleteByAestheticExcept(pkAesthetic,
+                    websites.getUpsertResultSet().stream()
+                            .map(AestheticWebsite::getAestheticWebsite)
+                            .collect(Collectors.toList()));
+
+            websitesChanged = websites.isChanged() || deleted > 0;
+        }
+
+        if (websitesChanged && updateLog.getEventType() != EventType.CREATED) {
+            updateLogEntries.add(UpdateLogEntry.builder()
+                    .updatableField(UpdatableField.AESTHETIC_WEBSITES).build());
         }
 
         /* Create or update tb_aesthetic_relationship */
@@ -306,8 +399,11 @@ public class AestheticServiceImpl implements AestheticService {
         List<SimilarAesthetic> similarAestheticObjects =
                 aestheticEditRequest.getSimilarAestheticObjects();
 
+        boolean similarAestheticsChanged;
+
         if (similarAestheticObjects.isEmpty()) {
-            aestheticRelationshipRepository.deleteByAesthetic(pkAesthetic);
+            int deleted = aestheticRelationshipRepository.deleteByAesthetic(pkAesthetic);
+            similarAestheticsChanged = deleted > 0;
         } else {
             List<AestheticRelationship> payloadAestheticRelationships =
                     similarAestheticObjects
@@ -315,13 +411,32 @@ public class AestheticServiceImpl implements AestheticService {
                                     .toAestheticRelationships().stream())
                             .collect(Collectors.toList());
 
-            List<AestheticRelationship> aestheticRelationships = aestheticRelationshipRepository
-                    .createOrUpdateForAesthetic(pkAesthetic, payloadAestheticRelationships);
+            DatabaseUpsertResult<AestheticRelationship> aestheticRelationships =
+                    aestheticRelationshipRepository.createOrUpdateForAesthetic(pkAesthetic,
+                            payloadAestheticRelationships);
 
-            aestheticRelationshipRepository.deleteByAestheticExcept(pkAesthetic,
-                    aestheticRelationships.stream()
+            int deleted = aestheticRelationshipRepository.deleteByAestheticExcept(pkAesthetic,
+                    aestheticRelationships.getUpsertResultSet().stream()
                             .map(AestheticRelationship::getAestheticRelationship)
                             .collect(Collectors.toList()));
+
+            similarAestheticsChanged = aestheticRelationships.isChanged() || deleted > 0;
+        }
+
+        if (similarAestheticsChanged && updateLog.getEventType() != EventType.CREATED) {
+            updateLogEntries.add(UpdateLogEntry.builder()
+                    .updatableField(UpdatableField.AESTHETIC_RELATED_AESTHETICS).build());
+        }
+
+        /* Update the update log */
+
+        if (!aesthetic.getIsDraft()) {
+            updateLog.setPkVal(pkAesthetic);
+            updateLog = updateLogRepository.save(updateLog);
+            int pkUpdateLog = updateLog.getUpdateLog();
+
+            updateLogEntries.forEach(entry -> entry.setUpdateLog(pkUpdateLog));
+            updateLogEntryRepository.saveAll(updateLogEntries);
         }
 
         /* End creates and updates */
