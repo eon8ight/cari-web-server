@@ -30,6 +30,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
+    @Value("${cookie.domain}")
+    private String cookieDomain;
+
     @Value("${spring.environment:local}")
     private String springEnvironment;
 
@@ -40,8 +43,8 @@ public class AuthController {
     private JwtProvider jwtProvider;
 
     private ResponseCookie buildTokenCookie(String token, long maxAge) {
-        ResponseCookieBuilder tokenCookieBuilder =
-                ResponseCookie.from("sessionToken", token).maxAge(maxAge).path("/");
+        ResponseCookieBuilder tokenCookieBuilder = ResponseCookie.from("sessionToken", token)
+                .maxAge(maxAge).path("/").domain(cookieDomain);
 
         if (!springEnvironment.equals("local")) {
             tokenCookieBuilder.sameSite("None").secure(true);
