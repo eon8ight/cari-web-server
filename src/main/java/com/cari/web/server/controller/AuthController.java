@@ -41,7 +41,7 @@ public class AuthController {
 
     private ResponseCookie buildTokenCookie(String token, long maxAge) {
         ResponseCookieBuilder tokenCookieBuilder =
-                ResponseCookie.from("sessionToken", token).maxAge(maxAge).path("/").httpOnly(true);
+                ResponseCookie.from("sessionToken", token).maxAge(maxAge).path("/");
 
         if (!springEnvironment.equals("local")) {
             tokenCookieBuilder.sameSite("None").secure(true);
