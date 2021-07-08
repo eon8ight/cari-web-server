@@ -54,8 +54,6 @@ public class UpdateLogRollup implements Serializable {
         @JsonAlias("created_time")
         private String createdTime;
 
-        private String creator;
-
         @JsonAlias("event_type")
         private int eventType;
 
