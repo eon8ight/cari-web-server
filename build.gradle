@@ -48,6 +48,14 @@ dependencyManagement {
     }
 }
 
+task stage {
+    dependsOn build
+    doLast {
+        delete fileTree(dir: 'build', exclude: 'libs')
+        delete fileTree(dir: 'build/libs', exclude: '*.jar')
+    }
+}
+
 test {
     useJUnitPlatform()
 }
